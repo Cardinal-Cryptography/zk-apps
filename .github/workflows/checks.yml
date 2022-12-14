@@ -23,7 +23,7 @@ jobs:
           rustup component add clippy rustfmt
 
       - name: Install `cargo contract`
-        run: cargo install cargo-contract
+        run: cargo install dylint-link && cargo install cargo-contract
 
 
       - name: Run format check for `cli`
