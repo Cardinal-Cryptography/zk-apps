@@ -1,0 +1,56 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          rustup component add clippy rustfmt
+
+      - name: Install `cargo contract`
+        run: cargo install dylint-link && cargo install cargo-contract
+
+
+      - name: Run format check for `cli`
+        run: cd cli/ && cargo fmt --all --check
+
+      - name: Run clippy for `cli`
+        run: cd cli/ && cargo clippy --all-features -- --no-deps -D warnings
+
+      - name: Run tests  for `cli`
+        run: cd cli/ && cargo test
+
+
+      - name: Run format check for `contract`
+        run: cd contract/ && cargo fmt --all --check
+
+      - name: Run clippy for `contract`
+        run: cd contract/ && cargo clippy --all-features -- --no-deps -D warnings
+
+      - name: Run tests  for `contract`
+        run: cd contract/ && cargo test
+
+
+      - name: Run format check for `public_token`
+        run: cd public_token/ && cargo fmt --all --check
+
+      - name: Run clippy for `public_token`
+        run: cd public_token/ && cargo clippy --all-features -- --no-deps -D warnings
+
+      - name: Run tests  for `public_token`
+        run: cd public_token/ && cargo test
