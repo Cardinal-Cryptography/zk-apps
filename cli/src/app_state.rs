@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::DepositId;
 
+/// Full information about a single deposit.
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Deposit {
     pub deposit_id: DepositId,
@@ -30,10 +31,9 @@ impl Display for Deposit {
     }
 }
 
+/// Application info that is kept locally.
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct AppState {
-    #[serde(skip)]
-    pub caller_seed: String,
     pub node_address: String,
     pub contract_address: AccountId,
 
@@ -46,7 +46,6 @@ const DEFAULT_NODE_ADDRESS: &str = "ws://127.0.0.1:9944";
 impl Default for AppState {
     fn default() -> Self {
         Self {
-            caller_seed: String::new(),
             node_address: DEFAULT_NODE_ADDRESS.to_string(),
             contract_address: AccountId::new([0u8; 32]),
             deposit_counter: 0,
@@ -55,6 +54,7 @@ impl Default for AppState {
     }
 }
 
+/// Deposit data narrowed to the most important part (for the user).
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Asset {
     pub token_id: FrontendTokenId,

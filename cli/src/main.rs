@@ -1,14 +1,13 @@
 use std::{env, io};
 
-use aleph_client::{keypair_from_string, SignedConnection};
+use aleph_client::create_connection;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use config::LoggingFormat;
 use inquire::Password;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
-use zeroize::Zeroize;
-use ContractInteractionCommand::{Deposit, RegisterToken, Withdraw};
+use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
@@ -17,8 +16,7 @@ use crate::{
     config::{
         CliConfig,
         Command::{ContractInteraction, StateRead, StateWrite},
-        ContractInteractionCommand, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
-        StateReadCommand, StateWriteCommand,
+        ContractInteractionCommand, StateReadCommand, StateWriteCommand,
     },
     contract::Shielder,
     deposit::do_deposit,
@@ -27,6 +25,8 @@ use crate::{
 };
 
 type DepositId = u16;
+
+const MERKLE_PATH_MAX_LEN: u8 = 16;
 
 mod app_state;
 mod config;
@@ -37,19 +37,19 @@ mod withdraw;
 
 fn perform_state_write_action(app_state: &mut AppState, command: StateWriteCommand) -> Result<()> {
     match command {
-        SetNode(SetNodeCmd { node }) => {
+        SetNode { node } => {
             app_state.node_address = node;
         }
-        SetContractAddress(SetContractAddressCmd { address }) => {
+        SetContractAddress { address } => {
             app_state.contract_address = address;
         }
     };
     Ok(())
 }
 
-fn perform_state_read_action(app_state: &mut AppState, command: StateReadCommand) -> Result<()> {
+fn perform_state_read_action(app_state: &AppState, command: StateReadCommand) -> Result<()> {
     match command {
-        ShowAssets(ShowAssetsCmd { token_id }) => {
+        ShowAssets { token_id } => {
             let assets = match token_id {
                 None => app_state.get_all_assets(),
                 Some(token_id) => app_state.get_single_asset(token_id),
@@ -57,10 +57,7 @@ fn perform_state_read_action(app_state: &mut AppState, command: StateReadCommand
             info!(?assets)
         }
         PrintState => {
-            info!(caller_seed=?app_state.caller_seed, 
-                node_address=%app_state.node_address, 
-                contract_address=%app_state.contract_address,
-                deposits=?app_state.deposits())
+            info!(node_address=%app_state.node_address,contract_address=%app_state.contract_address,deposits=?app_state.deposits())
         }
     };
     Ok(())
@@ -70,8 +67,7 @@ fn perform_contract_action(
     app_state: &mut AppState,
     command: ContractInteractionCommand,
 ) -> Result<()> {
-    let signer = keypair_from_string(&app_state.caller_seed);
-    let connection = SignedConnection::new(&app_state.node_address, signer);
+    let connection = create_connection(&app_state.node_address);
 
     let metadata_file = command.get_metadata_file();
     let contract = Shielder::new(&app_state.contract_address, &metadata_file)?;
@@ -79,9 +75,6 @@ fn perform_contract_action(
     match command {
         Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,
         Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state)?,
-        RegisterToken(cmd) => {
-            contract.register_new_token(&connection, cmd.token_id, cmd.token_address)?
-        }
     };
     Ok(())
 }
@@ -91,26 +84,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     init_logging(cli_config.logging_format)?;
 
-    let seed = match cli_config.seed {
-        Some(seed) => seed,
-        _ => Password::new("Password (account seed):")
+    let password = match cli_config.password {
+        Some(password) => password,
+        _ => Password::new("Password (for encrypting local state):")
             .without_confirmation()
             .prompt()?,
     };
 
-    let mut app_state = get_app_state(&cli_config.state_file, &seed)?;
-    app_state.caller_seed = seed;
+    let mut app_state = get_app_state(&cli_config.state_file, &password)?;
 
     match cli_config.command {
-        StateWrite(cmd) => perform_state_write_action(&mut app_state, cmd)?,
-        StateRead(cmd) => perform_state_read_action(&mut app_state, cmd)?,
-        ContractInteraction(cmd) => perform_contract_action(&mut app_state, cmd)?,
+        StateWrite(cmd) => {
+            perform_state_write_action(&mut app_state, cmd)?;
+            save_app_state(&app_state, &cli_config.state_file, &password)?;
+        }
+        StateRead(cmd) => perform_state_read_action(&app_state, cmd)?,
+        ContractInteraction(cmd) => {
+            perform_contract_action(&mut app_state, cmd)?;
+            save_app_state(&app_state, &cli_config.state_file, &password)?;
+        }
     }
-
-    save_app_state(&app_state, &cli_config.state_file, &app_state.caller_seed)?;
-
-    app_state.caller_seed.zeroize();
-    // `cli_config.seed` and `seed` are already moved
 
     Ok(())
 }
@@ -125,18 +118,14 @@ fn init_logging(format: LoggingFormat) -> Result<()> {
             .unwrap_or("warn,blender_cli=info"),
     );
 
+    let subscriber = tracing_subscriber::fmt()
+        .with_writer(io::stdout)
+        .with_target(false)
+        .with_env_filter(filter);
+
     match format {
-        LoggingFormat::Text => tracing_subscriber::fmt()
-            .with_writer(io::stdout)
-            .with_target(false)
-            .with_env_filter(filter)
-            .try_init(),
-        LoggingFormat::Json => tracing_subscriber::fmt()
-            .with_writer(io::stdout)
-            .with_target(false)
-            .with_env_filter(filter)
-            .json()
-            .try_init(),
+        LoggingFormat::Json => subscriber.json().try_init(),
+        LoggingFormat::Text => subscriber.try_init(),
     }
     .map_err(|err| anyhow!(err))
 }

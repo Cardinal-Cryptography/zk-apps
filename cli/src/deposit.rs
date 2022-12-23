@@ -1,19 +1,20 @@
-use std::fs;
+use std::{fs, path::PathBuf};
 
-use aleph_client::SignedConnection;
+use aleph_client::{keypair_from_string, Connection, SignedConnection};
 use anyhow::Result;
 use ark_serialize::CanonicalDeserialize;
+use inquire::Password;
 use rand::Rng;
 use relations::{
-    compute_note, serialize, DepositRelation, FrontendNullifier, FrontendTrapdoor, Groth16,
-    NonUniversalSystem, ProvingSystem,
+    compute_note, serialize, DepositRelation, FrontendNote, FrontendNullifier, FrontendTokenAmount,
+    FrontendTokenId, FrontendTrapdoor, Groth16, ProvingSystem,
 };
 
 use crate::{app_state::AppState, config::DepositCmd, contract::Shielder};
 
-pub(super) fn do_deposit(
+pub fn do_deposit(
     contract: Shielder,
-    connection: SignedConnection,
+    connection: Connection,
     cmd: DepositCmd,
     app_state: &mut AppState,
 ) -> Result<()> {
@@ -21,6 +22,7 @@ pub(super) fn do_deposit(
         token_id,
         amount: token_amount,
         proving_key_file,
+        caller_seed,
         ..
     } = cmd;
 
@@ -30,25 +32,45 @@ pub(super) fn do_deposit(
     let nullifier: FrontendNullifier = rng.gen::<u64>();
     let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
-    let circuit = DepositRelation::new(note, token_id, token_amount, trapdoor, nullifier);
-
-    let pk = match fs::read(proving_key_file) {
-        Ok(bytes) => <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*bytes)?,
-        Err(_e) => {
-            let (pk, vk) = Groth16::generate_keys(circuit.clone());
-
-            fs::write("deposit.pk.bytes", serialize(&pk)).unwrap();
-            // NOTE: not needed here but for registering in the snarcos pallet
-            fs::write("deposit.vk.bytes", serialize(&vk)).unwrap();
-
-            pk
-        }
+    let seed = match caller_seed {
+        Some(seed) => seed,
+        None => Password::new("Seed of the depositing account (the tokens owner):")
+            .without_confirmation()
+            .prompt()?,
     };
+    let connection = SignedConnection::from_any_connection(&connection, keypair_from_string(&seed));
 
-    let proof = serialize(&Groth16::prove(&pk, circuit));
+    // We generate proof as late as it's possible, so that if any of the lighter procedures fails,
+    // we don't waste user's time.
+    let proof = generate_proof(
+        &proving_key_file,
+        note,
+        token_id,
+        token_amount,
+        trapdoor,
+        nullifier,
+    )?;
+
     let leaf_idx = contract.deposit(&connection, cmd.token_id, cmd.amount, note, &proof)?;
 
-    app_state.add_deposit(cmd.token_id, cmd.amount, trapdoor, nullifier, leaf_idx);
+    app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx);
 
     Ok(())
+}
+
+fn generate_proof(
+    proving_key_file: &PathBuf,
+    note: FrontendNote,
+    token_id: FrontendTokenId,
+    token_amount: FrontendTokenAmount,
+    trapdoor: FrontendTrapdoor,
+    nullifier: FrontendNullifier,
+) -> Result<Vec<u8>> {
+    let pk_bytes = fs::read(proving_key_file)?;
+    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
+
+    let circuit =
+        DepositRelation::with_full_input(note, token_id, token_amount, trapdoor, nullifier);
+
+    Ok(serialize(&Groth16::prove(&pk, circuit)))
 }

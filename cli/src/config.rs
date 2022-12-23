@@ -7,7 +7,7 @@ use relations::{FrontendTokenAmount, FrontendTokenId};
 use crate::DepositId;
 
 #[derive(Clone, Eq, PartialEq, Parser)]
-pub(super) struct CliConfig {
+pub struct CliConfig {
     /// Path to the file containing application state.
     #[clap(long, default_value = "~/.shielder-state", value_parser = parsing::parse_path)]
     pub state_file: PathBuf,
@@ -16,18 +16,18 @@ pub(super) struct CliConfig {
     #[clap(short = 'l', value_enum, default_value = "text")]
     pub logging_format: LoggingFormat,
 
-    /// Account seed, which is used both for submitting transactions and decrypting `state_file`.
+    /// Password for `state_file` encryption and decryption.
     ///
     /// If not provided, will be prompted.
     #[clap(long)]
-    pub seed: Option<String>,
+    pub password: Option<String>,
 
     #[clap(subcommand)]
     pub command: Command,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
-pub(super) enum Command {
+pub enum Command {
     #[clap(flatten)]
     StateWrite(StateWriteCommand),
     #[clap(flatten)]
@@ -37,28 +37,36 @@ pub(super) enum Command {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
-pub(super) enum StateWriteCommand {
-    SetNode(SetNodeCmd),
-    SetContractAddress(SetContractAddressCmd),
+pub enum StateWriteCommand {
+    /// Set WS address of the node that we will be connecting to.
+    SetNode {
+        /// WS endpoint address of the node to connect to.
+        node: String,
+    },
+    /// Set address of the Shielder contract.
+    SetContractAddress {
+        /// Address of the Shielder contract.
+        address: AccountId,
+    },
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
-pub(super) enum StateReadCommand {
-    ShowAssets(ShowAssetsCmd),
+pub enum StateReadCommand {
+    /// Display all available deposits.
+    ShowAssets {
+        /// Which token type to display. All, if `None`.
+        token_id: Option<FrontendTokenId>,
+    },
+    /// Display full `state_file` content.
     PrintState,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
-pub(super) enum ContractInteractionCommand {
+pub enum ContractInteractionCommand {
+    /// Shield some tokens.
     Deposit(DepositCmd),
+    /// Unshield some tokens.
     Withdraw(WithdrawCmd),
-    RegisterToken(RegisterTokenCmd),
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, ValueEnum)]
-pub(super) enum LoggingFormat {
-    Text,
-    Json,
 }
 
 impl ContractInteractionCommand {
@@ -70,50 +78,35 @@ impl ContractInteractionCommand {
             ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
-            ContractInteractionCommand::RegisterToken(RegisterTokenCmd {
-                metadata_file, ..
-            }) => metadata_file.clone(),
         }
     }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct SetNodeCmd {
-    /// WS endpoint address of the node to connect to.
-    pub node: String,
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct SetContractAddressCmd {
-    /// Address of the Shielder contract.
-    pub address: AccountId,
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct ShowAssetsCmd {
-    /// Which token type to display. All, if `None`.
-    pub token_id: Option<FrontendTokenId>,
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct DepositCmd {
-    /// Registered token id.
+pub struct DepositCmd {
+    /// Token id (must already be registered in the contract).
     pub token_id: FrontendTokenId,
 
-    /// Amount of the token to deposit.
+    /// Amount of the token to be shielded.
     pub amount: FrontendTokenAmount,
 
-    /// Contract metadata file.
+    /// Seed for submitting the transaction.
+    ///
+    /// If not provided, will be prompted.
+    #[clap(long)]
+    pub caller_seed: Option<String>,
+
+    /// File with contract metadata.
     #[clap(default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
 
-    /// raw pk bytes file.
+    /// File with raw proving key bytes.
     #[clap(default_value = "deposit.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct WithdrawCmd {
+pub struct WithdrawCmd {
     /// Which note should be spent.
     #[clap(long, required_unless_present("interactive"))]
     pub deposit_id: Option<DepositId>,
@@ -126,40 +119,33 @@ pub(super) struct WithdrawCmd {
     #[clap(short, conflicts_with_all(["deposit_id", "amount"]))]
     pub interactive: bool,
 
-    /// The destination account. If `None`, the tokens will be transferred to the main seed account.
+    /// The destination account. If `None`, the tokens will be transferred to the caller seed account.
     #[clap(long)]
     pub recipient: Option<AccountId>,
 
-    /// Seed for submitting the transaction. If `None`, the main seed is used.
+    /// Seed for submitting the transaction.
+    ///
+    /// If not provided, will be prompted.
     #[clap(long)]
     pub caller_seed: Option<String>,
 
-    /// Fee for the caller.
-    #[clap(long)]
-    pub fee: Option<FrontendTokenAmount>,
+    /// Fee for the caller. Zero, if not provided.
+    #[clap(long, default_value = "0")]
+    pub fee: FrontendTokenAmount,
 
-    /// Contract metadata file.
+    /// File with contract metadata.
     #[clap(long, default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
 
-    /// raw pk bytes file.
+    /// File with raw proving key bytes.
     #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct RegisterTokenCmd {
-    /// Token ID to register this particular token contract under.
-    #[clap(long)]
-    pub token_id: u16,
-
-    /// Address where the token contract can be found.
-    #[clap(long)]
-    pub token_address: AccountId,
-
-    /// Contract metadata file.
-    #[clap(long, default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
-    pub metadata_file: PathBuf,
+#[derive(Clone, Eq, PartialEq, Debug, ValueEnum)]
+pub enum LoggingFormat {
+    Text,
+    Json,
 }
 
 mod parsing {

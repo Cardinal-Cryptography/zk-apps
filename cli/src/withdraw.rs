@@ -1,25 +1,25 @@
 use std::fs;
 
-use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
+use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
 use anyhow::{anyhow, Result};
 use ark_serialize::CanonicalDeserialize;
-use inquire::{CustomType, Select};
+use inquire::{CustomType, Password, Select};
 use rand::Rng;
 use relations::{
     compute_note, serialize, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor, Groth16,
-    NonUniversalSystem, ProvingSystem, WithdrawRelation,
+    ProvingSystem, WithdrawRelation,
 };
-use tracing::debug;
 
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Shielder,
+    MERKLE_PATH_MAX_LEN,
 };
 
-pub(super) fn do_withdraw(
+pub fn do_withdraw(
     contract: Shielder,
-    mut connection: SignedConnection,
+    connection: Connection,
     cmd: WithdrawCmd,
     app_state: &mut AppState,
 ) -> Result<()> {
@@ -44,22 +44,27 @@ pub(super) fn do_withdraw(
 
     let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
 
-    if let Some(seed) = caller_seed {
-        connection = SignedConnection::new(&app_state.node_address, keypair_from_string(&seed));
-    }
-    let recipient = match recipient {
-        None => account_from_keypair(&keypair_from_string(&app_state.caller_seed)),
-        Some(recipient) => recipient,
+    let caller_seed = match caller_seed {
+        Some(seed) => seed,
+        None => Password::new(
+            "Seed of the withdrawing account (the caller, not necessarily recipient):",
+        )
+        .without_confirmation()
+        .prompt()?,
     };
+    let signer = keypair_from_string(&caller_seed);
+    let recipient = match recipient {
+        Some(recipient) => recipient,
+        None => account_from_keypair(&signer),
+    };
+    let connection = SignedConnection::from_any_connection(&connection, signer);
+
     let recipient_bytes: [u8; 32] = recipient.clone().into();
-    debug!(?recipient_bytes, "recipient_bytes");
 
     let merkle_root = contract.get_merkle_root(&connection);
     let merkle_path = contract
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
-
-    debug!(?merkle_path, "retrieved merkle path");
 
     let mut rng = rand::thread_rng();
     let new_trapdoor: FrontendTrapdoor = rng.gen::<u64>();
@@ -67,12 +72,15 @@ pub(super) fn do_withdraw(
     let new_token_amount = whole_token_amount - withdraw_amount;
     let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
-    let circuit = WithdrawRelation::new(
-        old_nullifier,
-        merkle_root,
-        new_note,
+    let circuit = WithdrawRelation::with_full_input(
+        MERKLE_PATH_MAX_LEN,
+        fee,
+        recipient_bytes,
         token_id,
+        old_nullifier,
+        new_note,
         withdraw_amount,
+        merkle_root,
         old_trapdoor,
         new_trapdoor,
         new_nullifier,
@@ -81,22 +89,10 @@ pub(super) fn do_withdraw(
         old_note,
         whole_token_amount,
         new_token_amount,
-        fee.unwrap_or_default(),
-        recipient_bytes,
     );
 
-    let pk = match fs::read(proving_key_file) {
-        Ok(bytes) => <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*bytes)?,
-        Err(_e) => {
-            let (pk, vk) = Groth16::generate_keys(circuit.clone());
-
-            fs::write("deposit.pk.bytes", serialize(&pk)).unwrap();
-            // NOTE: not needed here but for registering in the snarcos pallet
-            fs::write("deposit.vk.bytes", serialize(&vk)).unwrap();
-
-            pk
-        }
-    };
+    let pk_bytes = fs::read(proving_key_file)?;
+    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
 
     let proof = serialize(&Groth16::prove(&pk, circuit));
 
