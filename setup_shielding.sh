@@ -16,9 +16,8 @@ TOTAL_TOKEN_ISSUANCE_PER_CONTRACT=4000
 TOKEN_PER_PERSON=1000
 TOKEN_ALLOWANCE=500
 
-# TODO : slurp bytes from disk
-# Hardcoded auxiliary data
-VK_BYTES=0x00000000
+DEPOSIT_VK_BYTES="0x$(cat deposit.vk.bytes | xxd -ps | tr -d '\n')"
+WITHDRAW_VK_BYTES="0x$(cat withdraw.vk.bytes | xxd -ps | tr -d '\n')"
 
 MERKLE_LEAVES=65536
 
@@ -108,9 +107,6 @@ distribute_tokens() {
 
 set_allowances() {
   cd "${ROOT_DIR}"/public_token/
-  $CALL_CMD --contract "${TOKEN_A_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
-  $CALL_CMD --contract "${TOKEN_B_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
-
   $CALL_CMD --contract "${TOKEN_A_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${DAMIAN}" | grep "Success"
   $CALL_CMD --contract "${TOKEN_B_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${DAMIAN}" | grep "Success"
 
@@ -132,8 +128,8 @@ deploy_shielder_contract() {
 
 register_vk() {
   cd "${ROOT_DIR}"/contract/
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${DEPOSIT_VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${WITHDRAW_VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
 }
 
 register_tokens() {
