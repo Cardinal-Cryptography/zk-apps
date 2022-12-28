@@ -57,7 +57,11 @@ fn perform_state_read_action(app_state: &AppState, command: StateReadCommand) ->
             info!(?assets)
         }
         PrintState => {
-            info!(node_address=%app_state.node_address,contract_address=%app_state.contract_address,deposits=?app_state.deposits())
+            info!(
+                node_address=%app_state.node_address,
+                contract_address=%app_state.contract_address,
+                deposits=?app_state.deposits()
+            )
         }
     };
     Ok(())
@@ -115,7 +119,7 @@ fn init_logging(format: LoggingFormat) -> Result<()> {
     let filter = EnvFilter::new(
         env::var(LOG_CONFIGURATION_ENVVAR)
             .as_deref()
-            .unwrap_or("warn,blender_cli=info"),
+            .unwrap_or("warn,shielder_cli=info"),
     );
 
     let subscriber = tracing_subscriber::fmt()

@@ -109,7 +109,7 @@ dependencies = [
 [[package]]
 name = "aleph_client"
 version = "1.13.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6b12376a53011b6bd233ce2ab1e21b095721ae92"
 dependencies = [
  "ac-node-api",
  "ac-primitives",
@@ -2576,7 +2576,7 @@ checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 [[package]]
 name = "pallet-aleph"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6b12376a53011b6bd233ce2ab1e21b095721ae92"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -2624,7 +2624,7 @@ dependencies = [
 [[package]]
 name = "pallet-elections"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6b12376a53011b6bd233ce2ab1e21b095721ae92"
 dependencies = [
  "frame-election-provider-support",
  "frame-support",
@@ -2766,7 +2766,7 @@ dependencies = [
 [[package]]
 name = "pallets-support"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6b12376a53011b6bd233ce2ab1e21b095721ae92"
 dependencies = [
  "frame-support",
 ]
@@ -2944,7 +2944,7 @@ dependencies = [
 [[package]]
 name = "primitives"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6b12376a53011b6bd233ce2ab1e21b095721ae92"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -4762,9 +4762,9 @@ version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
  "digest 0.10.6",
- "rand 0.7.3",
+ "rand 0.8.5",
  "static_assertions",
 ]
 
