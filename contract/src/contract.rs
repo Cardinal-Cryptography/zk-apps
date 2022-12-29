@@ -3,7 +3,6 @@
 mod shielder {
     use core::ops::Not;
 
-    use ark_ff::BigInteger256;
     use ark_serialize::CanonicalSerialize;
     use ink_env::call::{build_call, Call, ExecutionInput, Selector};
     #[allow(unused_imports)]
@@ -19,12 +18,15 @@ mod shielder {
         modifiers,
         traits::Storage,
     };
+    use relations::{
+        compute_parent_hash, CircuitField, DepositRelation, GetPublicInput, WithdrawRelation,
+    };
     use scale::{Decode, Encode};
 
     use crate::{
-        crypto::compute_parent_hash, error::ShielderError, CircuitField, MerkleHash, MerkleRoot,
-        Note, Nullifier, Set, TokenAmount, TokenId, DEPOSIT_VK_IDENTIFIER,
-        PSP22_TRANSFER_FROM_SELECTOR, PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
+        error::ShielderError, MerkleHash, MerkleRoot, Note, Nullifier, Set, TokenAmount, TokenId,
+        DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR, PSP22_TRANSFER_SELECTOR, SYSTEM,
+        WITHDRAW_VK_IDENTIFIER,
     };
 
     /// Supported relations - used for registering verifying keys.
@@ -296,7 +298,7 @@ mod shielder {
                 let left_child = self.tree_value(2 * parent);
                 let right_child = self.tree_value(2 * parent + 1);
                 self.notes
-                    .insert(parent, &compute_parent_hash(&left_child, &right_child));
+                    .insert(parent, &compute_parent_hash(left_child, right_child));
                 parent /= 2;
             }
 
@@ -341,16 +343,12 @@ mod shielder {
             note: Note,
             proof: Vec<u8>,
         ) -> Result<()> {
-            let input = [
-                CircuitField::from(BigInteger256::new(note)),
-                CircuitField::from(token_id),
-                CircuitField::from(value),
-            ];
+            let input = DepositRelation::with_public_input(note, token_id, value).public_input();
 
             self.env().extension().verify(
                 DEPOSIT_VK_IDENTIFIER,
                 proof,
-                Self::serialize(input.as_ref()),
+                Self::serialize::<Vec<CircuitField>>(input.as_ref()),
                 SYSTEM,
             )?;
 
@@ -383,6 +381,11 @@ mod shielder {
                 .ok_or(ShielderError::NullifierAlreadyUsed)
         }
 
+        fn max_path_len(&self) -> u8 {
+            // `self.max_leaves` is 2^n, so `trailing_zeros` is exactly the logarithm
+            self.max_leaves.trailing_zeros() as u8
+        }
+
         #[allow(clippy::too_many_arguments)]
         fn verify_withdrawal(
             &self,
@@ -395,27 +398,22 @@ mod shielder {
             fee: TokenAmount,
             recipient: AccountId,
         ) -> Result<()> {
-            let recipient_bytes: &[u8; 32] = recipient.as_ref();
-
-            let input = [
-                CircuitField::from(fee),
-                CircuitField::new(BigInteger256::new([
-                    u64::from_le_bytes(recipient_bytes[0..8].try_into().unwrap()),
-                    u64::from_le_bytes(recipient_bytes[8..16].try_into().unwrap()),
-                    u64::from_le_bytes(recipient_bytes[16..24].try_into().unwrap()),
-                    u64::from_le_bytes(recipient_bytes[24..32].try_into().unwrap()),
-                ])),
-                CircuitField::from(token_id),
-                CircuitField::from(old_nullifier),
-                CircuitField::from(BigInteger256::new(new_note)),
-                CircuitField::from(value_out),
-                CircuitField::from(BigInteger256::new(merkle_root)),
-            ];
+            let input = WithdrawRelation::with_public_input(
+                self.max_path_len(),
+                fee,
+                *recipient.as_ref(),
+                token_id,
+                old_nullifier,
+                new_note,
+                value_out,
+                merkle_root,
+            )
+            .public_input();
 
             self.env().extension().verify(
                 WITHDRAW_VK_IDENTIFIER,
                 proof,
-                Self::serialize(input.as_ref()),
+                Self::serialize::<Vec<CircuitField>>(input.as_ref()),
                 SYSTEM,
             )?;
 
