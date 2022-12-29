@@ -101,6 +101,8 @@ pub struct DepositCmd {
     pub metadata_file: PathBuf,
 
     /// File with raw proving key bytes.
+    ///
+    /// If not found, command will fail - the tool won't generate it for you.
     #[clap(default_value = "deposit.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
@@ -138,6 +140,8 @@ pub struct WithdrawCmd {
     pub metadata_file: PathBuf,
 
     /// File with raw proving key bytes.
+    ///
+    /// If not found, command will fail - the tool won't generate it for you.
     #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
