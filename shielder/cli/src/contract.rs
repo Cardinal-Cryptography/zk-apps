@@ -184,6 +184,82 @@ impl Shielder {
         }
     }
 
+    /// Call `deposit_and_merge` message of the contract.
+    #[allow(clippy::too_many_arguments)]
+    pub fn deposit_and_merge(
+        &self,
+        connection: &SignedConnection,
+        token_id: FrontendTokenId,
+        value: FrontendTokenAmount,
+        merkle_root: FrontendMerkleRoot,
+        old_nullifier: FrontendNullifier,
+        new_note: FrontendNote,
+        proof: &[u8],
+    ) -> Result<u32> {
+        let subscription = subscribe_events(connection)?;
+        let (cancel_tx, cancel_rx) = channel();
+        let (leaf_tx, leaf_rx) = channel();
+
+        let contract_ptr = self.contract.clone();
+
+        thread::spawn(move || {
+            listen_contract_events(
+                subscription,
+                &[&contract_ptr],
+                Some(cancel_rx),
+                |event_or_error| {
+                    debug!("{:?}", event_or_error);
+                    if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
+                        if Some(String::from("Withdrawn")) == ident {
+                            let event_note: Value = data.get("new_note").unwrap().clone();
+                            let decoded_note: [u64; 4] =
+                                to_seq(&event_note).unwrap().try_into().unwrap();
+                            // check the `new_note` in the event as well to identify it unambiguously
+                            if new_note.eq(&decoded_note) {
+                                let leaf_idx = data.get("leaf_idx").unwrap().clone();
+                                leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+                            }
+                        }
+                    }
+                },
+            );
+        });
+
+        let new_note_bytes = bytes_from_note(&new_note);
+        // NOTE: a bit of a misnomer but types fit (and root is also a note)
+        let merkle_root_bytes = bytes_from_note(&merkle_root);
+
+        let args = [
+            &*token_id.to_string(),
+            &*value.to_string(),
+            &*format!("0x{}", hex::encode(merkle_root_bytes)),
+            &*old_nullifier.to_string(),
+            &*format!("0x{}", hex::encode(new_note_bytes)),
+            &*format!("0x{}", hex::encode(proof)),
+        ];
+
+        debug!("Calling withdraw tx with arguments {:?}", &args);
+
+        self.contract
+            .contract_exec(connection, "withdraw", &args)
+            .map_err(|e| {
+                cancel_tx.send(()).unwrap();
+                e
+            })?;
+
+        thread::sleep(Duration::from_secs(3));
+        cancel_tx.send(()).unwrap();
+
+        if let Ok(leaf_idx) = leaf_rx.try_recv() {
+            info!("Successfully withdrawn tokens.");
+            Ok(leaf_idx as u32)
+        } else {
+            Err(anyhow!(
+                "Failed to observe expected event. Funds may not be SAFU."
+            ))
+        }
+    }
+
     /// Fetch the current merkle root.
     pub fn get_merkle_root(&self, connection: &SignedConnection) -> FrontendMerkleRoot {
         let root = self
