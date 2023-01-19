@@ -354,7 +354,9 @@ checksum = "a71ddfa72bad1446cab7bbecb6018dbbdc9abcbc3a0065483ae5186ad2a64dcd"
 dependencies = [
  "ark-ec",
  "ark-ff",
+ "ark-nonnative-field",
  "ark-poly",
+ "ark-relations",
  "ark-serialize",
  "ark-std",
  "derivative",
@@ -3204,7 +3206,7 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 [[package]]
 name = "relations"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=snarkeling#9e559121ed7d9dd34303590b7a6ade3528ab6efb"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=snarkeling#a0e3087ca2fee549c14024e9e90192df5bfcf0bb"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
