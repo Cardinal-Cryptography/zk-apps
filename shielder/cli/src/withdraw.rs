@@ -99,18 +99,18 @@ pub fn do_withdraw(
         &proof,
     )?;
 
-    app_state.delete_deposit_by_id(deposit.deposit_id);
-
     // save new deposit to the state
     if new_token_amount > 0 {
-        app_state.add_deposit(
-            token_id,
+        app_state.replace_deposit(
+            deposit.deposit_id,
             new_token_amount,
             new_trapdoor,
             new_nullifier,
             leaf_idx,
             new_note,
         );
+    } else {
+        app_state.delete_deposit_by_id(deposit.deposit_id);
     }
 
     Ok(())
