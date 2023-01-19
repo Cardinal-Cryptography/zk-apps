@@ -37,4 +37,4 @@ contract-transcode = "0.1"
 
 # TODO: use the newest aleph-client (with subxt)
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "shielder-cli" }
-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "liminal/migrate-to-ink4"}
+relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "snarkeling"}
