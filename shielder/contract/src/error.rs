@@ -1,5 +1,5 @@
-use ink_prelude::{format, string::String};
-use openbrush::contracts::{ownable::OwnableError, psp22::PSP22Error};
+use ink::prelude::{format, string::String};
+use openbrush::contracts::{psp22::PSP22Error, traits::ownable::OwnableError};
 use scale::{Decode, Encode};
 use snarcos_extension::SnarcosError;
 
@@ -49,8 +49,8 @@ impl From<OwnableError> for ShielderError {
     }
 }
 
-impl From<ink_env::Error> for ShielderError {
-    fn from(e: ink_env::Error) -> Self {
+impl From<ink::env::Error> for ShielderError {
+    fn from(e: ink::env::Error) -> Self {
         ShielderError::InkEnv(format!("{:?}", e))
     }
 }

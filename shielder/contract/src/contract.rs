@@ -1,20 +1,23 @@
-#[ink_lang::contract(env = snarcos_extension::DefaultEnvironment)]
-#[allow(clippy::let_unit_value)] // Clippy shouts about returning anything from messages.
+#[ink::contract(env = snarcos_extension::DefaultEnvironment)]
 mod shielder {
     use core::ops::Not;
 
     use ark_serialize::CanonicalSerialize;
-    use ink_env::call::{build_call, Call, ExecutionInput, Selector};
-    #[allow(unused_imports)]
-    use ink_env::*;
-    use ink_lang::{
+    use ink::{
         codegen::{EmitEvent, Env},
+        env::{
+            call::{build_call, Call, ExecutionInput, Selector},
+            CallFlags,
+        },
+        prelude::{vec, vec::Vec},
         reflect::ContractEventBase,
+        storage::Mapping,
     };
-    use ink_prelude::{vec, vec::Vec};
-    use ink_storage::{traits::SpreadAllocate, Mapping};
     use openbrush::{
-        contracts::{ownable::*, psp22::PSP22Error},
+        contracts::{
+            ownable::{self, only_owner, Internal, Ownable},
+            psp22::PSP22Error,
+        },
         modifiers,
         traits::Storage,
     };
@@ -80,7 +83,7 @@ mod shielder {
     pub type MerklePath = Vec<MerkleHash>;
 
     #[ink(storage)]
-    #[derive(SpreadAllocate, Storage)]
+    #[derive(Default, Storage)]
     pub struct Shielder {
         /// Merkle tree holding notes in its leaves.
         ///
@@ -114,11 +117,13 @@ mod shielder {
                 panic!("Please have 2^n leaves")
             }
 
-            ink_lang::utils::initialize_contract(|shielder: &mut Self| {
-                shielder._init_with_owner(Self::env().caller());
-                shielder.max_leaves = max_leaves;
-                shielder.next_free_leaf = max_leaves;
-            })
+            let mut shielder = Self::default();
+
+            shielder._init_with_owner(Self::env().caller());
+            shielder.max_leaves = max_leaves;
+            shielder.next_free_leaf = max_leaves;
+
+            shielder
         }
 
         /// Trigger deposit action (see ADR for detailed description).
