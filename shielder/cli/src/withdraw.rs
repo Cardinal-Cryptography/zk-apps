@@ -35,10 +35,9 @@ pub fn do_withdraw(
         trapdoor: old_trapdoor,
         nullifier: old_nullifier,
         leaf_idx,
+        note: old_note,
         ..
     } = deposit;
-
-    let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
 
     let caller_seed = match caller_seed {
         Some(seed) => seed,
@@ -110,6 +109,7 @@ pub fn do_withdraw(
             new_trapdoor,
             new_nullifier,
             leaf_idx,
+            new_note,
         );
     }
 

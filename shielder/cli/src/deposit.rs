@@ -78,7 +78,7 @@ fn first_deposit(
 
     let leaf_idx = contract.deposit(&connection, token_id, token_amount, note, &proof)?;
 
-    app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx);
+    app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
 
     Ok(())
 }
@@ -97,10 +97,9 @@ fn deposit_and_merge(
         trapdoor: old_trapdoor,
         nullifier: old_nullifier,
         leaf_idx,
+        note: old_note,
         ..
     } = deposit;
-
-    let old_note = compute_note(token_id, old_token_amount, old_trapdoor, old_nullifier);
 
     let merkle_root = contract.get_merkle_root(&connection);
     let merkle_path = contract
@@ -147,6 +146,7 @@ fn deposit_and_merge(
         new_trapdoor,
         new_nullifier,
         leaf_idx,
+        new_note,
     );
 
     Ok(())
