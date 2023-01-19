@@ -1,20 +1,16 @@
-use std::fs;
-
 use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
 use anyhow::{anyhow, Result};
-use ark_serialize::CanonicalDeserialize;
 use inquire::{CustomType, Password, Select};
 use rand::Rng;
 use relations::{
-    compute_note, serialize, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor, Groth16,
-    ProvingSystem, WithdrawRelation,
+    compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor, WithdrawRelation,
 };
 
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Shielder,
-    MERKLE_PATH_MAX_LEN,
+    generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
 pub fn do_withdraw(
@@ -66,9 +62,8 @@ pub fn do_withdraw(
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
 
-    let mut rng = rand::thread_rng();
-    let new_trapdoor: FrontendTrapdoor = rng.gen::<u64>();
-    let new_nullifier: FrontendNullifier = rng.gen::<u64>();
+    let (new_trapdoor, new_nullifier) =
+        rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let new_token_amount = whole_token_amount - withdraw_amount;
     let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
@@ -91,10 +86,7 @@ pub fn do_withdraw(
         new_token_amount,
     );
 
-    let pk_bytes = fs::read(proving_key_file)?;
-    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
-
-    let proof = serialize(&Groth16::prove(&pk, circuit));
+    let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract.withdraw(
         &connection,

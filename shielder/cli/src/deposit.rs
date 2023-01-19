@@ -1,21 +1,19 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 use aleph_client::{keypair_from_string, Connection, SignedConnection};
 use anyhow::Result;
-use ark_serialize::CanonicalDeserialize;
 use inquire::Password;
 use rand::Rng;
 use relations::{
-    compute_note, serialize, CircuitField, ConstraintSynthesizer, DepositAndMergeRelation,
-    DepositRelation, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
-    Groth16, ProvingSystem,
+    compute_note, DepositAndMergeRelation, DepositRelation, FrontendNullifier, FrontendTokenAmount,
+    FrontendTokenId, FrontendTrapdoor,
 };
 
 use crate::{
     app_state::{AppState, Deposit},
     config::DepositCmd,
     contract::Shielder,
-    MERKLE_PATH_MAX_LEN,
+    generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
 pub fn do_deposit(
@@ -69,10 +67,7 @@ fn first_deposit(
     contract: Shielder,
     app_state: &mut AppState,
 ) -> Result<()> {
-    let mut rng = rand::thread_rng();
-
-    let trapdoor: FrontendTrapdoor = rng.gen::<u64>();
-    let nullifier: FrontendNullifier = rng.gen::<u64>();
+    let (trapdoor, nullifier) = rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
     // We generate proof as late as it's possible, so that if any of the lighter procedures fails,
@@ -112,9 +107,8 @@ fn deposit_and_merge(
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
 
-    let mut rng = rand::thread_rng();
-    let new_trapdoor: FrontendTrapdoor = rng.gen::<u64>();
-    let new_nullifier: FrontendNullifier = rng.gen::<u64>();
+    let (new_trapdoor, new_nullifier) =
+        rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let new_token_amount = old_token_amount + token_amount;
     let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
@@ -156,14 +150,4 @@ fn deposit_and_merge(
     );
 
     Ok(())
-}
-
-fn generate_proof(
-    circuit: impl ConstraintSynthesizer<CircuitField>,
-    proving_key_file: PathBuf,
-) -> Result<Vec<u8>> {
-    let pk_bytes = fs::read(proving_key_file)?;
-    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
-
-    Ok(serialize(&Groth16::prove(&pk, circuit)))
 }

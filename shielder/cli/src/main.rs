@@ -1,10 +1,12 @@
-use std::{env, io};
+use std::{env, fs, io, path::PathBuf};
 
 use aleph_client::create_connection;
 use anyhow::{anyhow, Result};
+use ark_serialize::CanonicalDeserialize;
 use clap::Parser;
 use config::LoggingFormat;
 use inquire::Password;
+use relations::{serialize, CircuitField, ConstraintSynthesizer, Groth16, ProvingSystem};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use ContractInteractionCommand::{Deposit, Withdraw};
@@ -132,4 +134,14 @@ fn init_logging(format: LoggingFormat) -> Result<()> {
         LoggingFormat::Text => subscriber.try_init(),
     }
     .map_err(|err| anyhow!(err))
+}
+
+fn generate_proof(
+    circuit: impl ConstraintSynthesizer<CircuitField>,
+    proving_key_file: PathBuf,
+) -> Result<Vec<u8>> {
+    let pk_bytes = fs::read(proving_key_file)?;
+    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
+
+    Ok(serialize(&Groth16::prove(&pk, circuit)))
 }
