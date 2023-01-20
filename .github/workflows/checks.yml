@@ -67,15 +67,15 @@ jobs:
       - name: Build public token contract
         uses: addnab/docker-run-action@v3
         with:
-          registry: $DOCKER_REGISTRY
-          image: $DOCKER_IMAGE
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          image: ${{ vars.DOCKER_IMAGE }}
           options: -v ${PWD}:/code --platform linux/amd64
           run: cd shielder/public_token && cargo contract build
 
       - name: Build shielder contract
         uses: addnab/docker-run-action@v3
         with:
-          registry: $DOCKER_REGISTRY
-          image: $DOCKER_IMAGE
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          image: ${{ vars.DOCKER_IMAGE }}
           options: -v ${PWD}:/code --platform linux/amd64
           run: cd shielder/contract && cargo contract build
