@@ -65,17 +65,17 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build public token contract
-        uses: addnab/docker-run-action@v3
-        with:
-          registry: ${{ vars.DOCKER_REGISTRY }}
-          image: ${{ vars.DOCKER_IMAGE }}
-          options: -v ${{ github.workspace }}:/code
-          run: cargo contract build --manifest-path shielder/public_token/Cargo.toml
+        run: |
+          docker run                              \
+            -v ${{ github.workspace }}:/code      \
+            --platform linux/amd64                \
+            public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 \
+            cargo contract build --manifest-path shielder/public_token/Cargo.toml
 
       - name: Build shielder contract
-        uses: addnab/docker-run-action@v3
-        with:
-          registry: ${{ vars.DOCKER_REGISTRY }}
-          image: ${{ vars.DOCKER_IMAGE }}
-          options: -v ${{ github.workspace }}:/code
-          run: cargo contract build --manifest-path shielder/contract/Cargo.toml
+        run: |
+          docker run                              \
+            -v ${{ github.workspace }}:/code      \
+            --platform linux/amd64                \
+            public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 \
+            cargo contract build --manifest-path shielder/contract/Cargo.toml
