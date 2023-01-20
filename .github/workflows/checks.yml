@@ -64,7 +64,7 @@ jobs:
           docker run                         \
             -v ${{ github.workspace }}:/code \
             --platform linux/amd64           \
-            ${{ DOCKER_IMAGE }}              \
+            ${{ vars.DOCKER_IMAGE }}         \
             cargo contract build --manifest-path shielder/public_token/Cargo.toml
 
       - name: Build shielder contract
@@ -72,5 +72,5 @@ jobs:
           docker run                         \
             -v ${{ github.workspace }}:/code \
             --platform linux/amd64           \
-            ${{ DOCKER_IMAGE }}              \
+            ${{ vars.DOCKER_IMAGE }}         \
             cargo contract build --manifest-path shielder/contract/Cargo.toml
