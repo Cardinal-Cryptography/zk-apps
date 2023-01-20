@@ -61,16 +61,16 @@ jobs:
 
       - name: Build public token contract
         run: |
-          docker run                                     \
-            -v ${{ github.workspace }}:/code             \
-            --platform linux/amd64                       \
-            ${{ public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 }} \
+          docker run                         \
+            -v ${{ github.workspace }}:/code \
+            --platform linux/amd64           \
+            ${{ DOCKER_IMAGE }}              \
             cargo contract build --manifest-path shielder/public_token/Cargo.toml
 
       - name: Build shielder contract
         run: |
-          docker run                                     \
-            -v ${{ github.workspace }}:/code             \
-            --platform linux/amd64                       \
-            ${{ public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 }} \
+          docker run                         \
+            -v ${{ github.workspace }}:/code \
+            --platform linux/amd64           \
+            ${{ DOCKER_IMAGE }}              \
             cargo contract build --manifest-path shielder/contract/Cargo.toml
