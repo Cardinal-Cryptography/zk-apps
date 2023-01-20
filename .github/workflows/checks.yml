@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  rust-checks:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout source code
@@ -21,10 +21,6 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           rustup component add clippy rustfmt
-
-      - name: Install `cargo contract`
-        run: cargo install dylint-link && cargo install cargo-contract
-
 
       - name: Run format check for `shielder/cli`
         run: cd shielder/cli/ && cargo fmt --all --check
