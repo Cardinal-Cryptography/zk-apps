@@ -69,11 +69,13 @@ jobs:
         with:
           registry: ${{ vars.DOCKER_REGISTRY }}
           image: ${{ vars.DOCKER_IMAGE }}
-          run: cd shielder/public_token && cargo contract build
+          options: -v ${{ github.workspace }}:/code
+          run: cargo contract build --manifest-path shielder/public_token/Cargo.toml
 
       - name: Build shielder contract
         uses: addnab/docker-run-action@v3
         with:
           registry: ${{ vars.DOCKER_REGISTRY }}
           image: ${{ vars.DOCKER_IMAGE }}
-          run: cd shielder/contract && cargo contract build
+          options: -v ${{ github.workspace }}:/code
+          run: cargo contract build --manifest-path shielder/contract/Cargo.toml
