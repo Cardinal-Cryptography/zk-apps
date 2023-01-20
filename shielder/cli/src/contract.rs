@@ -1,8 +1,11 @@
 use std::path::Path;
 
 use aleph_client::{
-    contract::{event::get_contract_events, ContractInstance, ConvertibleValue},
-    AccountId, AsConnection, SignedConnection,
+    contract::{
+        event::{get_contract_events, ContractEvent},
+        ContractInstance, ConvertibleValue,
+    },
+    AccountId, AsConnection, Connection, SignedConnection, TxInfo,
 };
 use anyhow::{anyhow, Result};
 use relations::{
@@ -47,22 +50,14 @@ impl Shielder {
             .contract
             .contract_exec(connection, "deposit", &args)
             .await?;
-        let events =
-            get_contract_events(connection.as_connection(), &self.contract, tx_info).await?;
-        let event = match &*events {
-            [event] if event.name == Some("Deposited".into()) => Ok(event),
-            _ => Err(anyhow!(
-                "Expected a single deposit event to be emitted. Found: {events:?}"
-            )),
-        }?;
+        let event = self
+            .get_event(connection.as_connection(), "Deposited", tx_info)
+            .await?;
 
-        if let Some(leaf_idx) = event.data.get("leaf_idx") {
-            let leaf_idx = ConvertibleValue(leaf_idx.clone()).try_into()?;
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
             info!("Successfully deposited tokens.");
-            Ok(leaf_idx)
-        } else {
-            Err(anyhow!("Failed to read event data"))
-        }
+            idx
+        })
     }
 
     /// Call `withdraw` message of the contract. If successful, return leaf idx.
@@ -99,23 +94,14 @@ impl Shielder {
             .contract
             .contract_exec(connection, "withdraw", &args)
             .await?;
+        let event = self
+            .get_event(connection.as_connection(), "Withdrawn", tx_info)
+            .await?;
 
-        let events =
-            get_contract_events(connection.as_connection(), &self.contract, tx_info).await?;
-        let event = match &*events {
-            [event] if event.name == Some("Withdrawn".into()) => Ok(event),
-            _ => Err(anyhow!(
-                "Expected a single withdrawal event to be emitted. Found: {events:?}"
-            )),
-        }?;
-
-        if let Some(leaf_idx) = event.data.get("leaf_idx") {
-            let leaf_idx = ConvertibleValue(leaf_idx.clone()).try_into()?;
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
             info!("Successfully withdrawn tokens.");
-            Ok(leaf_idx)
-        } else {
-            Err(anyhow!("Failed to read event data"))
-        }
+            idx
+        })
     }
 
     /// Fetch the current merkle root.
@@ -136,5 +122,29 @@ impl Shielder {
             .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()])
             .await
             .unwrap()
+    }
+
+    async fn get_event<'a>(
+        &'a self,
+        connection: &'a Connection,
+        event_type: &'static str,
+        tx_info: TxInfo,
+    ) -> Result<ContractEvent> {
+        let events = get_contract_events(connection, &self.contract, tx_info).await?;
+        match &*events {
+            [event] if event.name == Some(event_type.into()) => Ok(event.clone()),
+            _ => Err(anyhow!(
+                "Expected a single `{event_type}` event to be emitted. Found: {events:?}"
+            )),
+        }
+    }
+
+    fn extract_leaf_idx_from_event(event: &ContractEvent) -> Result<u32> {
+        if let Some(leaf_idx) = event.data.get("leaf_idx") {
+            let leaf_idx = ConvertibleValue(leaf_idx.clone()).try_into()?;
+            Ok(leaf_idx)
+        } else {
+            Err(anyhow!("Failed to read event data"))
+        }
     }
 }
