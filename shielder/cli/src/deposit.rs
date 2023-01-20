@@ -12,7 +12,7 @@ use relations::{
 
 use crate::{app_state::AppState, config::DepositCmd, contract::Shielder};
 
-pub fn do_deposit(
+pub async fn do_deposit(
     contract: Shielder,
     connection: Connection,
     cmd: DepositCmd,
@@ -38,7 +38,7 @@ pub fn do_deposit(
             .without_confirmation()
             .prompt()?,
     };
-    let connection = SignedConnection::from_any_connection(&connection, keypair_from_string(&seed));
+    let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
 
     // We generate proof as late as it's possible, so that if any of the lighter procedures fails,
     // we don't waste user's time.
@@ -51,7 +51,9 @@ pub fn do_deposit(
         nullifier,
     )?;
 
-    let leaf_idx = contract.deposit(&connection, cmd.token_id, cmd.amount, note, &proof)?;
+    let leaf_idx = contract
+        .deposit(&connection, cmd.token_id, cmd.amount, note, &proof)
+        .await?;
 
     app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx);
 
