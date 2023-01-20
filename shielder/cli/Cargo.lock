@@ -60,7 +60,7 @@ dependencies = [
 [[package]]
 name = "aleph_client"
 version = "2.10.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#b87299f75357530d377cdec64a6de72819a52c14"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#d499a0f87055b2799a667b23a852fa19d81443ac"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2648,7 +2648,7 @@ dependencies = [
 [[package]]
 name = "primitives"
 version = "0.5.4"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#b87299f75357530d377cdec64a6de72819a52c14"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#d499a0f87055b2799a667b23a852fa19d81443ac"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
