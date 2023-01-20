@@ -57,6 +57,9 @@ jobs:
 
   build-contracts:
     runs-on: ubuntu-20.04
+    env:
+      DOCKER_REGISTRY: public.ecr.aws/p6e8q1z1/
+      DOCKER_IMAGE: ink-dev:latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -64,15 +67,15 @@ jobs:
       - name: Build public token contract
         uses: addnab/docker-run-action@v3
         with:
-          registry: public.ecr.aws/p6e8q1z1/
-          image: ink-dev:0.2.0
+          registry: $DOCKER_REGISTRY
+          image: $DOCKER_IMAGE
           options: -v ${PWD}:/code --platform linux/amd64
-          run: cd public/token && cargo contract build
+          run: cd public_token && cargo contract build
 
       - name: Build shielder contract
         uses: addnab/docker-run-action@v3
         with:
-          registry: public.ecr.aws/p6e8q1z1/
-          image: ink-dev:0.2.0
+          registry: $DOCKER_REGISTRY
+          image: $DOCKER_IMAGE
           options: -v ${PWD}:/code --platform linux/amd64
           run: cd shielder && cargo contract build
