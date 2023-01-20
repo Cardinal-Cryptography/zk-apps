@@ -54,3 +54,25 @@ jobs:
 
       - name: Run tests  for `shielder/public_token`
         run: cd shielder/public_token/ && cargo test
+
+  build-contracts:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Build public token contract
+        uses: addnab/docker-run-action@v3
+        with:
+          registry: public.ecr.aws/p6e8q1z1/
+          image: ink-dev:0.2.0
+          options: -v ${PWD}:/code --platform linux/amd64
+          run: cd public/token && cargo contract build
+
+      - name: Build shielder contract
+        uses: addnab/docker-run-action@v3
+        with:
+          registry: public.ecr.aws/p6e8q1z1/
+          image: ink-dev:0.2.0
+          options: -v ${PWD}:/code --platform linux/amd64
+          run: cd shielder && cargo contract build
