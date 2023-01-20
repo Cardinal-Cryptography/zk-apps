@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  rust-checks:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout source code
@@ -21,10 +21,6 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           rustup component add clippy rustfmt
-
-      - name: Install `cargo contract`
-        run: cargo install dylint-link && cargo install cargo-contract
-
 
       - name: Run format check for `shielder/cli`
         run: cd shielder/cli/ && cargo fmt --all --check
@@ -54,3 +50,27 @@ jobs:
 
       - name: Run tests  for `shielder/public_token`
         run: cd shielder/public_token/ && cargo test
+
+  build-contracts:
+    runs-on: ubuntu-20.04
+    env:
+      DOCKER_IMAGE: "public.ecr.aws/p6e8q1z1/ink-dev:0.2.0"
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Build public token contract
+        run: |
+          docker run                         \
+            -v ${{ github.workspace }}:/code \
+            --platform linux/amd64           \
+            ${{ env.DOCKER_IMAGE }}         \
+            cargo contract build --manifest-path shielder/public_token/Cargo.toml
+
+      - name: Build shielder contract
+        run: |
+          docker run                         \
+            -v ${{ github.workspace }}:/code \
+            --platform linux/amd64           \
+            ${{ env.DOCKER_IMAGE }}         \
+            cargo contract build --manifest-path shielder/contract/Cargo.toml

@@ -12,7 +12,7 @@ DAMIAN_ACCOUNT=5D34dL5prEUaGNQtPPZ3yN5Y6BnkfXunKXXz6fo7ZJbLwRRH
 HANS_ACCOUNT=5GBNeWRhZc2jXu7D55rBimKYDk8PGk8itRYFTPfC8RJLKG5o
 
 # Token economics
-TOTAL_TOKEN_ISSUANCE_PER_CONTRACT=4000
+TOTAL_TOKEN_ISSUANCE_PER_CONTRACT=2000
 TOKEN_PER_PERSON=1000
 TOKEN_ALLOWANCE=500
 
@@ -24,18 +24,17 @@ MERKLE_LEAVES=65536
 usage() {
   cat << EOF
 Sets up the environment for testing Shielder application. Precisely:
- - we start local chain with "./scripts/run_nodes.sh -b false", so make sure that you have your binary already built in release mode,
  - we build and deploy token contracts (each with 2000 tokens of initial supply) and the Shielder contract
  - we endow //0 and //1 with 1000 tokens each (of both types)
  - for both tokens, for both actors, we set allowance for Shielder to spend up to 500 tokens
- - we register (dummy) verifying key for both 'deposit' and 'withdraw' relation
+ - we register verifying key for both 'deposit' and 'withdraw' relation
  - we register both token contracts
 
-Make sure to have "cargo contract" installed (version 1.5).
+Make sure to have "cargo contract" installed (version 2.0.0-beta.1).
 EOF
 }
 
-while getopts r:n:k: flag
+while getopts n:k: flag
 do
   case "${flag}" in
     n) NODE=${OPTARG};;
@@ -53,7 +52,7 @@ REGISTER_KEYS="${REGISTER_KEYS:-false}"
 NODE="${NODE:-ws://127.0.0.1:9944}"
 
 # Command shortcuts
-INSTANTIATE_CMD="cargo contract instantiate --skip-confirm --url ${NODE} --suri ${CONTRACTS_ADMIN}"
+INSTANTIATE_CMD="cargo contract instantiate --skip-confirm --url ${NODE} --suri ${CONTRACTS_ADMIN} --output-json"
 CALL_CMD="cargo contract call --quiet --skip-confirm  --url ${NODE}"
 
 # Contract addresses
@@ -87,12 +86,11 @@ build_token_contract() {
 
 deploy_token_contracts() {
   cd "${ROOT_DIR}"/public_token/
-  result=$($INSTANTIATE_CMD --args "${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT}" --salt 0x$(random_salt))
-  TOKEN_A_ADDRESS=$(echo "$result" | grep Contract | tail -1 | cut -c 14-)
+
+  TOKEN_A_ADDRESS=$($INSTANTIATE_CMD --args "${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT}" --salt "0x$(random_salt)" | jq -r '.contract')
   echo "Token A address: ${TOKEN_A_ADDRESS}"
 
-  result=$($INSTANTIATE_CMD --args "${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT}" --salt 0x$(random_salt))
-  TOKEN_B_ADDRESS=$(echo "$result" | grep Contract | tail -1 | cut -c 14-)
+  TOKEN_B_ADDRESS=$($INSTANTIATE_CMD --args "${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT}" --salt "0x$(random_salt)" | jq -r '.contract')
   echo "Token B address: ${TOKEN_B_ADDRESS}"
 }
 
@@ -121,8 +119,7 @@ build_shielder_contract() {
 
 deploy_shielder_contract() {
   cd "${ROOT_DIR}"/contract/
-  result=$($INSTANTIATE_CMD --args ${MERKLE_LEAVES} --salt 0x$(random_salt))
-  SHIELDER_ADDRESS=$(echo "$result" | grep Contract | tail -1 | cut -c 14-)
+  SHIELDER_ADDRESS=$($INSTANTIATE_CMD --args "${MERKLE_LEAVES}" --salt "0x$(random_salt)" | jq -r '.contract')
   echo "Shielder address: ${SHIELDER_ADDRESS}"
 }
 
