@@ -54,24 +54,23 @@ jobs:
   build-contracts:
     runs-on: ubuntu-20.04
     env:
-      DOCKER_REGISTRY: public.ecr.aws/p6e8q1z1/
-      DOCKER_IMAGE: ink-dev:latest
+      DOCKER_IMAGE: public.ecr.aws/p6e8q1z1/ink-dev:latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
 
       - name: Build public token contract
         run: |
-          docker run                              \
-            -v ${{ github.workspace }}:/code      \
-            --platform linux/amd64                \
-            public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 \
+          docker run                                     \
+            -v ${{ github.workspace }}:/code             \
+            --platform linux/amd64                       \
+            ${{ public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 }} \
             cargo contract build --manifest-path shielder/public_token/Cargo.toml
 
       - name: Build shielder contract
         run: |
-          docker run                              \
-            -v ${{ github.workspace }}:/code      \
-            --platform linux/amd64                \
-            public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 \
+          docker run                                     \
+            -v ${{ github.workspace }}:/code             \
+            --platform linux/amd64                       \
+            ${{ public.ecr.aws/p6e8q1z1/ink-dev:0.2.0 }} \
             cargo contract build --manifest-path shielder/contract/Cargo.toml
