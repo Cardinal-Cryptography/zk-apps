@@ -59,8 +59,8 @@ dependencies = [
 
 [[package]]
 name = "aleph_client"
-version = "2.10.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#d499a0f87055b2799a667b23a852fa19d81443ac"
+version = "2.12.0"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#209f101066135f210ba25db8e4dc009a405b7e87"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -76,7 +76,6 @@ dependencies = [
  "primitives",
  "serde",
  "serde_json",
- "sp-core 6.0.0",
  "sp-runtime 6.0.0",
  "subxt",
  "thiserror",
@@ -407,9 +406,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.62"
+version = "0.1.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "689894c2db1ea643a50834b999abf1c110887402542955ff5451dab8f861f9ed"
+checksum = "eff18d764974428cf3a9328e23fc5c986f5fbed46e6cd4cdf42544df5d297ec1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1495,9 +1494,9 @@ dependencies = [
 
 [[package]]
 name = "gimli"
-version = "0.27.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dec7af912d60cdbd3677c1af9352ebae6fb8394d165568a2234df0fa00f87793"
+checksum = "221996f774192f0f718773def8201c4ae31f02616a54ccfc2d358bb0e5cefdec"
 
 [[package]]
 name = "group"
@@ -2389,9 +2388,9 @@ dependencies = [
 
 [[package]]
 name = "object"
-version = "0.30.2"
+version = "0.30.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b8c786513eb403643f2a88c244c2aaa270ef2153f55094587d0c48a3cf22a83"
+checksum = "ea86265d3d3dcb6a27fc51bd29a4bf387fae9d2986b823079d4986af253eb439"
 dependencies = [
  "memchr",
 ]
@@ -2648,7 +2647,7 @@ dependencies = [
 [[package]]
 name = "primitives"
 version = "0.5.4"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#d499a0f87055b2799a667b23a852fa19d81443ac"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#209f101066135f210ba25db8e4dc009a405b7e87"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -4668,9 +4667,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-bidi"
-version = "0.3.9"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0046be40136ef78dc325e0edefccf84ccddacd0afcc1ca54103fa3c61bbdab1d"
+checksum = "d54675592c1dbefd78cbd98db9bacd89886e1ca50692a0692baefffdeb92dd58"
 
 [[package]]
 name = "unicode-ident"
