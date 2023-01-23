@@ -17,7 +17,7 @@ use crate::{
     MERKLE_PATH_MAX_LEN,
 };
 
-pub fn do_withdraw(
+pub async fn do_withdraw(
     contract: Shielder,
     connection: Connection,
     cmd: WithdrawCmd,
@@ -55,15 +55,16 @@ pub fn do_withdraw(
     let signer = keypair_from_string(&caller_seed);
     let recipient = match recipient {
         Some(recipient) => recipient,
-        None => account_from_keypair(&signer),
+        None => account_from_keypair(signer.signer()),
     };
-    let connection = SignedConnection::from_any_connection(&connection, signer);
+    let connection = SignedConnection::from_connection(connection, signer);
 
     let recipient_bytes: [u8; 32] = recipient.clone().into();
 
-    let merkle_root = contract.get_merkle_root(&connection);
+    let merkle_root = contract.get_merkle_root(&connection).await;
     let merkle_path = contract
         .get_merkle_path(&connection, leaf_idx)
+        .await
         .expect("Path does not exist");
 
     let mut rng = rand::thread_rng();
@@ -96,17 +97,19 @@ pub fn do_withdraw(
 
     let proof = serialize(&Groth16::prove(&pk, circuit));
 
-    let leaf_idx = contract.withdraw(
-        &connection,
-        token_id,
-        withdraw_amount,
-        recipient,
-        fee,
-        merkle_root,
-        old_nullifier,
-        new_note,
-        &proof,
-    )?;
+    let leaf_idx = contract
+        .withdraw(
+            &connection,
+            token_id,
+            withdraw_amount,
+            recipient,
+            fee,
+            merkle_root,
+            old_nullifier,
+            new_note,
+            &proof,
+        )
+        .await?;
 
     app_state.delete_deposit_by_id(deposit.deposit_id);
 
