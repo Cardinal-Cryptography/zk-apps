@@ -1,20 +1,13 @@
-use std::{
-    path::Path,
-    sync::{mpsc::channel, Arc},
-    thread,
-    time::Duration,
-};
+use std::path::Path;
 
 use aleph_client::{
     contract::{
-        event::{listen_contract_events, subscribe_events, ContractEvent},
-        util::to_u128,
-        ContractInstance,
+        event::{get_contract_events, ContractEvent},
+        ContractInstance, ConvertibleValue,
     },
-    AccountId, SignedConnection,
+    AccountId, AsConnection, Connection, SignedConnection, TxInfo,
 };
 use anyhow::{anyhow, Result};
-use contract_transcode::Value;
 use relations::{
     bytes_from_note, FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
     FrontendTokenAmount, FrontendTokenId,
@@ -23,21 +16,18 @@ use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct Shielder {
-    contract: Arc<ContractInstance>,
+    contract: ContractInstance,
 }
 
 impl Shielder {
     pub fn new(address: &AccountId, metadata_path: &Path) -> Result<Self> {
         Ok(Self {
-            contract: Arc::new(ContractInstance::new(
-                address.clone(),
-                metadata_path.to_str().unwrap(),
-            )?),
+            contract: ContractInstance::new(address.clone(), metadata_path.to_str().unwrap())?,
         })
     }
 
     /// Call `deposit` message of the contract. If successful, return leaf idx.
-    pub fn deposit(
+    pub async fn deposit(
         &self,
         connection: &SignedConnection,
         token_id: FrontendTokenId,
@@ -45,34 +35,6 @@ impl Shielder {
         note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let subscription = subscribe_events(connection)?;
-        let (cancel_tx, cancel_rx) = channel();
-        let (leaf_tx, leaf_rx) = channel();
-
-        let contract_clone = self.contract.clone();
-        thread::spawn(move || {
-            listen_contract_events(
-                subscription,
-                &[contract_clone.as_ref()],
-                Some(cancel_rx),
-                |event_or_error| {
-                    debug!("{:?}", event_or_error);
-                    if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
-                        if Some(String::from("Deposited")) == ident {
-                            let event_note: Value = data.get("note").unwrap().clone();
-                            let decoded_note: [u64; 4] =
-                                to_seq(&event_note).unwrap().try_into().unwrap();
-                            // check the `note` in the event as well to identify unambiguously
-                            if note.eq(&decoded_note) {
-                                let leaf_idx = data.get("leaf_idx").unwrap().clone();
-                                leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
-                            }
-                        }
-                    }
-                },
-            );
-        });
-
         let note_bytes = bytes_from_note(&note);
 
         let args = [
@@ -84,29 +46,23 @@ impl Shielder {
 
         debug!("Calling deposit tx with arguments {:?}", &args);
 
-        self.contract
+        let tx_info = self
+            .contract
             .contract_exec(connection, "deposit", &args)
-            .map_err(|e| {
-                cancel_tx.send(()).unwrap();
-                e
-            })?;
+            .await?;
+        let event = self
+            .get_event(connection.as_connection(), "Deposited", tx_info)
+            .await?;
 
-        thread::sleep(Duration::from_secs(3));
-        cancel_tx.send(()).unwrap();
-
-        if let Ok(leaf_idx) = leaf_rx.try_recv() {
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
             info!("Successfully deposited tokens.");
-            Ok(leaf_idx as u32)
-        } else {
-            Err(anyhow!(
-                "Failed to observe expected event. And actually I do not know where your tokens are."
-            ))
-        }
+            idx
+        })
     }
 
-    /// Call `withdraw` message of the contract.
+    /// Call `withdraw` message of the contract. If successful, return leaf idx.
     #[allow(clippy::too_many_arguments)]
-    pub fn withdraw(
+    pub async fn withdraw(
         &self,
         connection: &SignedConnection,
         token_id: FrontendTokenId,
@@ -118,37 +74,7 @@ impl Shielder {
         new_note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let subscription = subscribe_events(connection)?;
-        let (cancel_tx, cancel_rx) = channel();
-        let (leaf_tx, leaf_rx) = channel();
-
-        let contract_ptr = self.contract.clone();
-
-        thread::spawn(move || {
-            listen_contract_events(
-                subscription,
-                &[&contract_ptr],
-                Some(cancel_rx),
-                |event_or_error| {
-                    debug!("{:?}", event_or_error);
-                    if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
-                        if Some(String::from("Withdrawn")) == ident {
-                            let event_note: Value = data.get("new_note").unwrap().clone();
-                            let decoded_note: [u64; 4] =
-                                to_seq(&event_note).unwrap().try_into().unwrap();
-                            // check the `new_note` in the event as well to identify it unambiguously
-                            if new_note.eq(&decoded_note) {
-                                let leaf_idx = data.get("leaf_idx").unwrap().clone();
-                                leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
-                            }
-                        }
-                    }
-                },
-            );
-        });
-
         let new_note_bytes = bytes_from_note(&new_note);
-        // NOTE: a bit of a misnomer but types fit (and root is also a note)
         let merkle_root_bytes = bytes_from_note(&merkle_root);
 
         let args = [
@@ -163,30 +89,22 @@ impl Shielder {
         ];
 
         debug!("Calling withdraw tx with arguments {:?}", &args);
-
-        self.contract
+        let tx_info = self
+            .contract
             .contract_exec(connection, "withdraw", &args)
-            .map_err(|e| {
-                cancel_tx.send(()).unwrap();
-                e
-            })?;
-
-        thread::sleep(Duration::from_secs(3));
-        cancel_tx.send(()).unwrap();
-
-        if let Ok(leaf_idx) = leaf_rx.try_recv() {
+            .await?;
+        let event = self
+            .get_event(connection.as_connection(), "Withdrawn", tx_info)
+            .await?;
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
             info!("Successfully withdrawn tokens.");
-            Ok(leaf_idx as u32)
-        } else {
-            Err(anyhow!(
-                "Failed to observe expected event. Funds may not be SAFU."
-            ))
-        }
+            idx
+        })
     }
 
     /// Call `deposit_and_merge` message of the contract.
     #[allow(clippy::too_many_arguments)]
-    pub fn deposit_and_merge(
+    pub async fn deposit_and_merge(
         &self,
         connection: &SignedConnection,
         token_id: FrontendTokenId,
@@ -196,37 +114,7 @@ impl Shielder {
         new_note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let subscription = subscribe_events(connection)?;
-        let (cancel_tx, cancel_rx) = channel();
-        let (leaf_tx, leaf_rx) = channel();
-
-        let contract_ptr = self.contract.clone();
-
-        thread::spawn(move || {
-            listen_contract_events(
-                subscription,
-                &[&contract_ptr],
-                Some(cancel_rx),
-                |event_or_error| {
-                    debug!("{:?}", event_or_error);
-                    if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
-                        if Some(String::from("Withdrawn")) == ident {
-                            let event_note: Value = data.get("new_note").unwrap().clone();
-                            let decoded_note: [u64; 4] =
-                                to_seq(&event_note).unwrap().try_into().unwrap();
-                            // check the `new_note` in the event as well to identify it unambiguously
-                            if new_note.eq(&decoded_note) {
-                                let leaf_idx = data.get("leaf_idx").unwrap().clone();
-                                leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
-                            }
-                        }
-                    }
-                },
-            );
-        });
-
         let new_note_bytes = bytes_from_note(&new_note);
-        // NOTE: a bit of a misnomer but types fit (and root is also a note)
         let merkle_root_bytes = bytes_from_note(&merkle_root);
 
         let args = [
@@ -238,89 +126,64 @@ impl Shielder {
             &*format!("0x{}", hex::encode(proof)),
         ];
 
-        debug!("Calling withdraw tx with arguments {:?}", &args);
+        debug!("Calling deposit-and-merge tx with arguments {:?}", &args);
 
-        self.contract
-            .contract_exec(connection, "withdraw", &args)
-            .map_err(|e| {
-                cancel_tx.send(()).unwrap();
-                e
-            })?;
-
-        thread::sleep(Duration::from_secs(3));
-        cancel_tx.send(()).unwrap();
-
-        if let Ok(leaf_idx) = leaf_rx.try_recv() {
-            info!("Successfully withdrawn tokens.");
-            Ok(leaf_idx as u32)
-        } else {
-            Err(anyhow!(
-                "Failed to observe expected event. Funds may not be SAFU."
-            ))
-        }
-    }
-
-    /// Fetch the current merkle root.
-    pub fn get_merkle_root(&self, connection: &SignedConnection) -> FrontendMerkleRoot {
-        let root = self
+        let tx_info = self
             .contract
-            .contract_read0(connection, "current_merkle_root")
-            .unwrap();
-        let decoded_root = to_seq(&root).unwrap();
-        decoded_root.try_into().unwrap()
+            .contract_exec(connection, "deposit_and_merge", &args)
+            .await?;
+
+        let event = self
+            .get_event(connection.as_connection(), "Deposited", tx_info)
+            .await?;
+
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
+            info!("Successfully deposited tokens.");
+            idx
+        })
     }
 
     /// Fetch the current merkle root.
-    pub fn get_merkle_path(
+    pub async fn get_merkle_root(&self, connection: &SignedConnection) -> FrontendMerkleRoot {
+        self.contract
+            .contract_read0(connection, "current_merkle_root")
+            .await
+            .unwrap()
+    }
+
+    /// Fetch the current merkle root.
+    pub async fn get_merkle_path(
         &self,
         connection: &SignedConnection,
         leaf_idx: u32,
     ) -> Option<FrontendMerklePath> {
-        let value = self
-            .contract
+        self.contract
             .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()])
-            .unwrap();
+            .await
+            .unwrap()
+    }
 
-        match value {
-            Value::Tuple(value) => match value.ident() {
-                Some(ident) => match ident.as_str() {
-                    "Some" => match value.values().next().unwrap() {
-                        Value::Seq(seq) => {
-                            let mut path: Vec<[u64; 4]> = vec![];
-                            seq.elems().iter().for_each(|value| {
-                                let note = to_seq(value).unwrap();
-                                path.push(note.try_into().unwrap());
-                            });
-
-                            Some(path)
-                        }
-
-                        _ => panic!("Unexpected value: {:?}", value),
-                    },
-                    "None" => None,
-                    _ => panic!("Unexpected string value: {:?}", value),
-                },
-                None => None,
-            },
-            _ => panic!("Expected {:?} to be a Tuple", &value),
+    async fn get_event<'a>(
+        &'a self,
+        connection: &'a Connection,
+        event_type: &'static str,
+        tx_info: TxInfo,
+    ) -> Result<ContractEvent> {
+        let events = get_contract_events(connection, &self.contract, tx_info).await?;
+        match &*events {
+            [event] if event.name == Some(event_type.into()) => Ok(event.clone()),
+            _ => Err(anyhow!(
+                "Expected a single `{event_type}` event to be emitted. Found: {events:?}"
+            )),
         }
     }
-}
 
-// TODO: could be made generic over elements
-// TODO: move to aleph-client
-fn to_seq(value: &Value) -> Result<Vec<u64>> {
-    match value {
-        Value::Seq(seq) => {
-            let mut result = vec![];
-            for element in seq.elems() {
-                match element {
-                    Value::UInt(integer) => result.push(*integer as u64),
-                    _ => panic!("Expected {:?} to be an UInt", &element),
-                }
-            }
-            Ok(result)
+    fn extract_leaf_idx_from_event(event: &ContractEvent) -> Result<u32> {
+        if let Some(leaf_idx) = event.data.get("leaf_idx") {
+            let leaf_idx = ConvertibleValue(leaf_idx.clone()).try_into()?;
+            Ok(leaf_idx)
+        } else {
+            Err(anyhow!("Failed to read event data"))
         }
-        _ => Err(anyhow!("Expected {:?} to be a sequence", value)),
     }
 }

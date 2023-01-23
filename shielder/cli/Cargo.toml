@@ -18,6 +18,7 @@ serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.87"
 shellexpand = "2.1.2"
 zeroize = "1.5.7"
+tokio = { version = "1.24.2", features = ["rt-multi-thread", "macros"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.16", features = ["fmt", "json", "env-filter"] }
 
@@ -32,9 +33,6 @@ ark-serialize = { version = "^0.3.0", default-features = false }
 ark-snark = { version = "^0.3.0", default-features = false }
 ark-std = { version = "^0.3.0", default-features = false }
 
-# TODO: needed for event decoding magic that should eventually be merged into aleph_client
-contract-transcode = "0.1"
-
-# TODO: use the newest aleph-client (with subxt)
+# todo: change this for versioned `aleph-client` right away after publishing it
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "shielder-cli" }
 relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "snarkeling"}

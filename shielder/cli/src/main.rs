@@ -1,6 +1,6 @@
 use std::{env, fs, io, path::PathBuf};
 
-use aleph_client::create_connection;
+use aleph_client::Connection;
 use anyhow::{anyhow, Result};
 use ark_serialize::CanonicalDeserialize;
 use clap::Parser;
@@ -69,23 +69,24 @@ fn perform_state_read_action(app_state: &AppState, command: StateReadCommand) ->
     Ok(())
 }
 
-fn perform_contract_action(
+async fn perform_contract_action(
     app_state: &mut AppState,
     command: ContractInteractionCommand,
 ) -> Result<()> {
-    let connection = create_connection(&app_state.node_address);
+    let connection = Connection::new(&app_state.node_address).await;
 
     let metadata_file = command.get_metadata_file();
     let contract = Shielder::new(&app_state.contract_address, &metadata_file)?;
 
     match command {
-        Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,
-        Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state)?,
+        Deposit(cmd) => do_deposit(contract, connection, cmd, app_state).await?,
+        Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state).await?,
     };
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli_config: CliConfig = CliConfig::parse();
 
     init_logging(cli_config.logging_format)?;
@@ -106,7 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         StateRead(cmd) => perform_state_read_action(&app_state, cmd)?,
         ContractInteraction(cmd) => {
-            perform_contract_action(&mut app_state, cmd)?;
+            perform_contract_action(&mut app_state, cmd).await?;
             save_app_state(&app_state, &cli_config.state_file, &password)?;
         }
     }

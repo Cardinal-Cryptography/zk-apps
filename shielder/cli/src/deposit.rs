@@ -16,7 +16,7 @@ use crate::{
     generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
-pub fn do_deposit(
+pub async fn do_deposit(
     contract: Shielder,
     connection: Connection,
     cmd: DepositCmd,
@@ -36,30 +36,36 @@ pub fn do_deposit(
             .without_confirmation()
             .prompt()?,
     };
-    let connection = SignedConnection::from_any_connection(&connection, keypair_from_string(&seed));
+    let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
 
     let old_deposit = app_state.get_last_deposit(token_id);
     match old_deposit {
-        Some(old_deposit) => deposit_and_merge(
-            old_deposit,
-            amount,
-            proving_key_file,
-            connection,
-            contract,
-            app_state,
-        ),
-        None => first_deposit(
-            token_id,
-            amount,
-            proving_key_file,
-            connection,
-            contract,
-            app_state,
-        ),
+        Some(old_deposit) => {
+            deposit_and_merge(
+                old_deposit,
+                amount,
+                proving_key_file,
+                connection,
+                contract,
+                app_state,
+            )
+            .await
+        }
+        None => {
+            first_deposit(
+                token_id,
+                amount,
+                proving_key_file,
+                connection,
+                contract,
+                app_state,
+            )
+            .await
+        }
     }
 }
 
-fn first_deposit(
+async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
     proving_key_file: PathBuf,
@@ -76,14 +82,16 @@ fn first_deposit(
         DepositRelation::with_full_input(note, token_id, token_amount, trapdoor, nullifier);
     let proof = generate_proof(circuit, proving_key_file)?;
 
-    let leaf_idx = contract.deposit(&connection, token_id, token_amount, note, &proof)?;
+    let leaf_idx = contract
+        .deposit(&connection, token_id, token_amount, note, &proof)
+        .await?;
 
     app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
 
     Ok(())
 }
 
-fn deposit_and_merge(
+async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
     proving_key_file: PathBuf,
@@ -101,9 +109,10 @@ fn deposit_and_merge(
         ..
     } = deposit;
 
-    let merkle_root = contract.get_merkle_root(&connection);
+    let merkle_root = contract.get_merkle_root(&connection).await;
     let merkle_path = contract
         .get_merkle_path(&connection, leaf_idx)
+        .await
         .expect("Path does not exist");
 
     let (new_trapdoor, new_nullifier) =
@@ -130,15 +139,17 @@ fn deposit_and_merge(
 
     let proof = generate_proof(circuit, proving_key_file)?;
 
-    let leaf_idx = contract.deposit_and_merge(
-        &connection,
-        token_id,
-        token_amount,
-        merkle_root,
-        old_nullifier,
-        new_note,
-        &proof,
-    )?;
+    let leaf_idx = contract
+        .deposit_and_merge(
+            &connection,
+            token_id,
+            token_amount,
+            merkle_root,
+            old_nullifier,
+            new_note,
+            &proof,
+        )
+        .await?;
 
     app_state.replace_deposit(
         deposit.deposit_id,
