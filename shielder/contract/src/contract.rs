@@ -154,44 +154,9 @@ mod shielder {
             Ok(())
         }
 
-        /// Trigger deposit and merge action (see ADR for detailed description).
-        #[allow(clippy::too_many_arguments)]
-        #[ink(message, selector = 2)]
-        pub fn deposit_and_merge(
-            &mut self,
-            token_id: TokenId,
-            value: TokenAmount,
-            merkle_root: MerkleRoot,
-            nullifier: Nullifier,
-            note: Note,
-            proof: Vec<u8>,
-        ) -> Result<()> {
-            self.acquire_deposit(token_id, value)?;
-
-            self.verify_merkle_root(merkle_root)?;
-            self.verify_nullifier(nullifier)?;
-
-            self.verify_deposit_and_merge(token_id, value, merkle_root, nullifier, note, proof)?;
-
-            self.create_new_leaf(note)?;
-            self.nullifiers.insert(nullifier, &());
-
-            Self::emit_event(
-                self.env(),
-                Event::Deposited(Deposited {
-                    token_id,
-                    value,
-                    leaf_idx: self.next_free_leaf - 1,
-                    note,
-                }),
-            );
-
-            Ok(())
-        }
-
         /// Trigger withdraw action (see ADR for detailed description).
         #[allow(clippy::too_many_arguments)]
-        #[ink(message, selector = 3)]
+        #[ink(message, selector = 2)]
         pub fn withdraw(
             &mut self,
             token_id: TokenId,
@@ -237,13 +202,13 @@ mod shielder {
         }
 
         /// Read the current root of the Merkle tree with notes.
-        #[ink(message, selector = 4)]
+        #[ink(message, selector = 3)]
         pub fn current_merkle_root(&self) -> MerkleRoot {
             self.current_root()
         }
 
         /// Retrieve the path from the leaf to the root. `None` if the leaf does not exist.
-        #[ink(message, selector = 5)]
+        #[ink(message, selector = 4)]
         pub fn merkle_path(&self, leaf_idx: u32) -> Option<MerklePath> {
             if self.max_leaves > leaf_idx || leaf_idx >= self.next_free_leaf {
                 return None;
@@ -261,7 +226,7 @@ mod shielder {
         }
 
         /// Check whether `nullifier` has been already used.
-        #[ink(message, selector = 6)]
+        #[ink(message, selector = 5)]
         pub fn contains_nullifier(&self, nullifier: Nullifier) -> bool {
             self.nullifiers.contains(nullifier)
         }
@@ -269,7 +234,7 @@ mod shielder {
         /// Register a verifying key for one of the `Relation`.
         ///
         /// For owner use only.
-        #[ink(message, selector = 7)]
+        #[ink(message, selector = 8)]
         #[modifiers(only_owner)]
         pub fn register_vk(&mut self, relation: Relation, vk: Vec<u8>) -> Result<()> {
             let identifier = match relation {
@@ -281,7 +246,7 @@ mod shielder {
         }
 
         /// Check if there is a token address registered at `token_id`.
-        #[ink(message, selector = 8)]
+        #[ink(message, selector = 9)]
         pub fn registered_token_address(&self, token_id: TokenId) -> Option<AccountId> {
             self.registered_tokens.get(token_id)
         }
@@ -289,7 +254,7 @@ mod shielder {
         /// Register a token contract (`token_address`) at `token_id`.
         ///
         /// For owner use only.
-        #[ink(message, selector = 9)]
+        #[ink(message, selector = 10)]
         pub fn register_new_token(
             &mut self,
             token_id: TokenId,
@@ -308,6 +273,41 @@ mod shielder {
                     token_address,
                 }),
             );
+            Ok(())
+        }
+
+        /// Trigger deposit and merge action (see ADR for detailed description).
+        #[allow(clippy::too_many_arguments)]
+        #[ink(message, selector = 11)]
+        pub fn deposit_and_merge(
+            &mut self,
+            token_id: TokenId,
+            value: TokenAmount,
+            merkle_root: MerkleRoot,
+            nullifier: Nullifier,
+            note: Note,
+            proof: Vec<u8>,
+        ) -> Result<()> {
+            self.acquire_deposit(token_id, value)?;
+
+            self.verify_merkle_root(merkle_root)?;
+            self.verify_nullifier(nullifier)?;
+
+            self.verify_deposit_and_merge(token_id, value, merkle_root, nullifier, note, proof)?;
+
+            self.create_new_leaf(note)?;
+            self.nullifiers.insert(nullifier, &());
+
+            Self::emit_event(
+                self.env(),
+                Event::Deposited(Deposited {
+                    token_id,
+                    value,
+                    leaf_idx: self.next_free_leaf - 1,
+                    note,
+                }),
+            );
+
             Ok(())
         }
     }
