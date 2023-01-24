@@ -38,7 +38,6 @@ while getopts n:k: flag
 do
   case "${flag}" in
     n) NODE=${OPTARG};;
-    k) REGISTER_KEYS=${OPTARG};;
     *)
       usage
       exit
@@ -48,7 +47,6 @@ done
 
 # defaults
 
-REGISTER_KEYS="${REGISTER_KEYS:-false}"
 NODE="${NODE:-ws://127.0.0.1:9944}"
 
 # Command shortcuts
@@ -121,6 +119,7 @@ deploy_shielder_contract() {
   cd "${ROOT_DIR}"/contract/
   SHIELDER_ADDRESS=$($INSTANTIATE_CMD --args "${MERKLE_LEAVES}" --salt "0x$(random_salt)" | jq -r '.contract')
   echo "Shielder address: ${SHIELDER_ADDRESS}"
+  cp "${ROOT_DIR}"/contract/target/ink/metadata.json "${ROOT_DIR}"/cli/shielder-metadata.json
 }
 
 register_vk() {
@@ -155,10 +154,8 @@ set_up_shielding() {
   log_progress "Setting allowances for Shielder..."
   set_allowances || error "Failed to set allowances"
 
-  if [ $REGISTER_KEYS = true ]; then
-    log_progress "Registering verifying keys..."
-    register_vk || error "Failed to register verifying keys"
-  fi
+  log_progress "Registering verifying keys..."
+  register_vk || error "Failed to register verifying keys"
 
   log_progress "Registering token contracts..."
   register_tokens || error "Failed to register token contracts"

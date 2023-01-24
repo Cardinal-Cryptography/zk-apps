@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x70e16f3ac581c5ca15e8d782b9678d9dc64a791c215395044b764a5e212dbf64",
+    "hash": "0x3f176aeddc0807a9e689c510fbf9f14c8808254e6f87f70dcca84696dac54395",
     "language": "ink! 4.0.0-beta",
     "compiler": "rustc 1.67.0-nightly",
     "build_info": {
@@ -519,6 +519,78 @@
           "type": 11
         },
         "selector": "0x0000000a"
+      },
+      {
+        "args": [
+          {
+            "label": "token_id",
+            "type": {
+              "displayName": [
+                "TokenId"
+              ],
+              "type": 8
+            }
+          },
+          {
+            "label": "value",
+            "type": {
+              "displayName": [
+                "TokenAmount"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "label": "merkle_root",
+            "type": {
+              "displayName": [
+                "MerkleRoot"
+              ],
+              "type": 9
+            }
+          },
+          {
+            "label": "nullifier",
+            "type": {
+              "displayName": [
+                "Nullifier"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "label": "note",
+            "type": {
+              "displayName": [
+                "Note"
+              ],
+              "type": 9
+            }
+          },
+          {
+            "label": "proof",
+            "type": {
+              "displayName": [
+                "Vec"
+              ],
+              "type": 10
+            }
+          }
+        ],
+        "docs": [
+          " Trigger deposit and merge action (see ADR for detailed description)."
+        ],
+        "label": "deposit_and_merge",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 11
+        },
+        "selector": "0x0000000b"
       }
     ]
   },
