@@ -29,7 +29,7 @@ mod shielder {
 
     use crate::{
         error::ShielderError, MerkleHash, MerkleRoot, Note, Nullifier, Set, TokenAmount, TokenId,
-        DEPOSIT_MERGE_VK_IDENTIFIER, DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
+        DEPOSIT_AND_MERGE_VK_IDENTIFIER, DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
         PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
     };
 
@@ -38,6 +38,7 @@ mod shielder {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum Relation {
         Deposit,
+        DepositAndMerge,
         Withdraw,
     }
 
@@ -239,6 +240,7 @@ mod shielder {
         pub fn register_vk(&mut self, relation: Relation, vk: Vec<u8>) -> Result<()> {
             let identifier = match relation {
                 Relation::Deposit => DEPOSIT_VK_IDENTIFIER,
+                Relation::DepositAndMerge => DEPOSIT_AND_MERGE_VK_IDENTIFIER,
                 Relation::Withdraw => WITHDRAW_VK_IDENTIFIER,
             };
             self.env().extension().store_key(identifier, vk)?;
@@ -448,7 +450,7 @@ mod shielder {
             .public_input();
 
             self.env().extension().verify(
-                DEPOSIT_MERGE_VK_IDENTIFIER,
+                DEPOSIT_AND_MERGE_VK_IDENTIFIER,
                 proof,
                 Self::serialize::<Vec<CircuitField>>(input.as_ref()),
                 SYSTEM,

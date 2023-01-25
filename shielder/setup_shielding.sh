@@ -17,6 +17,7 @@ TOKEN_PER_PERSON=1000
 TOKEN_ALLOWANCE=500
 
 DEPOSIT_VK_BYTES="0x$(cat deposit.vk.bytes | xxd -ps | tr -d '\n')"
+DEPOSIT_AND_MERGE_VK_BYTES="0x$(cat deposit.vk.bytes | xxd -ps | tr -d '\n')"
 WITHDRAW_VK_BYTES="0x$(cat withdraw.vk.bytes | xxd -ps | tr -d '\n')"
 
 MERKLE_LEAVES=65536
@@ -125,6 +126,7 @@ deploy_shielder_contract() {
 register_vk() {
   cd "${ROOT_DIR}"/contract/
   $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${DEPOSIT_VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args DepositAndMerge "${DEPOSIT_AND_MERGE_VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
   $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${WITHDRAW_VK_BYTES}" --suri "${CONTRACTS_ADMIN}" | grep "Success"
 }
 
