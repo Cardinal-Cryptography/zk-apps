@@ -5,8 +5,8 @@ use anyhow::Result;
 use inquire::Password;
 use rand::Rng;
 use relations::{
-    compute_note, DepositAndMergeRelation, DepositRelation, FrontendNullifier, FrontendTokenAmount,
-    FrontendTokenId, FrontendTrapdoor,
+    compute_note, DepositAndMergeRelation, DepositRelationWithFullInput, FrontendNullifier,
+    FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
 };
 
 use crate::{
@@ -78,8 +78,7 @@ async fn first_deposit(
 
     // We generate proof as late as it's possible, so that if any of the lighter procedures fails,
     // we don't waste user's time.
-    let circuit =
-        DepositRelation::with_full_input(note, token_id, token_amount, trapdoor, nullifier);
+    let circuit = DepositRelationWithFullInput::new(note, token_id, token_amount, trapdoor, nullifier);
     let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract
@@ -108,7 +107,6 @@ async fn deposit_and_merge(
         note: old_note,
         ..
     } = deposit;
-
     let merkle_root = contract.get_merkle_root(&connection).await;
     let merkle_path = contract
         .get_merkle_path(&connection, leaf_idx)
