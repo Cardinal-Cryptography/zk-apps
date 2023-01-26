@@ -386,7 +386,8 @@ mod shielder {
             note: Note,
             proof: Vec<u8>,
         ) -> Result<()> {
-            let input = DepositRelationWithPublicInput::new(note, token_id, value).serialize_public_input();
+            let input =
+                DepositRelationWithPublicInput::new(note, token_id, value).serialize_public_input();
 
             self.env().extension().verify(
                 DEPOSIT_VK_IDENTIFIER,
