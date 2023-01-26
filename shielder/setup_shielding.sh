@@ -17,7 +17,7 @@ TOKEN_PER_PERSON=1000
 TOKEN_ALLOWANCE=500
 
 DEPOSIT_VK_BYTES="0x$(cat deposit.vk.bytes | xxd -ps | tr -d '\n')"
-DEPOSIT_AND_MERGE_VK_BYTES="0x$(cat deposit.vk.bytes | xxd -ps | tr -d '\n')"
+DEPOSIT_AND_MERGE_VK_BYTES="0x$(cat deposit_and_merge.vk.bytes | xxd -ps | tr -d '\n')"
 WITHDRAW_VK_BYTES="0x$(cat withdraw.vk.bytes | xxd -ps | tr -d '\n')"
 
 MERKLE_LEAVES=65536

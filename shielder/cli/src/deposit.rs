@@ -25,7 +25,6 @@ pub async fn do_deposit(
     let DepositCmd {
         token_id,
         amount,
-        proving_key_file,
         caller_seed,
         ..
     } = cmd;
@@ -44,7 +43,7 @@ pub async fn do_deposit(
             deposit_and_merge(
                 old_deposit,
                 amount,
-                proving_key_file,
+                cmd.deposit_and_merge_key_file,
                 connection,
                 contract,
                 app_state,
@@ -55,7 +54,7 @@ pub async fn do_deposit(
             first_deposit(
                 token_id,
                 amount,
-                proving_key_file,
+                cmd.deposit_key_file,
                 connection,
                 contract,
                 app_state,
@@ -78,7 +77,8 @@ async fn first_deposit(
 
     // We generate proof as late as it's possible, so that if any of the lighter procedures fails,
     // we don't waste user's time.
-    let circuit = DepositRelationWithFullInput::new(note, token_id, token_amount, trapdoor, nullifier);
+    let circuit =
+        DepositRelationWithFullInput::new(note, token_id, token_amount, trapdoor, nullifier);
     let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract

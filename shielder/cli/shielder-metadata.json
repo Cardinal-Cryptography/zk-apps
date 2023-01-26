@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x3e91dc5994690f565b8db23293d4204ceaa9c620f5866de1b1e6727f5ad39639",
+    "hash": "0x472298c70a3b792e4f4425799d2a1e8fa5c44e1cadace7ac4be336b62beb1a5f",
     "language": "ink! 4.0.0-beta",
     "compiler": "rustc 1.67.0-nightly",
     "build_info": {
@@ -1413,6 +1413,10 @@
               },
               {
                 "index": 1,
+                "name": "DepositAndMerge"
+              },
+              {
+                "index": 2,
                 "name": "Withdraw"
               }
             ]
