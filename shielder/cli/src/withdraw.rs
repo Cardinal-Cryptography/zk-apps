@@ -102,8 +102,6 @@ pub async fn do_withdraw(
         )
         .await?;
 
-    app_state.delete_deposit_by_id(deposit.deposit_id);
-
     // save new deposit to the state
     if new_token_amount > 0 {
         app_state.replace_deposit(
