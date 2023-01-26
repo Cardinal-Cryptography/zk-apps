@@ -1,0 +1,41 @@
+# Requires setting some env variables:
+#  - NODE_IMAGE: Docker image of the node to be run
+#  - NODE_PUBKEY: public address of the node
+#  - BOOTNODE_PEER_ID: peer id of the bootnode
+#  - DOCKER_USER: user for launching docker container
+
+version: '3'
+services:
+
+  snarkeling-node:
+    image: ${NODE_IMAGE}
+    container_name: snarkeling-node
+    user: ${DOCKER_USER}
+    environment:
+      - ALLOW_PRIVATE_IPV4=true
+      - BASE_PATH=/data/${NODE_PUBKEY}
+      - CHAIN=/data/chainspec.snarkeling.json
+      - CUSTOM_ARGS=-lerror,runtime::contracts=debug
+      - DISCOVER_LOCAL=true
+      - NAME=SnarkelingNode
+      - NODE_KEY_PATH=/data/${NODE_PUBKEY}/p2p_secret
+      - PORT=30333
+      - PURGE_BEFORE_START=true
+      - RPC_PORT=9933
+      - RUST_LOG=info
+      - UNIT_CREATION_DELAY=50
+      - WS_PORT=9944
+      - BOOT_NODES=/ip4/127.0.0.1/tcp/30333/p2p/${BOOTNODE_PEER_ID}
+      - PUBLIC_ADDR=/ip4/127.0.0.1/tcp/30333
+      - VALIDATOR_PORT=30343
+      - PUBLIC_VALIDATOR_ADDRESS=127.0.0.1:30343
+    volumes:
+      - ./docker/node_data/:/data/
+    expose:
+      - 30333
+      - 9933
+      - 9944
+    ports:
+      - "0.0.0.0:30333:30333"
+      - "0.0.0.0:9933:9933"
+      - "0.0.0.0:9944:9944"
