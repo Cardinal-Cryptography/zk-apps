@@ -5,7 +5,9 @@ use std::{
 
 use aleph_client::AccountId;
 use itertools::Itertools;
-use relations::{FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor};
+use relations::{
+    FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::DepositId;
@@ -19,6 +21,7 @@ pub struct Deposit {
     pub leaf_idx: u32,
     pub trapdoor: FrontendTrapdoor,
     pub nullifier: FrontendNullifier,
+    pub note: FrontendNote,
 }
 
 impl Display for Deposit {
@@ -31,28 +34,7 @@ impl Display for Deposit {
     }
 }
 
-/// Application info that is kept locally.
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
-pub struct AppState {
-    pub node_address: String,
-    pub contract_address: AccountId,
-
-    deposit_counter: DepositId,
-    deposits: Vec<Deposit>,
-}
-
 const DEFAULT_NODE_ADDRESS: &str = "ws://127.0.0.1:9944";
-
-impl Default for AppState {
-    fn default() -> Self {
-        Self {
-            node_address: DEFAULT_NODE_ADDRESS.to_string(),
-            contract_address: AccountId::new([0u8; 32]),
-            deposit_counter: 0,
-            deposits: Default::default(),
-        }
-    }
-}
 
 /// Deposit data narrowed to the most important part (for the user).
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
@@ -92,6 +74,27 @@ impl From<&Deposit> for Asset {
     }
 }
 
+/// Application info that is kept locally.
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub struct AppState {
+    pub node_address: String,
+    pub contract_address: AccountId,
+
+    deposit_counter: DepositId,
+    deposits: Vec<Deposit>,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            node_address: DEFAULT_NODE_ADDRESS.to_string(),
+            contract_address: AccountId::new([0u8; 32]),
+            deposit_counter: 0,
+            deposits: Default::default(),
+        }
+    }
+}
+
 impl AppState {
     pub fn get_all_assets(&self) -> Vec<Asset> {
         self.deposits.iter().map(Asset::from).sorted().collect()
@@ -112,6 +115,7 @@ impl AppState {
         trapdoor: FrontendTrapdoor,
         nullifier: FrontendNullifier,
         leaf_idx: u32,
+        note: FrontendNote,
     ) {
         self.deposits.push(Deposit {
             deposit_id: self.deposit_counter,
@@ -120,6 +124,7 @@ impl AppState {
             leaf_idx,
             trapdoor,
             nullifier,
+            note,
         });
         self.deposit_counter += 1;
     }
@@ -141,5 +146,38 @@ impl AppState {
 
     pub fn delete_deposit_by_id(&mut self, deposit_id: DepositId) {
         self.deposits.retain(|d| d.deposit_id != deposit_id)
+    }
+
+    pub fn replace_deposit(
+        &mut self,
+        deposit_id: DepositId,
+        token_amount: FrontendTokenAmount,
+        trapdoor: FrontendTrapdoor,
+        nullifier: FrontendNullifier,
+        leaf_idx: u32,
+        note: FrontendNote,
+    ) {
+        for deposit in &mut self.deposits {
+            if deposit.deposit_id == deposit_id {
+                let new_deposit = Deposit {
+                    deposit_id,
+                    token_id: deposit.token_id,
+                    token_amount,
+                    leaf_idx,
+                    trapdoor,
+                    nullifier,
+                    note,
+                };
+                *deposit = new_deposit;
+            }
+        }
+    }
+
+    pub fn get_last_deposit(&self, token_id: FrontendTokenId) -> Option<Deposit> {
+        self.deposits
+            .iter()
+            .filter(|d| d.token_id == token_id)
+            .last()
+            .cloned()
     }
 }

@@ -89,7 +89,6 @@ impl Shielder {
         ];
 
         debug!("Calling withdraw tx with arguments {:?}", &args);
-
         let tx_info = self
             .contract
             .contract_exec(connection, "withdraw", &args)
@@ -97,9 +96,49 @@ impl Shielder {
         let event = self
             .get_event(connection.as_connection(), "Withdrawn", tx_info)
             .await?;
-
         Self::extract_leaf_idx_from_event(&event).map(|idx| {
             info!("Successfully withdrawn tokens.");
+            idx
+        })
+    }
+
+    /// Call `deposit_and_merge` message of the contract.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn deposit_and_merge(
+        &self,
+        connection: &SignedConnection,
+        token_id: FrontendTokenId,
+        value: FrontendTokenAmount,
+        merkle_root: FrontendMerkleRoot,
+        old_nullifier: FrontendNullifier,
+        new_note: FrontendNote,
+        proof: &[u8],
+    ) -> Result<u32> {
+        let new_note_bytes = bytes_from_note(&new_note);
+        let merkle_root_bytes = bytes_from_note(&merkle_root);
+
+        let args = [
+            &*token_id.to_string(),
+            &*value.to_string(),
+            &*format!("0x{}", hex::encode(merkle_root_bytes)),
+            &*old_nullifier.to_string(),
+            &*format!("0x{}", hex::encode(new_note_bytes)),
+            &*format!("0x{}", hex::encode(proof)),
+        ];
+
+        debug!("Calling deposit-and-merge tx with arguments {:?}", &args);
+
+        let tx_info = self
+            .contract
+            .contract_exec(connection, "deposit_and_merge", &args)
+            .await?;
+
+        let event = self
+            .get_event(connection.as_connection(), "Deposited", tx_info)
+            .await?;
+
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
+            info!("Successfully deposited tokens.");
             idx
         })
     }

@@ -100,17 +100,23 @@ pub struct DepositCmd {
     #[clap(default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
 
-    /// File with raw proving key bytes.
+    /// File with raw proving key bytes for first deposit.
     ///
     /// If not found, command will fail - the tool won't generate it for you.
     #[clap(default_value = "deposit.pk.bytes", value_parser = parsing::parse_path)]
-    pub proving_key_file: PathBuf,
+    pub deposit_key_file: PathBuf,
+
+    /// File with raw proving key bytes for subsequent deposits.
+    ///
+    /// If not found, command will fail - the tool won't generate it for you.
+    #[clap(default_value = "deposit_and_merge.pk.bytes", value_parser = parsing::parse_path)]
+    pub deposit_and_merge_key_file: PathBuf,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub struct WithdrawCmd {
-    /// Which note should be spent.
-    #[clap(long, required_unless_present("interactive"))]
+    /// Which note should be spent, last created if none provided.
+    #[clap(long)]
     pub deposit_id: Option<DepositId>,
 
     /// How many tokens should be withdrawn.

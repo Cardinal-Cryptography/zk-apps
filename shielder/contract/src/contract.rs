@@ -22,14 +22,15 @@ mod shielder {
         traits::Storage,
     };
     use relations::{
-        compute_parent_hash, CircuitField, DepositRelation, GetPublicInput, WithdrawRelation,
+        compute_parent_hash, CircuitField, DepositAndMergeRelation, DepositRelationWithPublicInput,
+        GetPublicInput, WithdrawRelation,
     };
     use scale::{Decode, Encode};
 
     use crate::{
         error::ShielderError, MerkleHash, MerkleRoot, Note, Nullifier, Set, TokenAmount, TokenId,
-        DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR, PSP22_TRANSFER_SELECTOR, SYSTEM,
-        WITHDRAW_VK_IDENTIFIER,
+        DEPOSIT_AND_MERGE_VK_IDENTIFIER, DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
+        PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
     };
 
     /// Supported relations - used for registering verifying keys.
@@ -37,6 +38,7 @@ mod shielder {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum Relation {
         Deposit,
+        DepositAndMerge,
         Withdraw,
     }
 
@@ -238,6 +240,7 @@ mod shielder {
         pub fn register_vk(&mut self, relation: Relation, vk: Vec<u8>) -> Result<()> {
             let identifier = match relation {
                 Relation::Deposit => DEPOSIT_VK_IDENTIFIER,
+                Relation::DepositAndMerge => DEPOSIT_AND_MERGE_VK_IDENTIFIER,
                 Relation::Withdraw => WITHDRAW_VK_IDENTIFIER,
             };
             self.env().extension().store_key(identifier, vk)?;
@@ -272,6 +275,41 @@ mod shielder {
                     token_address,
                 }),
             );
+            Ok(())
+        }
+
+        /// Trigger deposit and merge action (see ADR for detailed description).
+        #[allow(clippy::too_many_arguments)]
+        #[ink(message, selector = 11)]
+        pub fn deposit_and_merge(
+            &mut self,
+            token_id: TokenId,
+            value: TokenAmount,
+            merkle_root: MerkleRoot,
+            nullifier: Nullifier,
+            note: Note,
+            proof: Vec<u8>,
+        ) -> Result<()> {
+            self.acquire_deposit(token_id, value)?;
+
+            self.verify_merkle_root(merkle_root)?;
+            self.verify_nullifier(nullifier)?;
+
+            self.verify_deposit_and_merge(token_id, value, merkle_root, nullifier, note, proof)?;
+
+            self.create_new_leaf(note)?;
+            self.nullifiers.insert(nullifier, &());
+
+            Self::emit_event(
+                self.env(),
+                Event::Deposited(Deposited {
+                    token_id,
+                    value,
+                    leaf_idx: self.next_free_leaf - 1,
+                    note,
+                }),
+            );
+
             Ok(())
         }
     }
@@ -348,7 +386,8 @@ mod shielder {
             note: Note,
             proof: Vec<u8>,
         ) -> Result<()> {
-            let input = DepositRelation::with_public_input(note, token_id, value).public_input();
+            let input =
+                DepositRelationWithPublicInput::new(note, token_id, value).serialize_public_input();
 
             self.env().extension().verify(
                 DEPOSIT_VK_IDENTIFIER,
@@ -389,6 +428,36 @@ mod shielder {
         fn max_path_len(&self) -> u8 {
             // `self.max_leaves` is 2^n, so `trailing_zeros` is exactly the logarithm
             self.max_leaves.trailing_zeros() as u8
+        }
+
+        #[allow(clippy::too_many_arguments)]
+        fn verify_deposit_and_merge(
+            &self,
+            token_id: TokenId,
+            token_amount: TokenAmount,
+            merkle_root: MerkleRoot,
+            old_nullifier: Nullifier,
+            new_note: Note,
+            proof: Vec<u8>,
+        ) -> Result<()> {
+            let input = DepositAndMergeRelation::with_public_input(
+                self.max_path_len(),
+                token_id,
+                token_amount,
+                old_nullifier,
+                merkle_root,
+                new_note,
+            )
+            .public_input();
+
+            self.env().extension().verify(
+                DEPOSIT_AND_MERGE_VK_IDENTIFIER,
+                proof,
+                Self::serialize::<Vec<CircuitField>>(input.as_ref()),
+                SYSTEM,
+            )?;
+
+            Ok(())
         }
 
         #[allow(clippy::too_many_arguments)]
