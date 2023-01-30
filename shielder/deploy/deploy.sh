@@ -5,8 +5,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
-export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:manual
-export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling-cliain:manual
+export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:46c4726
+export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:46c4726
 export CARGO_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:0.2.0
 
 # actors
@@ -23,7 +23,8 @@ MERKLE_LEAVES=65536
 
 # env
 NODE="ws://127.0.0.1:9944"
-export DOCKER_USER="$(id -u):$(id -g)"
+DOCKER_USER="$(id -u):$(id -g)"
+export DOCKER_USER
 
 # tokenomics
 TOTAL_TOKEN_ISSUANCE_PER_CONTRACT=2000
@@ -105,10 +106,10 @@ run_snarkeling_node() {
 
 generate_relation_keys() {
   $DOCKER_SH \
-      -v "${SCRIPT_DIR}/docker/keys:/workdir" \
-      -w "/workdir" \
-      "${CLIAIN_IMAGE}" \
-      -c "/usr/local/bin/cliain snark-relation generate-keys ${1} ${2:-}"
+    -v "${SCRIPT_DIR}/docker/keys:/workdir" \
+    -w "/workdir" \
+    "${CLIAIN_IMAGE}" \
+    -c "/usr/local/bin/cliain snark-relation generate-keys ${1} ${2:-}"
 
   log_progress "✅ Generated keys for '${1}' relation"
 }
@@ -126,23 +127,16 @@ move_keys() {
 }
 
 build() {
-# building with the docker lasts too long now - to investigate
-#  $DOCKER_SH \
-#    -v "$(pwd)/..:/code" \
-#    --platform linux/amd64 \
-#    ${CARGO_IMAGE} \
-#    -c "cargo contract build --release --manifest-path public_token/Cargo.toml"
-
   cd "${SCRIPT_DIR}"/../public_token/
-  cargo contract build --quiet --release 1> /dev/null 2> /dev/null
+  cargo contract build --quiet --release 1>/dev/null 2>/dev/null
   log_progress "✅ Public token contract was built"
 
   cd "${SCRIPT_DIR}"/../contract/
-  cargo contract build --quiet --release 1> /dev/null 2> /dev/null
+  cargo contract build --quiet --release 1>/dev/null 2>/dev/null
   log_progress "✅ Shielder contract was built"
 
   cd "${SCRIPT_DIR}"/../cli/
-  cargo build --quiet --release 1> /dev/null 2> /dev/null
+  cargo build --quiet --release 1>/dev/null 2>/dev/null
   log_progress "✅ CLI was built"
 }
 
@@ -165,11 +159,12 @@ deploy_token_contracts() {
 
 distribute_tokens() {
   cd "${SCRIPT_DIR}"/../public_token/
-  $CALL_CMD --contract "${TOKEN_A_ADDRESS}" --message "PSP22::transfer" --args "${DAMIAN_PUBKEY}" "${TOKEN_PER_PERSON}" "0x00" --suri "${ADMIN}" | grep "Success"
-  $CALL_CMD --contract "${TOKEN_A_ADDRESS}" --message "PSP22::transfer" --args "${HANS_PUBKEY}" "${TOKEN_PER_PERSON}" "0x00" --suri "${ADMIN}" | grep "Success"
 
-  $CALL_CMD --contract "${TOKEN_B_ADDRESS}" --message "PSP22::transfer" --args "${DAMIAN_PUBKEY}" "${TOKEN_PER_PERSON}" "0x00" --suri "${ADMIN}" | grep "Success"
-  $CALL_CMD --contract "${TOKEN_B_ADDRESS}" --message "PSP22::transfer" --args "${HANS_PUBKEY}" "${TOKEN_PER_PERSON}" "0x00" --suri "${ADMIN}" | grep "Success"
+  for token in "${TOKEN_A_ADDRESS}" "${TOKEN_B_ADDRESS}"; do
+    for recipient in "${DAMIAN_PUBKEY}" "${HANS_PUBKEY}"; do
+      $CALL_CMD --contract "${token}" --message "PSP22::transfer" --args "${recipient}" "${TOKEN_PER_PERSON}" "0x00" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+    done
+  done
 }
 
 deploy_shielder_contract() {
@@ -181,34 +176,37 @@ deploy_shielder_contract() {
 
 set_allowances() {
   cd "${SCRIPT_DIR}"/../public_token/
-  $CALL_CMD --contract "${TOKEN_A_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${DAMIAN}" | grep "Success"
-  $CALL_CMD --contract "${TOKEN_B_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${DAMIAN}" | grep "Success"
 
-  $CALL_CMD --contract "${TOKEN_A_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${HANS}" | grep "Success"
-  $CALL_CMD --contract "${TOKEN_B_ADDRESS}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${HANS}" | grep "Success"
+  for token in "${TOKEN_A_ADDRESS}" "${TOKEN_B_ADDRESS}"; do
+    for actor in "${DAMIAN}" "${HANS}"; do
+      $CALL_CMD --contract "${token}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${actor}" 1> /dev/null 2> /dev/null
+    done
+  done
 }
 
 register_vk() {
   cd "${SCRIPT_DIR}"/../contract/
 
-  DEPOSIT_VK_BYTES="0x$(xxd -ps < "${SCRIPT_DIR}"/docker/keys/deposit.groth16.vk.bytes | tr -d '\n')"
-  WITHDRAW_VK_BYTES="0x$(xxd -ps < "${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
+  DEPOSIT_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit.groth16.vk.bytes | tr -d '\n')"
+  WITHDRAW_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
 
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${DEPOSIT_VK_BYTES}" --suri "${ADMIN}" | grep "Success"
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${WITHDRAW_VK_BYTES}" --suri "${ADMIN}" | grep "Success"
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${DEPOSIT_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${WITHDRAW_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
 }
 
 register_tokens() {
   cd "${SCRIPT_DIR}"/../contract/
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_new_token" --args 0 "${TOKEN_A_ADDRESS}" --suri "${ADMIN}" | grep "Success"
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_new_token" --args 1 "${TOKEN_B_ADDRESS}" --suri "${ADMIN}" | grep "Success"
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_new_token" --args 0 "${TOKEN_A_ADDRESS}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_new_token" --args 1 "${TOKEN_B_ADDRESS}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
 }
 
 setup_cli() {
-  rm ~/.shielder-state 2> /dev/null || true
+  rm ~/.shielder-state 2>/dev/null || true
 
   cd "${SCRIPT_DIR}"/../cli/
   ./target/release/shielder-cli set-contract-address "${SHIELDER_ADDRESS}"
+
+  log_progress "✅ Shielder CLI was set up"
 }
 
 deploy() {
@@ -238,6 +236,8 @@ deploy() {
 
   # setup CLI
   setup_cli || error "Failed to register token contracts"
+
+  log_progress "🙌 Deployment successful"
 }
 
 deploy

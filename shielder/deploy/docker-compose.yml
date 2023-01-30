@@ -15,7 +15,7 @@ services:
       - ALLOW_PRIVATE_IPV4=true
       - BASE_PATH=/data/${NODE_PUBKEY}
       - CHAIN=/data/chainspec.snarkeling.json
-      - CUSTOM_ARGS=-lerror,runtime::contracts=debug
+      - CUSTOM_ARGS=-lerror
       - DISCOVER_LOCAL=true
       - NAME=SnarkelingNode
       - NODE_KEY_PATH=/data/${NODE_PUBKEY}/p2p_secret
