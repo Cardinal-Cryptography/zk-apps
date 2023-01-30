@@ -1,20 +1,16 @@
-use std::fs;
-
 use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
 use anyhow::{anyhow, Result};
-use ark_serialize::CanonicalDeserialize;
 use inquire::{CustomType, Password, Select};
 use rand::Rng;
 use relations::{
-    compute_note, serialize, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor, Groth16,
-    ProvingSystem, WithdrawRelation,
+    compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor, WithdrawRelation,
 };
 
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Shielder,
-    MERKLE_PATH_MAX_LEN,
+    generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
 pub async fn do_withdraw(
@@ -39,10 +35,9 @@ pub async fn do_withdraw(
         trapdoor: old_trapdoor,
         nullifier: old_nullifier,
         leaf_idx,
+        note: old_note,
         ..
     } = deposit;
-
-    let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
 
     let caller_seed = match caller_seed {
         Some(seed) => seed,
@@ -67,9 +62,8 @@ pub async fn do_withdraw(
         .await
         .expect("Path does not exist");
 
-    let mut rng = rand::thread_rng();
-    let new_trapdoor: FrontendTrapdoor = rng.gen::<u64>();
-    let new_nullifier: FrontendNullifier = rng.gen::<u64>();
+    let (new_trapdoor, new_nullifier) =
+        rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let new_token_amount = whole_token_amount - withdraw_amount;
     let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
@@ -92,10 +86,7 @@ pub async fn do_withdraw(
         new_token_amount,
     );
 
-    let pk_bytes = fs::read(proving_key_file)?;
-    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
-
-    let proof = serialize(&Groth16::prove(&pk, circuit));
+    let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract
         .withdraw(
@@ -111,17 +102,18 @@ pub async fn do_withdraw(
         )
         .await?;
 
-    app_state.delete_deposit_by_id(deposit.deposit_id);
-
     // save new deposit to the state
     if new_token_amount > 0 {
-        app_state.add_deposit(
-            token_id,
+        app_state.replace_deposit(
+            deposit.deposit_id,
             new_token_amount,
             new_trapdoor,
             new_nullifier,
             leaf_idx,
+            new_note,
         );
+    } else {
+        app_state.delete_deposit_by_id(deposit.deposit_id);
     }
 
     Ok(())

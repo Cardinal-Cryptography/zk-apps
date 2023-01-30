@@ -26,6 +26,8 @@ type Set<T> = Mapping<T, ()>;
 
 /// Verification key identifier for the `deposit` relation (to be registered in `pallet_snarcos`).
 const DEPOSIT_VK_IDENTIFIER: VerificationKeyIdentifier = [b'd', b'p', b's', b't'];
+/// Verification key identifier for the `deposit` relation (to be registered in `pallet_snarcos`).
+const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier = [b'd', b'p', b'm', b'g'];
 /// Verification key identifier for the `withdraw` relation (to be registered in `pallet_snarcos`).
 const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier = [b'w', b't', b'h', b'd'];
 /// The only supported proving system for now.
