@@ -3,7 +3,8 @@ use anyhow::{anyhow, Result};
 use inquire::{CustomType, Password, Select};
 use rand::Rng;
 use relations::{
-    compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor, WithdrawRelation,
+    compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor,
+    WithdrawRelationWithFullInput,
 };
 
 use crate::{
@@ -67,7 +68,7 @@ pub async fn do_withdraw(
     let new_token_amount = whole_token_amount - withdraw_amount;
     let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
-    let circuit = WithdrawRelation::with_full_input(
+    let circuit = WithdrawRelationWithFullInput::new(
         MERKLE_PATH_MAX_LEN,
         fee,
         recipient_bytes,

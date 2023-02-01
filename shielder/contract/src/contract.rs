@@ -22,8 +22,8 @@ mod shielder {
         traits::Storage,
     };
     use relations::{
-        compute_parent_hash, CircuitField, DepositAndMergeRelation, DepositRelationWithPublicInput,
-        GetPublicInput, WithdrawRelation,
+        compute_parent_hash, CircuitField, DepositAndMergeRelationWithPublicInput,
+        DepositRelationWithPublicInput, WithdrawRelationWithPublicInput,
     };
     use scale::{Decode, Encode};
 
@@ -440,15 +440,15 @@ mod shielder {
             new_note: Note,
             proof: Vec<u8>,
         ) -> Result<()> {
-            let input = DepositAndMergeRelation::with_public_input(
+            let input = DepositAndMergeRelationWithPublicInput::new(
                 self.max_path_len(),
                 token_id,
-                token_amount,
                 old_nullifier,
-                merkle_root,
                 new_note,
+                token_amount,
+                merkle_root,
             )
-            .public_input();
+            .serialize_public_input();
 
             self.env().extension().verify(
                 DEPOSIT_AND_MERGE_VK_IDENTIFIER,
@@ -472,7 +472,7 @@ mod shielder {
             fee: TokenAmount,
             recipient: AccountId,
         ) -> Result<()> {
-            let input = WithdrawRelation::with_public_input(
+            let input = WithdrawRelationWithPublicInput::new(
                 self.max_path_len(),
                 fee,
                 *recipient.as_ref(),
@@ -482,7 +482,7 @@ mod shielder {
                 value_out,
                 merkle_root,
             )
-            .public_input();
+            .serialize_public_input();
 
             self.env().extension().verify(
                 WITHDRAW_VK_IDENTIFIER,
