@@ -34,9 +34,6 @@ TOKEN_ALLOWANCE=500
 # command aliases
 DOCKER_SH="docker run --rm -e RUST_LOG=debug -u ${DOCKER_USER} --entrypoint /bin/sh"
 
-INSTANTIATE_CMD="cargo contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json"
-CALL_CMD="cargo contract call --quiet --skip-confirm  --url ${NODE}"
-
 get_timestamp() {
   date +'%Y-%m-%d %H:%M:%S'
 }
@@ -123,33 +120,52 @@ move_keys() {
   log_progress "✅ Proving keys were made available to CLI"
 }
 
+docker_cargo() {
+  docker run --rm \
+    -u "${DOCKER_USER}" \
+    -v "${PWD}":/code \
+    -v ~/.cargo/git:/usr/local/cargo/git \
+    -v ~/.cargo/registry:/usr/local/cargo/registry \
+    --network host \
+    --entrypoint /bin/sh \
+    "${CARGO_IMAGE}" \
+    -c "cargo ${1}"
+}
+
 build() {
-  cd "${SCRIPT_DIR}"/../public_token/
-  cargo contract build --quiet --release 1>/dev/null 2>/dev/null
+  cd "${SCRIPT_DIR}"/..
+
+  docker_cargo "contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null 2>/dev/null"
   log_progress "✅ Public token contract was built"
 
-  cd "${SCRIPT_DIR}"/../contract/
-  cargo contract build --quiet --release 1>/dev/null 2>/dev/null
+  docker_cargo "contract build --release --manifest-path contract/Cargo.toml 1>/dev/null 2>/dev/null"
   log_progress "✅ Shielder contract was built"
 
-  cd "${SCRIPT_DIR}"/../cli/
-  cargo build --quiet --release 1>/dev/null 2>/dev/null
+  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null 2>/dev/null"
   log_progress "✅ CLI was built"
 }
 
 move_build_artifacts() {
-  cp ../contract/target/ink/metadata.json ../cli/shielder-metadata.json
+  cp "${SCRIPT_DIR}"/../contract/target/ink/metadata.json "${SCRIPT_DIR}"/../cli/shielder-metadata.json
   log_progress "✅ Shielder metadata was made visible to CLI"
 }
 
-deploy_token_contracts() {
-  cd "${SCRIPT_DIR}"/../public_token/
+contract_instantiate() {
+  docker_cargo "contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
+}
 
-  TOKEN_A_ADDRESS=$($INSTANTIATE_CMD --args "${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT}" --salt "0x$(random_salt)" | jq -r '.contract')
+contract_call() {
+  docker_cargo "contract call --quiet --skip-confirm --url ${NODE} ${1}"
+}
+
+deploy_token_contracts() {
+  cd "${SCRIPT_DIR}"/..
+
+  TOKEN_A_ADDRESS=$(contract_instantiate "--args ${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT} --manifest-path public_token/Cargo.toml" | jq -r '.contract')
   export TOKEN_A_ADDRESS
   log_progress "Token A address: ${TOKEN_A_ADDRESS}"
 
-  TOKEN_B_ADDRESS=$($INSTANTIATE_CMD --args "${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT}" --salt "0x$(random_salt)" | jq -r '.contract')
+  TOKEN_B_ADDRESS=$(contract_instantiate "--args ${TOTAL_TOKEN_ISSUANCE_PER_CONTRACT} --manifest-path public_token/Cargo.toml"| jq -r '.contract')
   export TOKEN_B_ADDRESS
   log_progress "Token B address: ${TOKEN_B_ADDRESS}"
 }
@@ -159,14 +175,14 @@ distribute_tokens() {
 
   for token in "${TOKEN_A_ADDRESS}" "${TOKEN_B_ADDRESS}"; do
     for recipient in "${DAMIAN_PUBKEY}" "${HANS_PUBKEY}"; do
-      $CALL_CMD --contract "${token}" --message "PSP22::transfer" --args "${recipient}" "${TOKEN_PER_PERSON}" "0x00" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+      contract_call "--contract ${token} --message PSP22::transfer --args ${recipient} ${TOKEN_PER_PERSON} 0x00 --suri ${ADMIN}" 1> /dev/null 2> /dev/null
     done
   done
 }
 
 deploy_shielder_contract() {
-  cd "${SCRIPT_DIR}"/../contract/
-  SHIELDER_ADDRESS=$($INSTANTIATE_CMD --args "${MERKLE_LEAVES}" --salt "0x$(random_salt)" | jq -r '.contract')
+  cd "${SCRIPT_DIR}"/..
+  SHIELDER_ADDRESS=$(contract_instantiate "--args ${MERKLE_LEAVES} --manifest-path contract/Cargo.toml" | jq -r '.contract')
   export SHIELDER_ADDRESS
   log_progress "Shielder address: ${SHIELDER_ADDRESS}"
 }
@@ -176,7 +192,7 @@ set_allowances() {
 
   for token in "${TOKEN_A_ADDRESS}" "${TOKEN_B_ADDRESS}"; do
     for actor in "${DAMIAN}" "${HANS}"; do
-      $CALL_CMD --contract "${token}" --message "PSP22::approve" --args "${SHIELDER_ADDRESS}" "${TOKEN_ALLOWANCE}" --suri "${actor}" 1> /dev/null 2> /dev/null
+       contract_call "--contract ${token} --message PSP22::approve --args ${SHIELDER_ADDRESS} ${TOKEN_ALLOWANCE} --suri ${actor}" 1> /dev/null 2> /dev/null
     done
   done
 }
@@ -188,15 +204,15 @@ register_vk() {
   DEPOSIT_MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit_and_merge.groth16.vk.bytes | tr -d '\n')"
   WITHDRAW_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
 
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${DEPOSIT_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args DepositAndMerge "${DEPOSIT_MERGE_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${WITHDRAW_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args DepositAndMerge ${DEPOSIT_MERGE_VK_BYTES} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Withdraw        ${WITHDRAW_VK_BYTES}      --suri ${ADMIN}" 1> /dev/null 2> /dev/null
 }
 
 register_tokens() {
   cd "${SCRIPT_DIR}"/../contract/
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_new_token" --args 0 "${TOKEN_A_ADDRESS}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
-  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_new_token" --args 1 "${TOKEN_B_ADDRESS}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract ${SHIELDER_ADDRESS} --message register_new_token --args 0 ${TOKEN_A_ADDRESS} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract ${SHIELDER_ADDRESS} --message register_new_token --args 1 ${TOKEN_B_ADDRESS} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
 }
 
 setup_cli() {
