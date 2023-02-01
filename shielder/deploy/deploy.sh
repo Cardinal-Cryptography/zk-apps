@@ -211,7 +211,7 @@ setup_cli() {
 
 deploy() {
   # general setup
-  prepare_fs || error "Failed prepare file system"
+  prepare_fs || error "Failed to prepare file system"
 
   # launching node
   generate_chainspec || error "Failed to generate chainspec"
