@@ -6,7 +6,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
 export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:46c4726
-export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:46c4726
+export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:ba08067
 export CARGO_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:0.2.0
 
 # actors
@@ -39,11 +39,6 @@ CALL_CMD="cargo contract call --quiet --skip-confirm  --url ${NODE}"
 
 get_timestamp() {
   date +'%Y-%m-%d %H:%M:%S'
-}
-
-error() {
-  echo -e "[$(get_timestamp)] [ERROR] ❌ $*"
-  exit 1
 }
 
 log_progress() {
@@ -116,11 +111,13 @@ generate_relation_keys() {
 
 generate_keys() {
   generate_relation_keys "deposit"
+  generate_relation_keys "deposit-and-merge" "--max-path-len ${MERKLE_TREE_HEIGHT}"
   generate_relation_keys "withdraw" "--max-path-len ${MERKLE_TREE_HEIGHT}"
 }
 
 move_keys() {
   mv docker/keys/deposit.groth16.pk.bytes ../cli/deposit.pk.bytes
+  mv docker/keys/deposit_and_merge.groth16.pk.bytes ../cli/deposit_and_merge.pk.bytes
   mv docker/keys/withdraw.groth16.pk.bytes ../cli/withdraw.pk.bytes
 
   log_progress "✅ Proving keys were made available to CLI"
@@ -188,9 +185,11 @@ register_vk() {
   cd "${SCRIPT_DIR}"/../contract/
 
   DEPOSIT_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit.groth16.vk.bytes | tr -d '\n')"
+  DEPOSIT_MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit_and_merge.groth16.vk.bytes | tr -d '\n')"
   WITHDRAW_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
 
   $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Deposit "${DEPOSIT_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
+  $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args DepositAndMerge "${DEPOSIT_MERGE_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
   $CALL_CMD --contract "${SHIELDER_ADDRESS}" --message "register_vk" --args Withdraw "${WITHDRAW_VK_BYTES}" --suri "${ADMIN}" 1> /dev/null 2> /dev/null
 }
 
@@ -211,31 +210,31 @@ setup_cli() {
 
 deploy() {
   # general setup
-  prepare_fs || error "Failed to prepare file system"
+  prepare_fs
 
   # launching node
-  generate_chainspec || error "Failed to generate chainspec"
-  export_bootnode_address || error "Failed to find out bootnode address"
-  run_snarkeling_node || error "Failed to launch snarkeling node"
+  generate_chainspec
+  export_bootnode_address
+  run_snarkeling_node
 
   # key generation
-  generate_keys || error "Failed to generate keys"
-  move_keys || error "Failed to move keys"
+  generate_keys
+  move_keys
 
   # build contracts and CLI
-  build || error "Failed to build contracts and CLI"
-  move_build_artifacts || error "Failed to move build artifacts"
+  build
+  move_build_artifacts
 
   # deploy and set up contracts
-  deploy_token_contracts || error "Failed to deploy token contracts"
-  distribute_tokens || error "Failed to distribute tokens"
-  deploy_shielder_contract || error "Failed to deploy Shielder contract"
-  set_allowances || error "Failed to set allowances"
-  register_vk || error "Failed to register verifying keys"
-  register_tokens || error "Failed to register token contracts"
+  deploy_token_contracts
+  distribute_tokens
+  deploy_shielder_contract
+  set_allowances
+  register_vk
+  register_tokens
 
   # setup CLI
-  setup_cli || error "Failed to register token contracts"
+  setup_cli
 
   log_progress "🙌 Deployment successful"
 }

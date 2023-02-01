@@ -5,8 +5,8 @@ use anyhow::Result;
 use inquire::Password;
 use rand::Rng;
 use relations::{
-    compute_note, DepositAndMergeRelation, DepositRelationWithFullInput, FrontendNullifier,
-    FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
+    compute_note, DepositAndMergeRelationWithFullInput, DepositRelationWithFullInput,
+    FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
 };
 
 use crate::{
@@ -118,13 +118,13 @@ async fn deposit_and_merge(
     let new_token_amount = old_token_amount + token_amount;
     let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
-    let circuit = DepositAndMergeRelation::with_full_input(
+    let circuit = DepositAndMergeRelationWithFullInput::new(
         MERKLE_PATH_MAX_LEN,
         token_id,
-        token_amount,
         old_nullifier,
-        merkle_root,
         new_note,
+        token_amount,
+        merkle_root,
         old_trapdoor,
         new_trapdoor,
         new_nullifier,
