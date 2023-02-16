@@ -1,7 +1,7 @@
+use baby_liminal_extension::BabyLiminalError;
 use ink::prelude::{format, string::String};
 use openbrush::contracts::{psp22::PSP22Error, traits::ownable::OwnableError};
 use scale::{Decode, Encode};
-use snarcos_extension::SnarcosError;
 
 #[derive(Eq, PartialEq, Debug, Decode, Encode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -18,7 +18,7 @@ pub enum ShielderError {
     TooHighFee,
 
     /// Pallet returned an error (through chain extension).
-    ChainExtension(SnarcosError),
+    ChainExtension(BabyLiminalError),
 
     /// PSP22 related error (e.g. insufficient allowance).
     Psp22(PSP22Error),
@@ -31,8 +31,8 @@ pub enum ShielderError {
     TokenIdNotRegistered,
 }
 
-impl From<SnarcosError> for ShielderError {
-    fn from(e: SnarcosError) -> Self {
+impl From<BabyLiminalError> for ShielderError {
+    fn from(e: BabyLiminalError) -> Self {
         ShielderError::ChainExtension(e)
     }
 }

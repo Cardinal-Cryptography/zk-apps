@@ -1,4 +1,4 @@
-#[ink::contract(env = snarcos_extension::DefaultEnvironment)]
+#[ink::contract(env = baby_liminal_extension::BabyLiminalEnvironment)]
 mod shielder {
     use core::ops::Not;
 
@@ -13,6 +13,10 @@ mod shielder {
         reflect::ContractEventBase,
         storage::Mapping,
     };
+    use liminal_ark_relations::{
+        CircuitField, DepositAndMergeRelationWithPublicInput, DepositRelationWithPublicInput,
+        WithdrawRelationWithPublicInput,
+    };
     use openbrush::{
         contracts::{
             ownable::{self, only_owner, Internal, Ownable},
@@ -20,10 +24,6 @@ mod shielder {
         },
         modifiers,
         traits::Storage,
-    };
-    use relations::{
-        compute_parent_hash, CircuitField, DepositAndMergeRelationWithPublicInput,
-        DepositRelationWithPublicInput, WithdrawRelationWithPublicInput,
     };
     use scale::{Decode, Encode};
 
@@ -340,8 +340,11 @@ mod shielder {
             while parent > 0 {
                 let left_child = self.tree_value(2 * parent);
                 let right_child = self.tree_value(2 * parent + 1);
-                self.notes
-                    .insert(parent, &compute_parent_hash(left_child, right_child));
+                let parent_hash = self
+                    .env()
+                    .extension()
+                    .poseidon_two_to_one([left_child, right_child]);
+                self.notes.insert(parent, &parent_hash);
                 parent /= 2;
             }
 
@@ -377,7 +380,7 @@ mod shielder {
             Ok(())
         }
 
-        /// Call `pallet_snarcos::verify` for the `deposit` relation with `(token_id, value, note)`
+        /// Call `pallet_baby_liminal::verify` for the `deposit` relation with `(token_id, value, note)`
         /// as public input.
         fn verify_deposit(
             &self,

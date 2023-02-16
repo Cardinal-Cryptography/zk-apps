@@ -434,15 +434,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atomic-polyfill"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d299f547288d6db8d5c3a2916f7b2f66134b15b8c1ac1c4357dd3b8752af7bb2"
-dependencies = [
- "critical-section",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -831,12 +822,6 @@ checksum = "28d997bd5e24a5928dd43e46dc529867e207907fe0b239c3477d924f7f2ca320"
 dependencies = [
  "libc",
 ]
-
-[[package]]
-name = "critical-section"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6548a0ad5d2549e111e1f6a11a6c2e2d00ce6a3dafe22948d67c2b443f775e52"
 
 [[package]]
 name = "crossbeam-utils"
@@ -2180,15 +2165,13 @@ dependencies = [
 [[package]]
 name = "liminal-ark-poseidon"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=snarkeling#e1d8bf3259f0430519e71db33e33c68eec527b75"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=liminal/poseidon-by-extension#91a2837589eec419f9c369ba5009bf3fc7dd767c"
 dependencies = [
  "ark-bls12-381",
  "ark-ff",
  "ark-r1cs-std",
  "ark-relations",
  "ark-sponge",
- "ark-std",
- "once_cell",
  "paste",
  "poseidon-parameters",
  "poseidon-paramgen",
@@ -2209,7 +2192,7 @@ dependencies = [
 [[package]]
 name = "liminal-ark-relations"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=snarkeling#e1d8bf3259f0430519e71db33e33c68eec527b75"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=liminal/poseidon-by-extension#91a2837589eec419f9c369ba5009bf3fc7dd767c"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
@@ -2542,10 +2525,6 @@ name = "once_cell"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
-dependencies = [
- "atomic-polyfill",
- "critical-section",
-]
 
 [[package]]
 name = "opaque-debug"

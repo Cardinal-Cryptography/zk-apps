@@ -35,4 +35,4 @@ ark-std = { version = "^0.3.0", default-features = false }
 
 # todo: change this for versioned `aleph-client` right away after publishing it
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "shielder-cli" }
-liminal-ark-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "snarkeling"}
+liminal-ark-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "liminal/poseidon-by-extension"}
