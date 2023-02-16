@@ -1,11 +1,11 @@
 use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
 use anyhow::{anyhow, Result};
 use inquire::{CustomType, Password, Select};
-use rand::Rng;
-use relations::{
+use liminal_ark_relations::{
     compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor,
     WithdrawRelationWithFullInput,
 };
+use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},

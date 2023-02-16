@@ -6,7 +6,9 @@ use ark_serialize::CanonicalDeserialize;
 use clap::Parser;
 use config::LoggingFormat;
 use inquire::Password;
-use relations::{serialize, CircuitField, ConstraintSynthesizer, Groth16, ProvingSystem};
+use liminal_ark_relations::{
+    serialize, CircuitField, ConstraintSynthesizer, Groth16, ProvingSystem,
+};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use ContractInteractionCommand::{Deposit, Withdraw};
