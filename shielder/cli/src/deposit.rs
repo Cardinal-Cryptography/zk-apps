@@ -151,7 +151,7 @@ async fn deposit_and_merge(
 
     app_state.replace_deposit(
         deposit.deposit_id,
-        token_amount,
+        new_token_amount,
         new_trapdoor,
         new_nullifier,
         leaf_idx,

@@ -136,8 +136,8 @@ mod shielder {
             note: Note,
             proof: Vec<u8>,
         ) -> Result<()> {
-            // self.acquire_deposit(token_id, value)?;
-            // self.verify_deposit(token_id, value, note, proof)?;
+            self.acquire_deposit(token_id, value)?;
+            self.verify_deposit(token_id, value, note, proof)?;
 
             self.create_new_leaf(note)?;
             self.merkle_roots.insert(self.current_root(), &());
@@ -298,6 +298,7 @@ mod shielder {
             self.verify_deposit_and_merge(token_id, value, merkle_root, nullifier, note, proof)?;
 
             self.create_new_leaf(note)?;
+            self.merkle_roots.insert(self.current_root(), &());
             self.nullifiers.insert(nullifier, &());
 
             Self::emit_event(

@@ -338,7 +338,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "baby-liminal-extension"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=liminal/poseidon-by-extension#c040ed048daeea1eb4726e9e0502c5b47dabc621"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=snarkeling#20055a7e053265a7b0ca131d36ce1c2847b44c17"
 dependencies = [
  "ink",
  "parity-scale-codec",
@@ -973,7 +973,7 @@ checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 [[package]]
 name = "liminal-ark-poseidon"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=liminal/poseidon-by-extension#c040ed048daeea1eb4726e9e0502c5b47dabc621"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=snarkeling#20055a7e053265a7b0ca131d36ce1c2847b44c17"
 dependencies = [
  "ark-bls12-381",
  "ark-ff",
@@ -1000,7 +1000,7 @@ dependencies = [
 [[package]]
 name = "liminal-ark-relations"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=liminal/poseidon-by-extension#c040ed048daeea1eb4726e9e0502c5b47dabc621"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=snarkeling#20055a7e053265a7b0ca131d36ce1c2847b44c17"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
