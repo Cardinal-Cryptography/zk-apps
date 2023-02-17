@@ -184,6 +184,7 @@ mod shielder {
             )?;
 
             self.create_new_leaf(new_note)?;
+            self.merkle_roots.insert(self.current_root(), &());
             self.nullifiers.insert(nullifier, &());
 
             self.withdraw_funds(token_id, value, fee_for_caller, recipient)?;
