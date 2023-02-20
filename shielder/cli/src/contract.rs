@@ -8,7 +8,7 @@ use aleph_client::{
     AccountId, AsConnection, Connection, SignedConnection, TxInfo,
 };
 use anyhow::{anyhow, Result};
-use relations::{
+use liminal_ark_relations::{
     bytes_from_note, FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
     FrontendTokenAmount, FrontendTokenId,
 };

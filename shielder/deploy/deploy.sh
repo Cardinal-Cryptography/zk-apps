@@ -5,8 +5,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
-export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:46c4726
-export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:ba08067
+export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:20055a7
+export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:8c5fe07
 export CARGO_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:0.2.0
 
 # actors

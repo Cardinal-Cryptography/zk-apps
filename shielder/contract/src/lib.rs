@@ -1,8 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 
+use baby_liminal_extension::{ProvingSystem, VerificationKeyIdentifier};
 use ink::storage::Mapping;
-use snarcos_extension::{ProvingSystem, VerificationKeyIdentifier};
 
 mod contract;
 mod error;

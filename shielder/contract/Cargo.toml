@@ -21,8 +21,8 @@ scale-info = { version = "2.3", default-features = false, features = ["derive"],
 ink = { git = "https://github.com/paritytech/ink", rev = "4655a8b4413cb50cbc38d1b7c173ad426ab06cde", default-features = false }
 openbrush = { git = "https://github.com/727-Ventures/openbrush-contracts/", tag = "3.0.0-beta", default-features = false, features = ["psp22", "ownable"] }
 
-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node", branch = "snarkeling", package = "relations", default-features = false }
-snarcos-extension = { git = "https://github.com/Cardinal-Cryptography/aleph-node", branch = "snarkeling", package = "snarcos-extension", default-features = false, features = ["ink-as-dependency"] }
+liminal-ark-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node", branch = "snarkeling", default-features = false }
+baby-liminal-extension = { git = "https://github.com/Cardinal-Cryptography/aleph-node", branch = "snarkeling", default-features = false, features = ["ink-as-dependency"] }
 
 [features]
 default = ["std"]
@@ -34,7 +34,7 @@ std = [
     "ink/std",
     "openbrush/std",
 
-    "relations/std",
-    "snarcos-extension/std",
+    "liminal-ark-relations/std",
+    "baby-liminal-extension/std",
 ]
 ink-as-dependency = []

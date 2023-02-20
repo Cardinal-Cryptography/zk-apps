@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use aleph_client::{keypair_from_string, Connection, SignedConnection};
 use anyhow::Result;
 use inquire::Password;
-use rand::Rng;
-use relations::{
+use liminal_ark_relations::{
     compute_note, DepositAndMergeRelationWithFullInput, DepositRelationWithFullInput,
     FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
 };
+use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},
@@ -151,7 +151,7 @@ async fn deposit_and_merge(
 
     app_state.replace_deposit(
         deposit.deposit_id,
-        token_amount,
+        new_token_amount,
         new_trapdoor,
         new_nullifier,
         leaf_idx,
