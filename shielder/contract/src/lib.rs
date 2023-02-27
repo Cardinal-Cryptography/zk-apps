@@ -32,8 +32,3 @@ const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier = [b'd', b'p', 
 const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier = [b'w', b't', b'h', b'd'];
 /// The only supported proving system for now.
 const SYSTEM: ProvingSystem = ProvingSystem::Groth16;
-
-/// PSP22 standard selector for transferring on behalf.
-const PSP22_TRANSFER_FROM_SELECTOR: [u8; 4] = [0x54, 0xb3, 0xc7, 0x6e];
-/// PSP22 standard selector for transferring own tokens.
-const PSP22_TRANSFER_SELECTOR: [u8; 4] = [0xdb, 0x20, 0xf9, 0xf5];

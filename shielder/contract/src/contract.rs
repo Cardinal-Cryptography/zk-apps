@@ -5,10 +5,7 @@ mod shielder {
     use ark_serialize::CanonicalSerialize;
     use ink::{
         codegen::{EmitEvent, Env},
-        env::{
-            call::{build_call, Call, ExecutionInput, Selector},
-            CallFlags,
-        },
+        env::CallFlags,
         prelude::{vec, vec::Vec},
         reflect::ContractEventBase,
         storage::Mapping,
@@ -20,7 +17,7 @@ mod shielder {
     use openbrush::{
         contracts::{
             ownable::{self, only_owner, Internal, Ownable},
-            psp22::PSP22Error,
+            psp22::PSP22Ref,
         },
         modifiers,
         traits::Storage,
@@ -29,8 +26,7 @@ mod shielder {
 
     use crate::{
         error::ShielderError, MerkleHash, MerkleRoot, Note, Nullifier, Set, TokenAmount, TokenId,
-        DEPOSIT_AND_MERGE_VK_IDENTIFIER, DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
-        PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
+        DEPOSIT_AND_MERGE_VK_IDENTIFIER, DEPOSIT_VK_IDENTIFIER, SYSTEM, WITHDRAW_VK_IDENTIFIER,
     };
 
     /// Supported relations - used for registering verifying keys.
@@ -367,18 +363,15 @@ mod shielder {
                 .registered_token_address(token_id)
                 .ok_or(ShielderError::TokenIdNotRegistered)?;
 
-            build_call::<super::shielder::Environment>()
-                .call_type(Call::new(token_contract))
-                .exec_input(
-                    ExecutionInput::new(Selector::new(PSP22_TRANSFER_FROM_SELECTOR))
-                        .push_arg(self.env().caller())
-                        .push_arg(self.env().account_id())
-                        .push_arg(deposit as Balance)
-                        .push_arg::<Vec<u8>>(vec![]),
-                )
-                .call_flags(CallFlags::default().set_allow_reentry(true))
-                .returns::<core::result::Result<(), PSP22Error>>()
-                .invoke()?;
+            PSP22Ref::transfer_from_builder(
+                &token_contract,
+                self.env().caller(),
+                self.env().account_id(),
+                deposit as Balance,
+                vec![],
+            )
+            .call_flags(CallFlags::default().set_allow_reentry(true))
+            .invoke()?;
             Ok(())
         }
 
@@ -525,15 +518,7 @@ mod shielder {
             value: TokenAmount,
             recipient: AccountId,
         ) -> Result<()> {
-            build_call::<super::shielder::Environment>()
-                .call_type(Call::new(token_contract))
-                .exec_input(
-                    ExecutionInput::new(Selector::new(PSP22_TRANSFER_SELECTOR))
-                        .push_arg(recipient)
-                        .push_arg(value as Balance)
-                        .push_arg::<Vec<u8>>(vec![]),
-                )
-                .returns::<core::result::Result<(), PSP22Error>>()
+            PSP22Ref::transfer_builder(&token_contract, recipient, value as Balance, vec![])
                 .invoke()?;
             Ok(())
         }
