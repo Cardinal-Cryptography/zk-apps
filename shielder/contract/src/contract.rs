@@ -368,7 +368,7 @@ mod shielder {
                 .ok_or(ShielderError::TokenIdNotRegistered)?;
 
             build_call::<super::shielder::Environment>()
-                .call_type(Call::new().callee(token_contract))
+                .call_type(Call::new(token_contract))
                 .exec_input(
                     ExecutionInput::new(Selector::new(PSP22_TRANSFER_FROM_SELECTOR))
                         .push_arg(self.env().caller())
@@ -378,7 +378,7 @@ mod shielder {
                 )
                 .call_flags(CallFlags::default().set_allow_reentry(true))
                 .returns::<core::result::Result<(), PSP22Error>>()
-                .fire()??;
+                .invoke()?;
             Ok(())
         }
 
@@ -526,7 +526,7 @@ mod shielder {
             recipient: AccountId,
         ) -> Result<()> {
             build_call::<super::shielder::Environment>()
-                .call_type(Call::new().callee(token_contract))
+                .call_type(Call::new(token_contract))
                 .exec_input(
                     ExecutionInput::new(Selector::new(PSP22_TRANSFER_SELECTOR))
                         .push_arg(recipient)
@@ -534,7 +534,7 @@ mod shielder {
                         .push_arg::<Vec<u8>>(vec![]),
                 )
                 .returns::<core::result::Result<(), PSP22Error>>()
-                .fire()??;
+                .invoke()?;
             Ok(())
         }
 
