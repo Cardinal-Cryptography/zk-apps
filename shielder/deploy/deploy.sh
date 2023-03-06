@@ -7,7 +7,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
 export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:20055a7
 export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:8c5fe07
-export CARGO_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:0.2.0
+export CARGO_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:1.0.0
 
 # actors
 DAMIAN=//0
@@ -146,7 +146,7 @@ build() {
 }
 
 move_build_artifacts() {
-  cp "${SCRIPT_DIR}"/../contract/target/ink/metadata.json "${SCRIPT_DIR}"/../cli/shielder-metadata.json
+  cp "${SCRIPT_DIR}"/../contract/target/ink/shielder.json "${SCRIPT_DIR}"/../cli/shielder-metadata.json
   log_progress "✅ Shielder metadata was made visible to CLI"
 }
 
@@ -195,6 +195,19 @@ set_allowances() {
        contract_call "--contract ${token} --message PSP22::approve --args ${SHIELDER_ADDRESS} ${TOKEN_ALLOWANCE} --suri ${actor}" 1> /dev/null 2> /dev/null
     done
   done
+}
+
+store_contract_addresses() {
+  jq -n --arg shielder_address "$SHIELDER_ADDRESS" \
+        --arg token_a_address "$TOKEN_A_ADDRESS" \
+        --arg token_b_address "$TOKEN_B_ADDRESS" \
+        '{
+          shielder_address: $shielder_address,
+          token_a_address: $token_a_address,
+          token_b_address: $token_b_address,
+        }' > ${SCRIPT_DIR}/addresses.json
+
+  log_progress "✅ Contract addresses stored in a file"
 }
 
 register_vk() {
@@ -248,6 +261,9 @@ deploy() {
   set_allowances
   register_vk
   register_tokens
+
+  # store contract addresses in a file
+  store_contract_addresses
 
   # setup CLI
   setup_cli
