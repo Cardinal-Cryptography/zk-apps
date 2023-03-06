@@ -7,9 +7,9 @@ mod psp22;
 #[allow(unused)]
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, path::Path};
+    use std::{fs::File, path::Path, str::FromStr};
 
-    use aleph_client::AccountId;
+    use aleph_client::{AccountId, Connection, KeyPair};
     use anyhow::Result;
     use serde::Deserialize;
 
@@ -22,15 +22,18 @@ mod tests {
         token_b_address: AccountId,
     }
 
-    #[derive(Debug)]
     struct TestContext {
         shielder: Shielder,
         token_a: PSP22Token,
         token_b: PSP22Token,
+        connection: Connection,
+        sudo: KeyPair,
+        damian: KeyPair,
+        hans: KeyPair,
     }
 
     impl TestContext {
-        fn local() -> Result<Self> {
+        async fn local() -> Result<Self> {
             let resources_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
             let addresses: Addresses =
                 serde_json::from_reader(File::open(resources_path.join("addresses.json"))?)?;
@@ -48,18 +51,41 @@ mod tests {
                 resources_path.join("public_token.json").to_str().unwrap(),
             )?;
 
+            let node_address = option_env!("NODE_WS")
+                .unwrap_or_else(|| "ws://127.0.0.1:9944")
+                .to_string();
+
+            let connection = Connection::new(&node_address).await;
+
+            let sudo = aleph_client::keypair_from_string("//Alice");
+            let damian = aleph_client::keypair_from_string("//0");
+            let hans = aleph_client::keypair_from_string("//1");
+
             Ok(Self {
                 shielder,
                 token_a,
                 token_b,
+                connection,
+                sudo,
+                damian,
+                hans,
             })
         }
     }
 
     #[tokio::test]
     pub async fn dummy() -> Result<()> {
-        let test_context = TestContext::local()?;
-        println!("{:?}", test_context);
+        let TestContext {
+            shielder,
+            token_a,
+            token_b,
+            connection,
+            sudo,
+            damian,
+            hans,
+        } = TestContext::local().await?;
+        let dbalance = token_a.balance_of(&connection, &damian.account_id()).await;
+        println!("TokenA.balance_of(DAMIAN)={:?}", dbalance);
         Ok(())
     }
 }
