@@ -8,19 +8,19 @@ mod contract;
 mod error;
 
 type Scalar = u64;
-type Nullifier = Scalar;
+pub type Nullifier = Scalar;
 
 /// Tangling output type.
-type MerkleHash = [u64; 4];
+pub type MerkleHash = [u64; 4];
 /// Type of the value in the Merkle tree leaf.
-type Note = MerkleHash;
+pub type Note = MerkleHash;
 /// Type of the value in the Merkle tree root.
-type MerkleRoot = MerkleHash;
+pub type MerkleRoot = MerkleHash;
 
 /// Short identifier of a registered token contract.
-type TokenId = u16;
+pub type TokenId = u16;
 /// `arkworks` does not support serializing `u128` and thus we have to operate on `u64` amounts.
-type TokenAmount = u64;
+pub type TokenAmount = u64;
 
 type Set<T> = Mapping<T, ()>;
 
