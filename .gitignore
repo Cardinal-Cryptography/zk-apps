@@ -14,6 +14,9 @@
 **/public_token.json
 **/shielder.json
 
+# Test resources
+**/resources
+
 # Substrate
 *.log
 *.out
