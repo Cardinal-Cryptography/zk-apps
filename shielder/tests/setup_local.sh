@@ -18,13 +18,19 @@ log_progress() {
 function copy_metadata() {
     cp ${SCRIPT_DIR}/../contract/target/ink/shielder.json ${SCRIPT_DIR}/resources/
     cp ${SCRIPT_DIR}/../public_token/target/ink/public_token.json ${SCRIPT_DIR}/resources/
-    log_progress "✅ Contracts' metadata was made visible to tests"
+    log_progress "✅ Contracts' metadata copied to tests/resources"
 }
 
 function copy_addresses() {
     cp ${SCRIPT_DIR}/../deploy/addresses.json ${SCRIPT_DIR}/resources/
-    log_progress "✅ addresses.json moved to tests/resources"
+    log_progress "✅ addresses.json copied to tests/resources"
+}
+
+function copy_verification_keys() {
+  cp ${SCRIPT_DIR}/../deploy/docker/keys/* ${SCRIPT_DIR}/resources/
+  log_progress "✅ Verification keys copied to tests/resources"
 }
 
 copy_metadata
 copy_addresses
+copy_verification_keys
