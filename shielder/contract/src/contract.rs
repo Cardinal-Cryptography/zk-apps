@@ -325,7 +325,7 @@ mod shielder {
             Ok(())
         }
 
-        /// Trigger merge action.
+        /// Trigger merge action to combine the value of two notes.
         #[allow(clippy::too_many_arguments)]
         #[ink(message, selector = 12)]
         pub fn merge(
