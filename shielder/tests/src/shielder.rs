@@ -2,7 +2,7 @@ use aleph_client::{
     contract::ContractInstance, AccountId, ConnectionApi, SignedConnection, TxInfo,
 };
 use anyhow::Result;
-use scale::{Decode, Encode};
+use scale::{Encode};
 use shielder::{MerkleHash, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 pub type MerklePath = Vec<MerkleHash>;
