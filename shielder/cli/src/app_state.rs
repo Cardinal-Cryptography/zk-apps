@@ -9,7 +9,8 @@ use liminal_ark_relations::{
     FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
 };
 use serde::{Deserialize, Serialize};
-use shielder::DepositId;
+
+use crate::DepositId;
 
 /// Full information about a single deposit.
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]

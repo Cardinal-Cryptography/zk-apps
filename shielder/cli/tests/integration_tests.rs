@@ -26,9 +26,6 @@ mod tests {
             sudo,
             damian,
             hans,
-            deposit_pk,
-            deposit_and_merge_pk,
-            withdraw_pk,
         } = TestContext::local().await?;
         let dbalanceA = token_a
             .balance_of(&connection, &damian.account_id())
@@ -39,14 +36,64 @@ mod tests {
     }
 }
 
+mod shielder {
+    use std::path::Path;
+
+    use aleph_client::AccountId;
+    use anyhow::Result;
+    use liminal_ark_relations::{CanonicalDeserialize, Groth16, ProvingSystem};
+    use shielder::contract::Shielder as ShielderContract;
+
+    use crate::ProvingKey;
+
+    #[allow(unused)]
+    pub(super) struct Shielder {
+        instance: ShielderContract,
+        deposit_pk: ProvingKey,
+        deposit_and_merge_pk: ProvingKey,
+        withdraw_pk: ProvingKey,
+    }
+
+    impl Shielder {
+        pub(super) fn new(shielder_address: &AccountId, resources_path: &Path) -> Result<Self> {
+            let shielder =
+                ShielderContract::new(shielder_address, &resources_path.join("shielder.json"))?;
+
+            let deposit_pk = {
+                let pk_bytes = std::fs::read(resources_path.join("deposit.groth16.vk.bytes"))?;
+                <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
+            };
+
+            let deposit_and_merge_pk = {
+                let pk_bytes =
+                    std::fs::read(resources_path.join("deposit_and_merge.groth16.vk.bytes"))?;
+                <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
+            };
+
+            let withdraw_pk = {
+                let pk_bytes = std::fs::read(resources_path.join("withdraw.groth16.vk.bytes"))?;
+                <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
+            };
+
+            Ok(Self {
+                instance: shielder,
+                deposit_pk,
+                deposit_and_merge_pk,
+                withdraw_pk,
+            })
+        }
+    }
+}
+
 use std::{fs::File, path::Path};
 
 use aleph_client::{AccountId, Connection, KeyPair};
 use anyhow::Result;
-use liminal_ark_relations::{CanonicalDeserialize, Groth16, ProvingSystem};
+use liminal_ark_relations::{Groth16, ProvingSystem};
 use psp22::PSP22Token;
 use serde::Deserialize;
-use shielder::contract::Shielder;
+
+use crate::shielder::Shielder;
 
 type ProvingKey = <Groth16 as ProvingSystem>::ProvingKey;
 
@@ -57,7 +104,7 @@ struct Addresses {
     token_b_address: AccountId,
 }
 
-pub struct TestContext {
+struct TestContext {
     pub shielder: Shielder,
     pub token_a: PSP22Token,
     pub token_b: PSP22Token,
@@ -65,21 +112,16 @@ pub struct TestContext {
     pub sudo: KeyPair,
     pub damian: KeyPair,
     pub hans: KeyPair,
-    pub deposit_pk: ProvingKey,
-    pub deposit_and_merge_pk: ProvingKey,
-    pub withdraw_pk: ProvingKey,
 }
 
 impl TestContext {
-    pub async fn local() -> Result<Self> {
+    async fn local() -> Result<Self> {
         let resources_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
         let addresses: Addresses =
             serde_json::from_reader(File::open(resources_path.join("addresses.json"))?)?;
 
-        let shielder = Shielder::new(
-            &addresses.shielder_address,
-            &resources_path.join("shielder.json"),
-        )?;
+        let shielder = Shielder::new(&addresses.shielder_address, &resources_path)?;
+
         let token_a = PSP22Token::new(
             addresses.token_a_address,
             resources_path.join("public_token.json").to_str().unwrap(),
@@ -99,22 +141,6 @@ impl TestContext {
         let damian = aleph_client::keypair_from_string("//0");
         let hans = aleph_client::keypair_from_string("//1");
 
-        let deposit_pk = {
-            let pk_bytes = std::fs::read(resources_path.join("deposit.groth16.vk.bytes"))?;
-            <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
-        };
-
-        let deposit_and_merge_pk = {
-            let pk_bytes =
-                std::fs::read(resources_path.join("deposit_and_merge.groth16.vk.bytes"))?;
-            <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
-        };
-
-        let withdraw_pk = {
-            let pk_bytes = std::fs::read(resources_path.join("withdraw.groth16.vk.bytes"))?;
-            <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
-        };
-
         Ok(Self {
             shielder,
             token_a,
@@ -123,9 +149,6 @@ impl TestContext {
             sudo,
             damian,
             hans,
-            deposit_pk,
-            deposit_and_merge_pk,
-            withdraw_pk,
         })
     }
 }

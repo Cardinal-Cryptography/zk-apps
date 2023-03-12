@@ -8,9 +8,14 @@ use liminal_ark_relations::{
 
 pub type DepositId = u16;
 
+pub type LeafIdx = u32;
+
 pub const MERKLE_PATH_MAX_LEN: u8 = 16;
 
+pub mod app_state;
 pub mod contract;
+pub mod deposit;
+pub mod withdraw;
 
 /// Generates a Groth16 proof for the given `circuit` using proving from the file.
 /// Returns an error when deserialization of the proving key fails.
