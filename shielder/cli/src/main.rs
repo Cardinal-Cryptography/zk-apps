@@ -1,19 +1,18 @@
-use std::{env, fs, io, path::PathBuf};
+use std::{env, io};
 
 use aleph_client::Connection;
 use anyhow::{anyhow, Result};
-use ark_serialize::CanonicalDeserialize;
 use clap::Parser;
 use config::LoggingFormat;
 use inquire::Password;
-use liminal_ark_relations::{
-    serialize, CircuitField, ConstraintSynthesizer, Groth16, ProvingSystem,
-};
+use shielder::contract::Shielder;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
+
+extern crate shielder;
 
 use crate::{
     app_state::AppState,
@@ -22,19 +21,13 @@ use crate::{
         Command::{ContractInteraction, StateRead, StateWrite},
         ContractInteractionCommand, StateReadCommand, StateWriteCommand,
     },
-    contract::Shielder,
     deposit::do_deposit,
     state_file::{get_app_state, save_app_state},
     withdraw::do_withdraw,
 };
 
-type DepositId = u16;
-
-const MERKLE_PATH_MAX_LEN: u8 = 16;
-
 mod app_state;
 mod config;
-mod contract;
 mod deposit;
 mod state_file;
 mod withdraw;
@@ -137,14 +130,4 @@ fn init_logging(format: LoggingFormat) -> Result<()> {
         LoggingFormat::Text => subscriber.try_init(),
     }
     .map_err(|err| anyhow!(err))
-}
-
-fn generate_proof(
-    circuit: impl ConstraintSynthesizer<CircuitField>,
-    proving_key_file: PathBuf,
-) -> Result<Vec<u8>> {
-    let pk_bytes = fs::read(proving_key_file)?;
-    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
-
-    Ok(serialize(&Groth16::prove(&pk, circuit)))
 }

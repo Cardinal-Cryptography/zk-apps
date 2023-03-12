@@ -170,6 +170,7 @@ deploy_token_contracts() {
   log_progress "Token B address: ${TOKEN_B_ADDRESS}"
 }
 
+# Distribute TOKEN_PER_PERSON of TOKEN_A and TOKEN_B to DAMIAN and HANS.
 distribute_tokens() {
   cd "${SCRIPT_DIR}"/../public_token/
 
@@ -187,6 +188,8 @@ deploy_shielder_contract() {
   log_progress "Shielder address: ${SHIELDER_ADDRESS}"
 }
 
+# Set allowance at TOKEN_ALLOWANCE on TOKEN_A and TOKEN_B from SHIELDER, from DAMIAN and HANS.
+# I.E. Shielder contract can now transfer up to TOKEN_ALLOWACE of tokens from DAMIAN and HANS' accounts.
 set_allowances() {
   cd "${SCRIPT_DIR}"/../public_token/
 

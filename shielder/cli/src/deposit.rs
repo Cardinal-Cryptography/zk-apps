@@ -8,12 +8,11 @@ use liminal_ark_relations::{
     FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
 };
 use rand::Rng;
+use shielder::{contract::Shielder, generate_proof, MERKLE_PATH_MAX_LEN};
 
 use crate::{
     app_state::{AppState, Deposit},
     config::DepositCmd,
-    contract::Shielder,
-    generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
 pub async fn do_deposit(
