@@ -14,7 +14,7 @@ mod tests {
     };
     use serde::Deserialize;
 
-    use crate::{psp22::*, TestContext};
+    use crate::{psp22::*, test_context::*};
 
     #[tokio::test]
     pub async fn deposit_decreases_balance() -> Result<()> {
@@ -44,7 +44,7 @@ mod shielder {
     use liminal_ark_relations::{CanonicalDeserialize, Groth16, ProvingSystem};
     use shielder::contract::Shielder as ShielderContract;
 
-    use crate::ProvingKey;
+    use crate::test_context::ProvingKey;
 
     #[allow(unused)]
     pub(super) struct Shielder {
@@ -85,70 +85,72 @@ mod shielder {
     }
 }
 
-use std::{fs::File, path::Path};
+mod test_context {
+    use std::{fs::File, path::Path};
 
-use aleph_client::{AccountId, Connection, KeyPair};
-use anyhow::Result;
-use liminal_ark_relations::{Groth16, ProvingSystem};
-use psp22::PSP22Token;
-use serde::Deserialize;
+    use aleph_client::{AccountId, Connection, KeyPair};
+    use anyhow::Result;
+    use liminal_ark_relations::{Groth16, ProvingSystem};
+    use psp22::PSP22Token;
+    use serde::Deserialize;
 
-use crate::shielder::Shielder;
+    use crate::{psp22, shielder::Shielder};
 
-type ProvingKey = <Groth16 as ProvingSystem>::ProvingKey;
+    pub(super) type ProvingKey = <Groth16 as ProvingSystem>::ProvingKey;
 
-#[derive(Debug, Deserialize)]
-struct Addresses {
-    shielder_address: AccountId,
-    token_a_address: AccountId,
-    token_b_address: AccountId,
-}
+    #[derive(Debug, Deserialize)]
+    pub(super) struct Addresses {
+        shielder_address: AccountId,
+        token_a_address: AccountId,
+        token_b_address: AccountId,
+    }
 
-struct TestContext {
-    pub shielder: Shielder,
-    pub token_a: PSP22Token,
-    pub token_b: PSP22Token,
-    pub connection: Connection,
-    pub sudo: KeyPair,
-    pub damian: KeyPair,
-    pub hans: KeyPair,
-}
+    pub(super) struct TestContext {
+        pub shielder: Shielder,
+        pub token_a: PSP22Token,
+        pub token_b: PSP22Token,
+        pub connection: Connection,
+        pub sudo: KeyPair,
+        pub damian: KeyPair,
+        pub hans: KeyPair,
+    }
 
-impl TestContext {
-    async fn local() -> Result<Self> {
-        let resources_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
-        let addresses: Addresses =
-            serde_json::from_reader(File::open(resources_path.join("addresses.json"))?)?;
+    impl TestContext {
+        pub(super) async fn local() -> Result<Self> {
+            let resources_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+            let addresses: Addresses =
+                serde_json::from_reader(File::open(resources_path.join("addresses.json"))?)?;
 
-        let shielder = Shielder::new(&addresses.shielder_address, &resources_path)?;
+            let shielder = Shielder::new(&addresses.shielder_address, &resources_path)?;
 
-        let token_a = PSP22Token::new(
-            addresses.token_a_address,
-            resources_path.join("public_token.json").to_str().unwrap(),
-        )?;
-        let token_b = PSP22Token::new(
-            addresses.token_b_address,
-            resources_path.join("public_token.json").to_str().unwrap(),
-        )?;
+            let token_a = PSP22Token::new(
+                addresses.token_a_address,
+                resources_path.join("public_token.json").to_str().unwrap(),
+            )?;
+            let token_b = PSP22Token::new(
+                addresses.token_b_address,
+                resources_path.join("public_token.json").to_str().unwrap(),
+            )?;
 
-        let node_address = option_env!("NODE_WS")
-            .unwrap_or_else(|| "ws://127.0.0.1:9944")
-            .to_string();
+            let node_address = option_env!("NODE_WS")
+                .unwrap_or_else(|| "ws://127.0.0.1:9944")
+                .to_string();
 
-        let connection = Connection::new(&node_address).await;
+            let connection = Connection::new(&node_address).await;
 
-        let sudo = aleph_client::keypair_from_string("//Alice");
-        let damian = aleph_client::keypair_from_string("//0");
-        let hans = aleph_client::keypair_from_string("//1");
+            let sudo = aleph_client::keypair_from_string("//Alice");
+            let damian = aleph_client::keypair_from_string("//0");
+            let hans = aleph_client::keypair_from_string("//1");
 
-        Ok(Self {
-            shielder,
-            token_a,
-            token_b,
-            connection,
-            sudo,
-            damian,
-            hans,
-        })
+            Ok(Self {
+                shielder,
+                token_a,
+                token_b,
+                connection,
+                sudo,
+                damian,
+                hans,
+            })
+        }
     }
 }
