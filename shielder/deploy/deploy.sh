@@ -5,8 +5,9 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
-export NODE_IMAGE=public.ecr.aws/p6e8q1z1/snarkeling:20055a7
-export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-snarkeling:8c5fe07
+# TODO: Replace with published snarkeling node.
+export NODE_IMAGE=aleph-node/snarkeling:latest
+export CLIAIN_IMAGE=public.ecr.aws/p6e8q1z1/cliain-liminal:8e3643e
 export CARGO_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:1.0.0
 
 # actors
@@ -67,7 +68,7 @@ generate_chainspec() {
     --base-path /data \
     --account-ids ${DAMIAN_PUBKEY} \
     --sudo-account-id ${ADMIN_PUBKEY} \
-    --rich-account-ids ${DAMIAN_PUBKEY},${HANS_PUBKEY},${ADMIN_PUBKEY} \
+    --faucet-account-id ${ADMIN_PUBKEY} \
     --chain-id a0smnet \
     --token-symbol SNZERO \
     --chain-name 'Aleph Zero Snarkeling'"
@@ -104,6 +105,15 @@ generate_relation_keys() {
     -c "/usr/local/bin/cliain snark-relation generate-keys ${1} ${2:-}"
 
   log_progress "✅ Generated keys for '${1}' relation"
+}
+
+transfer() {
+  $DOCKER_SH \
+    --network host \
+    ${CLIAIN_IMAGE} \
+    -c "/usr/local/bin/cliain --node ${NODE} --seed ${ADMIN} transfer --amount-in-tokens ${TOKEN_PER_PERSON} --to-account ${1}" 1>/dev/null 2>/dev/null
+
+  log_progress "✅ Transferred ${TOKEN_PER_PERSON} to ${1}"
 }
 
 generate_keys() {
@@ -170,6 +180,13 @@ deploy_token_contracts() {
   log_progress "Token B address: ${TOKEN_B_ADDRESS}"
 }
 
+# Funds Damian and Hans accounts from faucet
+prefund_users() {
+  for recipient in "${DAMIAN_PUBKEY}" "${HANS_PUBKEY}"; do
+    transfer ${recipient}
+  done
+}
+
 # Distribute TOKEN_PER_PERSON of TOKEN_A and TOKEN_B to DAMIAN and HANS.
 distribute_tokens() {
   cd "${SCRIPT_DIR}"/../public_token/
@@ -198,6 +215,8 @@ set_allowances() {
        contract_call "--contract ${token} --message PSP22::approve --args ${SHIELDER_ADDRESS} ${TOKEN_ALLOWANCE} --suri ${actor}" 1> /dev/null 2> /dev/null
     done
   done
+
+  log_progress "✅ Allowances set."
 }
 
 store_contract_addresses() {
@@ -210,19 +229,21 @@ store_contract_addresses() {
           token_b_address: $token_b_address,
         }' > ${SCRIPT_DIR}/addresses.json
 
-  log_progress "✅ Contract addresses stored in a file"
+  log_progress "✅ Contract addresses stored in a ${SCRIPT_DIR}/addresses.json"
 }
 
 register_vk() {
-  cd "${SCRIPT_DIR}"/../contract/
-
   DEPOSIT_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit.groth16.vk.bytes | tr -d '\n')"
   DEPOSIT_MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit_and_merge.groth16.vk.bytes | tr -d '\n')"
   WITHDRAW_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
 
-  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+  pushd $SCRIPT_DIR/../contract
+
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}"
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args DepositAndMerge ${DEPOSIT_MERGE_VK_BYTES} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Withdraw        ${WITHDRAW_VK_BYTES}      --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+
+  popd
 }
 
 register_tokens() {
@@ -256,6 +277,8 @@ deploy() {
   # build contracts and CLI
   build
   move_build_artifacts
+
+  prefund_users
 
   # deploy and set up contracts
   deploy_token_contracts
