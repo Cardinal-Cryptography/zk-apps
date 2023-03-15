@@ -13,6 +13,7 @@ mod tests {
         ProvingSystem,
     };
     use serde::Deserialize;
+    use shielder::deposit;
 
     use crate::{psp22::*, test_context::*};
 
@@ -23,35 +24,55 @@ mod tests {
             token_a,
             token_b,
             connection,
-            sudo,
-            damian,
-            hans,
+            mut sudo,
+            mut damian,
+            mut hans,
         } = TestContext::local().await?;
-        let dbalanceA = token_a
-            .balance_of(&connection, &damian.account_id())
+
+        let damian_balance_before = token_a
+            .balance_of(&connection, &damian.account_id)
             .await
             .unwrap();
-        println!("TokenA.balance_of(DAMIAN)={:?}", dbalanceA);
+
+        let deposit_amount = 100u64;
+
+        println!("TokenA.balance_of(DAMIAN)={:?}", damian_balance_before);
+
+        deposit::first_deposit(
+            TOKEN_A_ID,
+            deposit_amount,
+            shielder.deposit_pk_file,
+            SignedConnection::from_connection(connection.clone(), damian.keypair),
+            shielder.instance,
+            &mut damian.app_state,
+        )
+        .await
+        .unwrap();
+
+        let damian_balance_after = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        println!("TokenA.balance_of(DAMIAN)={:?}", damian_balance_after);
+
         Ok(())
     }
 }
 
 mod shielder {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     use aleph_client::AccountId;
     use anyhow::Result;
-    use liminal_ark_relations::{CanonicalDeserialize, Groth16, ProvingSystem};
     use shielder::contract::Shielder as ShielderContract;
-
-    use crate::test_context::ProvingKey;
 
     #[allow(unused)]
     pub(super) struct Shielder {
-        instance: ShielderContract,
-        deposit_pk: ProvingKey,
-        deposit_and_merge_pk: ProvingKey,
-        withdraw_pk: ProvingKey,
+        pub(super) instance: ShielderContract,
+        pub(super) deposit_pk_file: PathBuf,
+        pub(super) deposit_and_merge_pk_file: PathBuf,
+        pub(super) withdraw_pk_file: PathBuf,
     }
 
     impl Shielder {
@@ -59,27 +80,12 @@ mod shielder {
             let shielder =
                 ShielderContract::new(shielder_address, &resources_path.join("shielder.json"))?;
 
-            let deposit_pk = {
-                let pk_bytes = std::fs::read(resources_path.join("deposit.groth16.vk.bytes"))?;
-                <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
-            };
-
-            let deposit_and_merge_pk = {
-                let pk_bytes =
-                    std::fs::read(resources_path.join("deposit_and_merge.groth16.vk.bytes"))?;
-                <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
-            };
-
-            let withdraw_pk = {
-                let pk_bytes = std::fs::read(resources_path.join("withdraw.groth16.vk.bytes"))?;
-                <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?
-            };
-
             Ok(Self {
                 instance: shielder,
-                deposit_pk,
-                deposit_and_merge_pk,
-                withdraw_pk,
+                deposit_pk_file: resources_path.join("deposit.groth16.vk.bytes"),
+                deposit_and_merge_pk_file: resources_path
+                    .join("deposit_and_merge.groth16.vk.bytes"),
+                withdraw_pk_file: resources_path.join("withdraw.groth16.vk.bytes"),
             })
         }
     }
@@ -90,13 +96,14 @@ mod test_context {
 
     use aleph_client::{AccountId, Connection, KeyPair};
     use anyhow::Result;
-    use liminal_ark_relations::{Groth16, ProvingSystem};
     use psp22::PSP22Token;
     use serde::Deserialize;
+    use shielder::app_state::AppState;
 
     use crate::{psp22, shielder::Shielder};
 
-    pub(super) type ProvingKey = <Groth16 as ProvingSystem>::ProvingKey;
+    pub(super) const TOKEN_A_ID: u16 = 0;
+    pub(super) const TOKEN_B_ID: u16 = 1;
 
     #[derive(Debug, Deserialize)]
     pub(super) struct Addresses {
@@ -105,19 +112,39 @@ mod test_context {
         token_b_address: AccountId,
     }
 
+    pub(super) struct User {
+        pub(super) account_id: AccountId,
+        pub(super) keypair: KeyPair,
+        pub(super) app_state: AppState,
+    }
+
+    impl User {
+        pub(super) fn new(keypair: KeyPair) -> Self {
+            let account_id = keypair.account_id().clone();
+            let app_state = AppState::default();
+            Self {
+                account_id,
+                keypair,
+                app_state,
+            }
+        }
+    }
+
     pub(super) struct TestContext {
         pub shielder: Shielder,
         pub token_a: PSP22Token,
         pub token_b: PSP22Token,
         pub connection: Connection,
-        pub sudo: KeyPair,
-        pub damian: KeyPair,
-        pub hans: KeyPair,
+        pub sudo: User,
+        pub damian: User,
+        pub hans: User,
     }
 
     impl TestContext {
         pub(super) async fn local() -> Result<Self> {
-            let resources_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+            let resources_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests")
+                .join("resources");
             let addresses: Addresses =
                 serde_json::from_reader(File::open(resources_path.join("addresses.json"))?)?;
 
@@ -147,9 +174,9 @@ mod test_context {
                 token_a,
                 token_b,
                 connection,
-                sudo,
-                damian,
-                hans,
+                sudo: User::new(sudo),
+                damian: User::new(damian),
+                hans: User::new(hans),
             })
         }
     }

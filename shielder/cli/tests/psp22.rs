@@ -5,7 +5,7 @@ use anyhow::Result;
 
 #[derive(Debug)]
 pub struct PSP22Token {
-    instance: ContractInstance,
+    pub instance: ContractInstance,
 }
 
 impl PSP22Token {
