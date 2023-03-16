@@ -31,8 +31,8 @@ mod shielder {
     use crate::{
         array_to_tuple, error::ShielderError, tuple_to_array, MerkleHash, MerkleRoot, Note,
         Nullifier, Set, TokenAmount, TokenId, DEPOSIT_AND_MERGE_VK_IDENTIFIER,
-        DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
-        PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
+        DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR, PSP22_TRANSFER_SELECTOR, SYSTEM,
+        WITHDRAW_VK_IDENTIFIER,
     };
 
     /// Supported relations - used for registering verifying keys.
