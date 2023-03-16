@@ -32,3 +32,11 @@ const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier = [b'd', b'p', 
 const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier = [b'w', b't', b'h', b'd'];
 /// The only supported proving system for now.
 const SYSTEM: ProvingSystem = ProvingSystem::Groth16;
+
+fn array_to_tuple(a: [u64; 4]) -> (u64, u64, u64, u64) {
+    (a[0], a[1], a[2], a[3])
+}
+
+fn tuple_to_array(a: (u64, u64, u64, u64)) -> [u64; 4] {
+    [a.0, a.1, a.2, a.3]
+}
