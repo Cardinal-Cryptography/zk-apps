@@ -206,7 +206,7 @@ deploy_shielder_contract() {
 }
 
 # Set allowance at TOKEN_ALLOWANCE on TOKEN_A and TOKEN_B from SHIELDER, from DAMIAN and HANS.
-# I.E. Shielder contract can now transfer up to TOKEN_ALLOWACE of tokens from DAMIAN and HANS' accounts.
+# I.E. Shielder contract can now transfer up to TOKEN_ALLOWANCE of tokens from DAMIAN and HANS' accounts.
 set_allowances() {
   cd "${SCRIPT_DIR}"/../public_token/
 
