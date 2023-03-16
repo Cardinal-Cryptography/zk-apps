@@ -1,43 +1,31 @@
-use std::{env, fs, io, path::PathBuf};
+use std::{env, io};
 
-use aleph_client::Connection;
+use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
 use anyhow::{anyhow, Result};
-use ark_serialize::CanonicalDeserialize;
 use clap::Parser;
-use config::LoggingFormat;
-use inquire::Password;
-use liminal_ark_relations::{
-    serialize, CircuitField, ConstraintSynthesizer, Groth16, ProvingSystem,
-};
+use config::{DepositCmd, LoggingFormat, WithdrawCmd};
+use inquire::{CustomType, Password, Select};
+use liminal_ark_relations::FrontendTokenAmount;
+use shielder::{app_state::AppState, contract::Shielder, deposit::*, withdraw::*};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
+extern crate shielder;
+
 use crate::{
-    app_state::AppState,
     config::{
         CliConfig,
         Command::{ContractInteraction, StateRead, StateWrite},
         ContractInteractionCommand, StateReadCommand, StateWriteCommand,
     },
-    contract::Shielder,
-    deposit::do_deposit,
     state_file::{get_app_state, save_app_state},
-    withdraw::do_withdraw,
 };
 
-type DepositId = u16;
-
-const MERKLE_PATH_MAX_LEN: u8 = 16;
-
-mod app_state;
 mod config;
-mod contract;
-mod deposit;
 mod state_file;
-mod withdraw;
 
 fn perform_state_write_action(app_state: &mut AppState, command: StateWriteCommand) -> Result<()> {
     match command {
@@ -139,12 +127,126 @@ fn init_logging(format: LoggingFormat) -> Result<()> {
     .map_err(|err| anyhow!(err))
 }
 
-fn generate_proof(
-    circuit: impl ConstraintSynthesizer<CircuitField>,
-    proving_key_file: PathBuf,
-) -> Result<Vec<u8>> {
-    let pk_bytes = fs::read(proving_key_file)?;
-    let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;
+async fn do_deposit(
+    contract: Shielder,
+    connection: Connection,
+    cmd: DepositCmd,
+    app_state: &mut AppState,
+) -> Result<()> {
+    let DepositCmd {
+        token_id,
+        amount,
+        caller_seed,
+        ..
+    } = cmd;
 
-    Ok(serialize(&Groth16::prove(&pk, circuit)))
+    let seed = match caller_seed {
+        Some(seed) => seed,
+        None => Password::new("Seed of the depositing account (the tokens owner):")
+            .without_confirmation()
+            .prompt()?,
+    };
+    let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
+
+    let old_deposit = app_state.get_last_deposit(token_id);
+    match old_deposit {
+        Some(old_deposit) => {
+            deposit_and_merge(
+                old_deposit,
+                amount,
+                cmd.deposit_and_merge_key_file,
+                connection,
+                contract,
+                app_state,
+            )
+            .await
+        }
+        None => {
+            first_deposit(
+                token_id,
+                amount,
+                cmd.deposit_key_file,
+                connection,
+                contract,
+                app_state,
+            )
+            .await
+        }
+    }
+}
+
+async fn do_withdraw(
+    contract: Shielder,
+    connection: Connection,
+    cmd: WithdrawCmd,
+    app_state: &mut AppState,
+) -> Result<()> {
+    let (deposit, withdraw_amount) = get_deposit_and_withdraw_amount(&cmd, app_state)?;
+
+    let WithdrawCmd {
+        recipient,
+        caller_seed,
+        fee,
+        proving_key_file,
+        ..
+    } = cmd;
+
+    let caller_seed = match caller_seed {
+        Some(seed) => seed,
+        None => Password::new(
+            "Seed of the withdrawing account (the caller, not necessarily recipient):",
+        )
+        .without_confirmation()
+        .prompt()?,
+    };
+
+    let signer = keypair_from_string(&caller_seed);
+    let recipient = match recipient {
+        Some(recipient) => recipient,
+        None => account_from_keypair(signer.signer()),
+    };
+
+    let connection = SignedConnection::from_connection(connection, signer);
+
+    withdraw(
+        contract,
+        connection,
+        deposit,
+        withdraw_amount,
+        recipient,
+        fee,
+        proving_key_file,
+        app_state,
+    )
+    .await
+}
+
+fn get_deposit_and_withdraw_amount(
+    cmd: &WithdrawCmd,
+    app_state: &AppState,
+) -> Result<(shielder::app_state::Deposit, FrontendTokenAmount)> {
+    if !cmd.interactive {
+        if let Some(deposit) = app_state.get_deposit_by_id(cmd.deposit_id.unwrap()) {
+            return Ok((deposit, cmd.amount.unwrap()));
+        }
+        return Err(anyhow!("Incorrect deposit id"));
+    }
+
+    let deposit = Select::new("Select one of your deposits:", app_state.deposits())
+        .with_page_size(5)
+        .prompt()?;
+
+    let amount =
+        CustomType::<FrontendTokenAmount>::new("Specify how many tokens should be withdrawn:")
+            .with_default(deposit.token_amount)
+            .with_parser(&|a| match str::parse::<FrontendTokenAmount>(a) {
+                Ok(amount) if amount <= deposit.token_amount => Ok(amount),
+                _ => Err(()),
+            })
+            .with_error_message(
+                "You should provide a valid amount, no more than the whole deposit value",
+            )
+            .prompt()?;
+
+    Ok((deposit, amount))
 }
