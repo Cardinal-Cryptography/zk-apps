@@ -29,7 +29,7 @@ pub async fn first_deposit(
     // we don't waste user's time.
     let circuit =
         DepositRelationWithFullInput::new(note, token_id, token_amount, trapdoor, nullifier);
-    let proof = generate_proof(circuit, proving_key_file)?;
+    let proof = generate_proof(circuit, &proving_key_file)?;
 
     let leaf_idx = contract
         .deposit(&connection, token_id, token_amount, note, &proof)
@@ -45,10 +45,10 @@ pub async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
     proving_key_file: PathBuf,
-    connection: SignedConnection,
-    contract: Shielder,
+    connection: &SignedConnection,
+    contract: &Shielder,
     app_state: &mut AppState,
-) -> Result<()> {
+) -> Result<DepositId> {
     let Deposit {
         token_id,
         token_amount: old_token_amount,
@@ -58,9 +58,9 @@ pub async fn deposit_and_merge(
         note: old_note,
         ..
     } = deposit;
-    let merkle_root = contract.get_merkle_root(&connection).await;
+    let merkle_root = contract.get_merkle_root(connection).await;
     let merkle_path = contract
-        .get_merkle_path(&connection, leaf_idx)
+        .get_merkle_path(connection, leaf_idx)
         .await
         .expect("Path does not exist");
 
@@ -86,11 +86,11 @@ pub async fn deposit_and_merge(
         new_token_amount,
     );
 
-    let proof = generate_proof(circuit, proving_key_file)?;
+    let proof = generate_proof(circuit, &proving_key_file)?;
 
     let leaf_idx = contract
         .deposit_and_merge(
-            &connection,
+            connection,
             token_id,
             token_amount,
             merkle_root,
@@ -109,5 +109,5 @@ pub async fn deposit_and_merge(
         new_note,
     );
 
-    Ok(())
+    Ok(deposit.deposit_id)
 }

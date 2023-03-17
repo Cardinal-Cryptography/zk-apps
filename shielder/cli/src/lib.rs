@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::Path};
 
 use anyhow::Result;
 use ark_serialize::CanonicalDeserialize;
@@ -21,7 +21,7 @@ pub mod withdraw;
 /// Returns an error when either reading file or deserialization of the proving key fails.
 pub fn generate_proof(
     circuit: impl ConstraintSynthesizer<CircuitField>,
-    proving_key_file: PathBuf,
+    proving_key_file: &Path,
 ) -> Result<Vec<u8>> {
     let pk_bytes = fs::read(proving_key_file)?;
     let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*pk_bytes)?;

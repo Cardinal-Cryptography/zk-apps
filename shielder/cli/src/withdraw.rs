@@ -22,7 +22,7 @@ pub async fn withdraw(
     withdraw_amount: FrontendTokenAmount,
     recipient: &AccountId32,
     fee: u64,
-    withdraw_pk_file: PathBuf,
+    withdraw_pk_file: &PathBuf,
     app_state: &mut AppState,
 ) -> Result<()> {
     let Deposit {
@@ -82,6 +82,7 @@ pub async fn withdraw(
             &proof,
         )
         .await?;
+    println!("leaf: {:?}", leaf_idx);
 
     // save new deposit to the state
     if new_token_amount > 0 {

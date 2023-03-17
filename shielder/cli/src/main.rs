@@ -151,15 +151,16 @@ async fn do_deposit(
     let old_deposit = app_state.get_last_deposit(token_id);
     match old_deposit {
         Some(old_deposit) => {
-            deposit_and_merge(
+            let _ = deposit_and_merge(
                 old_deposit,
                 amount,
                 cmd.deposit_and_merge_key_file,
-                connection,
-                contract,
+                &connection,
+                &contract,
                 app_state,
             )
-            .await
+            .await?;
+            Ok(())
         }
         None => {
             let _ = first_deposit(
@@ -216,7 +217,7 @@ async fn do_withdraw(
         withdraw_amount,
         &recipient,
         fee,
-        proving_key_file,
+        &proving_key_file,
         app_state,
     )
     .await
