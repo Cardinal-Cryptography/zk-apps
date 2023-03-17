@@ -17,7 +17,7 @@ use crate::{
 pub async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
-    proving_key_file: PathBuf,
+    proving_key_file: &PathBuf,
     connection: &SignedConnection,
     contract: &Shielder,
     app_state: &mut AppState,
@@ -44,7 +44,7 @@ pub async fn first_deposit(
 pub async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
-    proving_key_file: PathBuf,
+    proving_key_file: &PathBuf,
     connection: &SignedConnection,
     contract: &Shielder,
     app_state: &mut AppState,

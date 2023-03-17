@@ -154,7 +154,7 @@ async fn do_deposit(
             let _ = deposit_and_merge(
                 old_deposit,
                 amount,
-                cmd.deposit_and_merge_key_file,
+                &cmd.deposit_and_merge_key_file,
                 &connection,
                 &contract,
                 app_state,
@@ -166,7 +166,7 @@ async fn do_deposit(
             let _ = first_deposit(
                 token_id,
                 amount,
-                cmd.deposit_key_file,
+                &cmd.deposit_key_file,
                 &connection,
                 &contract,
                 app_state,

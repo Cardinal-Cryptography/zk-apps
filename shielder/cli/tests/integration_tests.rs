@@ -57,18 +57,10 @@ mod tests {
         info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_before_shield,
             "Balance before shielding");
 
-        let damian_signed = damian.signed_conn(connection.clone());
-
-        let deposit_id = deposit::first_deposit(
-            TOKEN_A_ID,
-            shield_amount,
-            shielder.deposit_pk_file,
-            &damian_signed,
-            &shielder.instance,
-            &mut damian.app_state,
-        )
-        .await
-        .unwrap();
+        let deposit_id = damian
+            .shield(TOKEN_A_ID, shield_amount, &shielder)
+            .await
+            .unwrap();
 
         let damian_balance_after_shield = token_a
             .balance_of(&connection, &damian.account_id)
@@ -89,18 +81,10 @@ mod tests {
             .expect("deposit to exist since we just created it");
         let deposit_amount = prev_deposit.token_amount;
 
-        withdraw::withdraw(
-            &shielder.instance,
-            &damian_signed,
-            prev_deposit,
-            deposit_amount,
-            &damian.account_id,
-            0,
-            &shielder.withdraw_pk_file,
-            &mut damian.app_state,
-        )
-        .await
-        .unwrap();
+        damian
+            .unshield(&shielder, prev_deposit, None, 0)
+            .await
+            .unwrap();
 
         info!("Tokens unshielded");
 
@@ -150,18 +134,10 @@ mod tests {
 
         let first_shield_amount = 100u64;
 
-        let damian_signed = damian.signed_conn(connection.clone());
-
-        let first_deposit_id = deposit::first_deposit(
-            TOKEN_A_ID,
-            first_shield_amount,
-            shielder.deposit_pk_file,
-            &damian_signed,
-            &shielder.instance,
-            &mut damian.app_state,
-        )
-        .await
-        .unwrap();
+        let first_deposit_id = damian
+            .shield(TOKEN_A_ID, first_shield_amount, &shielder)
+            .await
+            .unwrap();
 
         let damian_balance_after_shield = token_a
             .balance_of(&connection, &damian.account_id)
@@ -177,8 +153,8 @@ mod tests {
         let merged_deposit_id = deposit::deposit_and_merge(
             first_deposit.clone(),
             second_shield_amount,
-            shielder.deposit_and_merge_pk_file,
-            &damian_signed,
+            &shielder.deposit_and_merge_pk_file,
+            &damian.conn,
             &shielder.instance,
             &mut damian.app_state,
         )
@@ -194,17 +170,7 @@ mod tests {
             "Balance after merging");
 
         // We should not be able to withdraw with nullifier and trapdoor of the first deposit.
-        let res = withdraw::withdraw(
-            &shielder.instance,
-            &damian_signed,
-            first_deposit,
-            first_shield_amount,
-            &damian.account_id,
-            0,
-            &shielder.withdraw_pk_file,
-            &mut damian.app_state,
-        )
-        .await;
+        let res = damian.unshield(&shielder, first_deposit, None, 0).await;
         assert!(res.is_err());
 
         // Damian's token balance should be unchanged.
@@ -219,20 +185,11 @@ mod tests {
         );
 
         let merged_deposit = damian.get_deposit(merged_deposit_id).unwrap();
-        let merged_deposit_amount = merged_deposit.token_amount;
 
-        let _ = withdraw::withdraw(
-            &shielder.instance,
-            &damian_signed,
-            merged_deposit,
-            merged_deposit_amount,
-            &damian.account_id,
-            0,
-            &shielder.withdraw_pk_file,
-            &mut damian.app_state,
-        )
-        .await
-        .expect("Withdrawing merged note should succeed");
+        let _ = damian
+            .unshield(&shielder, merged_deposit, None, 0)
+            .await
+            .expect("Withdrawing merged note should succeed");
 
         let damian_balance_after_unshielding = token_a
             .balance_of(&connection, &damian.account_id)
@@ -283,11 +240,12 @@ mod test_context {
 
     use aleph_client::{AccountId, Connection, KeyPair, SignedConnection};
     use anyhow::Result;
+    use liminal_ark_relations::{FrontendTokenAmount, FrontendTokenId};
     use psp22::PSP22Token;
     use serde::Deserialize;
     use shielder::{
         app_state::{AppState, Deposit},
-        DepositId,
+        deposit, withdraw, DepositId,
     };
 
     use crate::{psp22, shielder::Shielder};
@@ -303,27 +261,63 @@ mod test_context {
 
     pub(super) struct User {
         pub(super) account_id: AccountId,
-        pub(super) keypair: KeyPair,
         pub(super) app_state: AppState,
+        pub(super) conn: SignedConnection,
     }
 
     impl User {
-        pub(super) fn new(keypair: KeyPair) -> Self {
+        pub(super) fn new(keypair: KeyPair, conn: Connection) -> Self {
             let account_id = keypair.account_id().clone();
             let app_state = AppState::default();
+            let conn = SignedConnection::from_connection(conn, keypair.clone());
             Self {
                 account_id,
-                keypair,
                 app_state,
+                conn,
             }
-        }
-
-        pub(super) fn signed_conn(&self, conn: Connection) -> SignedConnection {
-            SignedConnection::from_connection(conn, self.keypair.clone())
         }
 
         pub(super) fn get_deposit(&self, deposit_id: DepositId) -> Option<Deposit> {
             self.app_state.get_deposit_by_id(deposit_id)
+        }
+
+        pub(super) async fn shield(
+            &mut self,
+            token_id: FrontendTokenId,
+            token_amount: FrontendTokenAmount,
+            shielder: &Shielder,
+        ) -> Result<DepositId> {
+            let deposit_id = deposit::first_deposit(
+                token_id,
+                token_amount,
+                &shielder.deposit_pk_file,
+                &self.conn,
+                &shielder.instance,
+                &mut self.app_state,
+            )
+            .await?;
+            Ok(deposit_id)
+        }
+
+        pub(super) async fn unshield(
+            &mut self,
+            shielder: &Shielder,
+            deposit: Deposit,
+            amount: Option<FrontendTokenAmount>,
+            fee: u64,
+        ) -> Result<()> {
+            let withdraw_amount = amount.unwrap_or(deposit.token_amount);
+            withdraw::withdraw(
+                &shielder.instance,
+                &self.conn,
+                deposit,
+                withdraw_amount,
+                &self.account_id,
+                fee,
+                &shielder.withdraw_pk_file,
+                &mut self.app_state,
+            )
+            .await
         }
     }
 
@@ -370,10 +364,10 @@ mod test_context {
                 shielder,
                 token_a,
                 token_b,
-                connection,
-                sudo: User::new(sudo),
-                damian: User::new(damian),
-                hans: User::new(hans),
+                connection: connection.clone(),
+                sudo: User::new(sudo, connection.clone()),
+                damian: User::new(damian, connection.clone()),
+                hans: User::new(hans, connection.clone()),
             })
         }
     }
