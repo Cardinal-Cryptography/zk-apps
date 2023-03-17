@@ -16,11 +16,11 @@ use crate::{
 
 #[allow(clippy::too_many_arguments)]
 pub async fn withdraw(
-    contract: Shielder,
-    connection: SignedConnection,
+    contract: &Shielder,
+    connection: &SignedConnection,
     deposit: Deposit,
     withdraw_amount: FrontendTokenAmount,
-    recipient: AccountId32,
+    recipient: &AccountId32,
     fee: u64,
     withdraw_pk_file: PathBuf,
     app_state: &mut AppState,

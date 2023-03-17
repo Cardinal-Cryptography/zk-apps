@@ -67,7 +67,7 @@ impl Shielder {
         connection: &SignedConnection,
         token_id: FrontendTokenId,
         value: FrontendTokenAmount,
-        recipient: AccountId,
+        recipient: &AccountId,
         fee_for_caller: FrontendTokenAmount,
         merkle_root: FrontendMerkleRoot,
         old_nullifier: FrontendNullifier,

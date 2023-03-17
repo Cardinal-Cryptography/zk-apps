@@ -116,7 +116,8 @@ impl AppState {
         nullifier: FrontendNullifier,
         leaf_idx: u32,
         note: FrontendNote,
-    ) {
+    ) -> DepositId {
+        let deposit_id = self.deposit_counter;
         self.deposits.push(Deposit {
             deposit_id: self.deposit_counter,
             token_id,
@@ -127,6 +128,7 @@ impl AppState {
             note,
         });
         self.deposit_counter += 1;
+        deposit_id
     }
 
     pub fn deposits(&self) -> Vec<Deposit> {
