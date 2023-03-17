@@ -13,16 +13,16 @@ mod tests {
         ProvingSystem,
     };
     use serde::Deserialize;
-    use shielder::deposit;
+    use shielder::{deposit, withdraw};
     use tracing::info;
     use tracing_subscriber::EnvFilter;
 
     use crate::{psp22::*, test_context::*};
 
     #[tokio::test]
-    pub async fn deposit_decreases_balance() -> Result<()> {
+    pub async fn basic_interaction() -> Result<()> {
         // We need to disable logging in our dependency crates by default.
-        let filter = EnvFilter::new("info");
+        let filter = EnvFilter::new("warn,shielder_cli=info");
 
         let subscriber = tracing_subscriber::fmt()
             .with_writer(std::io::stdout)
@@ -41,40 +41,70 @@ mod tests {
             mut hans,
         } = TestContext::local().await?;
 
-        let damian_balance_before = token_a
+        let damian_balance_before_shield = token_a
             .balance_of(&connection, &damian.account_id)
             .await
             .unwrap();
 
-        let deposit_amount = 100u64;
+        let shield_amount = 100u64;
 
-        info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_before,
+        info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_before_shield,
             "Balance before shielding");
 
-        deposit::first_deposit(
+        let damian_signed = damian.signed_conn(connection.clone());
+
+        let deposit_id = deposit::first_deposit(
             TOKEN_A_ID,
-            deposit_amount,
+            shield_amount,
             shielder.deposit_pk_file,
-            SignedConnection::from_connection(connection.clone(), damian.keypair),
-            shielder.instance,
+            &damian_signed,
+            &shielder.instance,
             &mut damian.app_state,
         )
         .await
         .unwrap();
 
-        let damian_balance_after = token_a
+        let damian_balance_after_shield = token_a
             .balance_of(&connection, &damian.account_id)
             .await
             .unwrap();
 
-        info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after,
+        info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_shield,
             "Balance after shielding");
 
         assert_eq!(
-            damian_balance_after + deposit_amount as u128,
-            damian_balance_before,
+            damian_balance_after_shield + shield_amount as u128,
+            damian_balance_before_shield,
             "Shielding should decrease balance"
         );
+
+        let prev_deposit = damian
+            .get_deposit(deposit_id)
+            .expect("deposit to exist since we just created it");
+        let deposit_amount = prev_deposit.token_amount;
+
+        withdraw::withdraw(
+            &shielder.instance,
+            &damian_signed,
+            prev_deposit,
+            deposit_amount,
+            &damian.account_id,
+            0,
+            shielder.withdraw_pk_file,
+            &mut damian.app_state,
+        )
+        .await
+        .unwrap();
+
+        let damian_balance_after_unshield = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_unshield,
+            "Balance after unshielding");
+
+        assert_eq!(damian_balance_after_unshield, damian_balance_before_shield);
         Ok(())
     }
 }
@@ -112,16 +142,18 @@ mod shielder {
 mod test_context {
     use std::{fs::File, path::Path};
 
-    use aleph_client::{AccountId, Connection, KeyPair};
+    use aleph_client::{AccountId, Connection, KeyPair, SignedConnection};
     use anyhow::Result;
     use psp22::PSP22Token;
     use serde::Deserialize;
-    use shielder::app_state::AppState;
+    use shielder::{
+        app_state::{AppState, Deposit},
+        DepositId,
+    };
 
     use crate::{psp22, shielder::Shielder};
 
     pub(super) const TOKEN_A_ID: u16 = 0;
-    pub(super) const TOKEN_B_ID: u16 = 1;
 
     #[derive(Debug, Deserialize)]
     pub(super) struct Addresses {
@@ -145,6 +177,14 @@ mod test_context {
                 keypair,
                 app_state,
             }
+        }
+
+        pub(super) fn signed_conn(&self, conn: Connection) -> SignedConnection {
+            SignedConnection::from_connection(conn, self.keypair.clone())
+        }
+
+        pub(super) fn get_deposit(&self, deposit_id: DepositId) -> Option<Deposit> {
+            self.app_state.get_deposit_by_id(deposit_id)
         }
     }
 

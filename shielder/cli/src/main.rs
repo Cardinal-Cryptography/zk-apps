@@ -162,15 +162,16 @@ async fn do_deposit(
             .await
         }
         None => {
-            first_deposit(
+            let _ = first_deposit(
                 token_id,
                 amount,
                 cmd.deposit_key_file,
-                connection,
-                contract,
+                &connection,
+                &contract,
                 app_state,
             )
-            .await
+            .await?;
+            Ok(())
         }
     }
 }
@@ -209,11 +210,11 @@ async fn do_withdraw(
     let connection = SignedConnection::from_connection(connection, signer);
 
     withdraw(
-        contract,
-        connection,
+        &contract,
+        &connection,
         deposit,
         withdraw_amount,
-        recipient,
+        &recipient,
         fee,
         proving_key_file,
         app_state,

@@ -11,17 +11,17 @@ use rand::Rng;
 use crate::{
     app_state::{AppState, Deposit},
     contract::Shielder,
-    generate_proof, MERKLE_PATH_MAX_LEN,
+    generate_proof, DepositId, MERKLE_PATH_MAX_LEN,
 };
 
 pub async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
     proving_key_file: PathBuf,
-    connection: SignedConnection,
-    contract: Shielder,
+    connection: &SignedConnection,
+    contract: &Shielder,
     app_state: &mut AppState,
-) -> Result<()> {
+) -> Result<DepositId> {
     let (trapdoor, nullifier) = rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
@@ -35,9 +35,10 @@ pub async fn first_deposit(
         .deposit(&connection, token_id, token_amount, note, &proof)
         .await?;
 
-    app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
+    let deposit_id =
+        app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
 
-    Ok(())
+    Ok(deposit_id)
 }
 
 pub async fn deposit_and_merge(
