@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Check if run in e2e shielder test context. Defaults to unset.
+E2E_TEST_CONTEXT=${E2E_TEST:-}
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
@@ -150,9 +153,6 @@ build() {
 
   docker_cargo "contract build --release --manifest-path contract/Cargo.toml 1>/dev/null 2>/dev/null"
   log_progress "✅ Shielder contract was built"
-
-  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null 2>/dev/null"
-  log_progress "✅ CLI was built"
 }
 
 move_build_artifacts() {
@@ -253,6 +253,10 @@ register_tokens() {
 }
 
 setup_cli() {
+  cd "${SCRIPT_DIR}"/..
+  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null 2>/dev/null"
+  log_progress "✅ CLI was built"
+
   rm ~/.shielder-state 2>/dev/null || true
 
   cd "${SCRIPT_DIR}"/../cli/
@@ -274,7 +278,7 @@ deploy() {
   generate_keys
   move_keys
 
-  # build contracts and CLI
+  # build contracts
   build
   move_build_artifacts
 
@@ -291,8 +295,13 @@ deploy() {
   # store contract addresses in a file
   store_contract_addresses
 
-  # setup CLI
-  setup_cli
+  # build and setup CLI
+  if [[ ! -z "${E2E_TEST_CONTEXT}" ]]; then
+    log_progress "Setting up CLI..."
+    setup_cli
+  else
+    log_progress "Running in e2e test context. Skipping CLI setup."
+  fi
 
   log_progress "🙌 Deployment successful"
 }
