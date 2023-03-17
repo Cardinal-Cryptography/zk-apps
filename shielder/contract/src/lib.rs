@@ -37,3 +37,11 @@ const SYSTEM: ProvingSystem = ProvingSystem::Groth16;
 const PSP22_TRANSFER_FROM_SELECTOR: [u8; 4] = [0x54, 0xb3, 0xc7, 0x6e];
 /// PSP22 standard selector for transferring own tokens.
 const PSP22_TRANSFER_SELECTOR: [u8; 4] = [0xdb, 0x20, 0xf9, 0xf5];
+
+fn array_to_tuple(a: [u64; 4]) -> (u64, u64, u64, u64) {
+    (a[0], a[1], a[2], a[3])
+}
+
+fn tuple_to_array(a: (u64, u64, u64, u64)) -> [u64; 4] {
+    [a.0, a.1, a.2, a.3]
+}

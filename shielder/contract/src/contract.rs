@@ -1,8 +1,9 @@
-#[ink::contract(env = baby_liminal_extension::BabyLiminalEnvironment)]
+#[ink::contract(env = baby_liminal_extension::ink::BabyLiminalEnvironment)]
 mod shielder {
     use core::ops::Not;
 
     use ark_serialize::CanonicalSerialize;
+    use baby_liminal_extension::BabyLiminalExtension;
     use ink::{
         codegen::{EmitEvent, Env},
         env::{
@@ -28,9 +29,10 @@ mod shielder {
     use scale::{Decode, Encode};
 
     use crate::{
-        error::ShielderError, MerkleHash, MerkleRoot, Note, Nullifier, Set, TokenAmount, TokenId,
-        DEPOSIT_AND_MERGE_VK_IDENTIFIER, DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
-        PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
+        array_to_tuple, error::ShielderError, tuple_to_array, MerkleHash, MerkleRoot, Note,
+        Nullifier, Set, TokenAmount, TokenId, DEPOSIT_AND_MERGE_VK_IDENTIFIER,
+        DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR, PSP22_TRANSFER_SELECTOR, SYSTEM,
+        WITHDRAW_VK_IDENTIFIER,
     };
 
     /// Supported relations - used for registering verifying keys.
@@ -345,8 +347,8 @@ mod shielder {
                 let parent_hash = self
                     .env()
                     .extension()
-                    .poseidon_two_to_one([left_child, right_child]);
-                self.notes.insert(parent, &parent_hash);
+                    .poseidon_two_to_one([array_to_tuple(left_child), array_to_tuple(right_child)]);
+                self.notes.insert(parent, &tuple_to_array(parent_hash));
                 parent /= 2;
             }
 

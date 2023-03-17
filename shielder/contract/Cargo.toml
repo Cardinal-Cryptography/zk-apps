@@ -18,11 +18,11 @@ ark-serialize = { version = "^0.3.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
-ink = { version = "~4.0.0",  default-features = false }
+ink = { version = "~4.0.1",  default-features = false }
 openbrush = { git = "https://github.com/727-Ventures/openbrush-contracts/", tag = "3.0.0", default-features = false, features = ["psp22", "ownable"] }
 
-liminal-ark-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node", branch = "snarkeling", default-features = false }
-baby-liminal-extension = { git = "https://github.com/Cardinal-Cryptography/aleph-node", branch = "snarkeling", default-features = false, features = ["ink-as-dependency"] }
+liminal-ark-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node", default-features = false }
+baby-liminal-extension = { git = "https://github.com/Cardinal-Cryptography/aleph-node", default-features = false, features = ["ink", "ink-as-dependency"] }
 
 [features]
 default = ["std"]
@@ -35,6 +35,6 @@ std = [
     "openbrush/std",
 
     "liminal-ark-relations/std",
-    "baby-liminal-extension/std",
+    "baby-liminal-extension/ink-std",
 ]
 ink-as-dependency = []
