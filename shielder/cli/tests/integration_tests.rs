@@ -4,7 +4,7 @@ mod psp22;
 #[allow(unused)]
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, path::Path, str::FromStr};
+    use std::{env, fs::File, path::Path, str::FromStr};
 
     use aleph_client::{AccountId, Connection, KeyPair, SignedConnection};
     use anyhow::Result;
@@ -19,14 +19,20 @@ mod tests {
 
     use crate::{psp22::*, test_context::*};
 
+    const LOG_CONFIGURATION_ENVVAR: &str = "RUST_LOG";
+
     #[tokio::test]
     pub async fn basic_interaction() -> Result<()> {
         // We need to disable logging in our dependency crates by default.
-        let filter = EnvFilter::new("warn,shielder_cli=info");
+        let filter = EnvFilter::new(
+            env::var(LOG_CONFIGURATION_ENVVAR)
+                .as_deref()
+                .unwrap_or("warn,shielder_cli=info,integration_tests::tests=debug"),
+        );
 
         let subscriber = tracing_subscriber::fmt()
             .with_writer(std::io::stdout)
-            .with_target(false)
+            .with_target(true)
             .with_env_filter(filter);
 
         subscriber.try_init().unwrap();
@@ -95,6 +101,8 @@ mod tests {
         )
         .await
         .unwrap();
+
+        info!("Tokens unshielded");
 
         let damian_balance_after_unshield = token_a
             .balance_of(&connection, &damian.account_id)
