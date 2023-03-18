@@ -203,6 +203,26 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn withdraw_partial() -> Result<()> {
+        todo!()
+    }
+
+    #[tokio::test]
+    async fn fee_for_relayer() -> Result<()> {
+        todo!()
+    }
+
+    #[tokio::test]
+    async fn withdraw_to_different_recipient() -> Result<()> {
+        todo!()
+    }
+
+    #[tokio::test]
+    async fn withdraw_through_relayer() -> Result<()> {
+        todo!()
+    }
 }
 
 mod shielder {
