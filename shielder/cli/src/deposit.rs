@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use aleph_client::SignedConnection;
 use anyhow::Result;
@@ -17,7 +17,7 @@ use crate::{
 pub async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
-    proving_key_file: &PathBuf,
+    proving_key_file: &Path,
     connection: &SignedConnection,
     contract: &Shielder,
     app_state: &mut AppState,
@@ -29,10 +29,10 @@ pub async fn first_deposit(
     // we don't waste user's time.
     let circuit =
         DepositRelationWithFullInput::new(note, token_id, token_amount, trapdoor, nullifier);
-    let proof = generate_proof(circuit, &proving_key_file)?;
+    let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract
-        .deposit(&connection, token_id, token_amount, note, &proof)
+        .deposit(connection, token_id, token_amount, note, &proof)
         .await?;
 
     let deposit_id =
@@ -44,7 +44,7 @@ pub async fn first_deposit(
 pub async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
-    proving_key_file: &PathBuf,
+    proving_key_file: &Path,
     connection: &SignedConnection,
     contract: &Shielder,
     app_state: &mut AppState,
@@ -86,7 +86,7 @@ pub async fn deposit_and_merge(
         new_token_amount,
     );
 
-    let proof = generate_proof(circuit, &proving_key_file)?;
+    let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract
         .deposit_and_merge(

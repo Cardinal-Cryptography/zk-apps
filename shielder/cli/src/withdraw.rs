@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use aleph_client::{sp_runtime::AccountId32, SignedConnection};
 use anyhow::Result;
@@ -22,7 +22,7 @@ pub async fn withdraw(
     withdraw_amount: FrontendTokenAmount,
     recipient: &AccountId32,
     fee: u64,
-    withdraw_pk_file: &PathBuf,
+    withdraw_pk_file: &Path,
     app_state: &mut AppState,
 ) -> Result<()> {
     let Deposit {
@@ -37,9 +37,9 @@ pub async fn withdraw(
 
     let recipient_bytes: [u8; 32] = recipient.clone().into();
 
-    let merkle_root = contract.get_merkle_root(&connection).await;
+    let merkle_root = contract.get_merkle_root(connection).await;
     let merkle_path = contract
-        .get_merkle_path(&connection, leaf_idx)
+        .get_merkle_path(connection, leaf_idx)
         .await
         .expect("Path does not exist");
 
@@ -71,7 +71,7 @@ pub async fn withdraw(
 
     let leaf_idx = contract
         .withdraw(
-            &connection,
+            connection,
             token_id,
             withdraw_amount,
             recipient,
