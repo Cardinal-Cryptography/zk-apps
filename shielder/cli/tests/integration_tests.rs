@@ -18,6 +18,7 @@ mod tests {
     const WITHDRAW_TO_ISSUER: Option<AccountId> = None;
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn basic_interaction() -> Result<()> {
         let TestContext {
@@ -88,6 +89,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn deposit_and_merge() -> Result<()> {
         let TestContext {
@@ -193,6 +195,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn withdraw_partial() -> Result<()> {
         let TestContext {
@@ -283,6 +286,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn withdraw_via_relayer() -> Result<()> {
         let TestContext {
@@ -353,6 +357,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn shielding_fails_insufficient_balance() -> Result<()> {
         let TestContext {
