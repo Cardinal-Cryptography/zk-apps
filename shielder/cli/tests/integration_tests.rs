@@ -259,7 +259,13 @@ mod tests {
         assert_eq!(partial_deposit.token_amount, diff_partial);
 
         damian
-            .unshield(&shielder, partial_deposit, WITHDRAW_ALL, NO_FEE, WITHDRAW_TO_ISSUER)
+            .unshield(
+                &shielder,
+                partial_deposit,
+                WITHDRAW_ALL,
+                NO_FEE,
+                WITHDRAW_TO_ISSUER,
+            )
             .await
             .unwrap();
 
