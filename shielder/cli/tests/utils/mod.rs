@@ -85,6 +85,7 @@ impl User {
     }
 }
 
+#[allow(unused)]
 pub struct TestContext {
     pub shielder: ShielderWrapper,
     pub token_a: PSP22Token,

@@ -1,15 +1,12 @@
 pub mod psp22;
-#[allow(unused)]
 pub mod shielder_wrapper;
-#[allow(unused)]
 pub mod utils;
 
-#[allow(unused)]
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
     use serial_test::serial;
-    use shielder::{deposit, withdraw};
+    use shielder::deposit;
     use tracing::info;
 
     use crate::utils::{TestContext, TOKEN_A_ID};
@@ -20,11 +17,9 @@ mod tests {
         let TestContext {
             shielder,
             token_a,
-            token_b,
             connection,
-            mut sudo,
             mut damian,
-            mut hans,
+            ..
         } = TestContext::local().await?;
 
         let damian_balance_before_shield = token_a
@@ -59,7 +54,7 @@ mod tests {
         let prev_deposit = damian
             .get_deposit(deposit_id)
             .expect("deposit to exist since we just created it");
-        let deposit_amount = prev_deposit.token_amount;
+        let _ = prev_deposit.token_amount;
 
         damian
             .unshield(&shielder, prev_deposit, None, 0, None)
@@ -86,11 +81,9 @@ mod tests {
         let TestContext {
             shielder,
             token_a,
-            token_b,
             connection,
-            mut sudo,
             mut damian,
-            mut hans,
+            ..
         } = TestContext::local().await?;
 
         let damian_balance_at_start = token_a
@@ -181,11 +174,9 @@ mod tests {
         let TestContext {
             shielder,
             token_a,
-            token_b,
             connection,
-            mut sudo,
             mut damian,
-            mut hans,
+            ..
         } = TestContext::local().await?;
 
         let damian_balance_at_start = token_a
@@ -261,11 +252,10 @@ mod tests {
         let TestContext {
             shielder,
             token_a,
-            token_b,
             connection,
-            mut sudo,
             mut damian,
             mut hans,
+            ..
         } = TestContext::local().await?;
 
         let damian_balance_at_start = token_a
@@ -332,11 +322,9 @@ mod tests {
         let TestContext {
             shielder,
             token_a,
-            token_b,
             connection,
-            mut sudo,
             mut damian,
-            mut hans,
+            ..
         } = TestContext::local().await?;
 
         let damian_balance_at_start = token_a
