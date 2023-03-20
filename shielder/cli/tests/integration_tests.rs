@@ -4,12 +4,18 @@ pub mod utils;
 
 #[cfg(test)]
 mod tests {
+    use aleph_client::AccountId;
     use anyhow::Result;
+    use liminal_ark_relations::FrontendTokenAmount;
     use serial_test::serial;
     use shielder::deposit;
     use tracing::info;
 
     use crate::utils::{TestContext, TOKEN_A_ID};
+
+    const NO_FEE: u64 = 0;
+    const WITHDRAW_ALL: Option<FrontendTokenAmount> = None;
+    const WITHDRAW_TO_ISSUER: Option<AccountId> = None;
 
     #[tokio::test]
     #[serial]
@@ -57,7 +63,13 @@ mod tests {
         let _ = prev_deposit.token_amount;
 
         damian
-            .unshield(&shielder, prev_deposit, None, 0, None)
+            .unshield(
+                &shielder,
+                prev_deposit,
+                WITHDRAW_ALL,
+                NO_FEE,
+                WITHDRAW_TO_ISSUER,
+            )
             .await
             .unwrap();
 
@@ -133,7 +145,13 @@ mod tests {
 
         // We should not be able to withdraw with nullifier and trapdoor of the first deposit.
         let res = damian
-            .unshield(&shielder, first_deposit, None, 0, None)
+            .unshield(
+                &shielder,
+                first_deposit,
+                WITHDRAW_ALL,
+                NO_FEE,
+                WITHDRAW_TO_ISSUER,
+            )
             .await;
         assert!(res.is_err());
 
@@ -151,7 +169,13 @@ mod tests {
         let merged_deposit = damian.get_deposit(merged_deposit_id).unwrap();
 
         let _ = damian
-            .unshield(&shielder, merged_deposit, None, 0, None)
+            .unshield(
+                &shielder,
+                merged_deposit,
+                WITHDRAW_ALL,
+                NO_FEE,
+                WITHDRAW_TO_ISSUER,
+            )
             .await
             .expect("Withdrawing merged note should succeed");
 
@@ -210,7 +234,13 @@ mod tests {
         let unshield_amount = prev_deposit.token_amount - diff_partial;
 
         damian
-            .unshield(&shielder, prev_deposit, Some(unshield_amount), 0, None)
+            .unshield(
+                &shielder,
+                prev_deposit,
+                Some(unshield_amount),
+                NO_FEE,
+                WITHDRAW_TO_ISSUER,
+            )
             .await
             .unwrap();
 
@@ -229,7 +259,7 @@ mod tests {
         assert_eq!(partial_deposit.token_amount, diff_partial);
 
         damian
-            .unshield(&shielder, partial_deposit, None, 0, None)
+            .unshield(&shielder, partial_deposit, WITHDRAW_ALL, NO_FEE, WITHDRAW_TO_ISSUER)
             .await
             .unwrap();
 
@@ -285,7 +315,7 @@ mod tests {
         hans.unshield(
             &shielder,
             deposit,
-            None,
+            WITHDRAW_ALL,
             fee_amount,
             Some(damian.account_id.clone()),
         )
