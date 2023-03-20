@@ -1,8 +1,7 @@
 use std::path::PathBuf;
 
-use aleph_client::{keypair_from_string, Connection, SignedConnection};
+use aleph_client::SignedConnection;
 use anyhow::Result;
-use inquire::Password;
 use liminal_ark_relations::{
     compute_note, DepositAndMergeRelationWithFullInput, DepositRelationWithFullInput,
     FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
@@ -11,60 +10,11 @@ use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},
-    config::DepositCmd,
     contract::Shielder,
     generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
-pub async fn do_deposit(
-    contract: Shielder,
-    connection: Connection,
-    cmd: DepositCmd,
-    app_state: &mut AppState,
-) -> Result<()> {
-    let DepositCmd {
-        token_id,
-        amount,
-        caller_seed,
-        ..
-    } = cmd;
-
-    let seed = match caller_seed {
-        Some(seed) => seed,
-        None => Password::new("Seed of the depositing account (the tokens owner):")
-            .without_confirmation()
-            .prompt()?,
-    };
-    let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
-
-    let old_deposit = app_state.get_last_deposit(token_id);
-    match old_deposit {
-        Some(old_deposit) => {
-            deposit_and_merge(
-                old_deposit,
-                amount,
-                cmd.deposit_and_merge_key_file,
-                connection,
-                contract,
-                app_state,
-            )
-            .await
-        }
-        None => {
-            first_deposit(
-                token_id,
-                amount,
-                cmd.deposit_key_file,
-                connection,
-                contract,
-                app_state,
-            )
-            .await
-        }
-    }
-}
-
-async fn first_deposit(
+pub async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
     proving_key_file: PathBuf,
@@ -90,7 +40,7 @@ async fn first_deposit(
     Ok(())
 }
 
-async fn deposit_and_merge(
+pub async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
     proving_key_file: PathBuf,

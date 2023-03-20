@@ -6,9 +6,8 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use chacha20poly1305::{aead::Aead, KeyInit, XChaCha20Poly1305};
+use shielder::app_state::AppState;
 use tracing::info;
-
-use crate::app_state::AppState;
 
 /// Try to get `AppState` from `path`. If `path` describes non-existing file, the default `AppState`
 /// will be created, saved to `path` and returned.
