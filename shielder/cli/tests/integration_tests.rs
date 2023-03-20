@@ -62,7 +62,7 @@ mod tests {
         let deposit_amount = prev_deposit.token_amount;
 
         damian
-            .unshield(&shielder, prev_deposit, None, 0)
+            .unshield(&shielder, prev_deposit, None, 0, None)
             .await
             .unwrap();
 
@@ -139,7 +139,9 @@ mod tests {
             "Balance after merging");
 
         // We should not be able to withdraw with nullifier and trapdoor of the first deposit.
-        let res = damian.unshield(&shielder, first_deposit, None, 0).await;
+        let res = damian
+            .unshield(&shielder, first_deposit, None, 0, None)
+            .await;
         assert!(res.is_err());
 
         // Damian's token balance should be unchanged.
@@ -156,7 +158,7 @@ mod tests {
         let merged_deposit = damian.get_deposit(merged_deposit_id).unwrap();
 
         let _ = damian
-            .unshield(&shielder, merged_deposit, None, 0)
+            .unshield(&shielder, merged_deposit, None, 0, None)
             .await
             .expect("Withdrawing merged note should succeed");
 
@@ -217,7 +219,7 @@ mod tests {
         let unshield_amount = prev_deposit.token_amount - diff_partial;
 
         damian
-            .unshield(&shielder, prev_deposit, Some(unshield_amount), 0)
+            .unshield(&shielder, prev_deposit, Some(unshield_amount), 0, None)
             .await
             .unwrap();
 
@@ -236,7 +238,7 @@ mod tests {
         assert_eq!(partial_deposit.token_amount, diff_partial);
 
         damian
-            .unshield(&shielder, partial_deposit, None, 0)
+            .unshield(&shielder, partial_deposit, None, 0, None)
             .await
             .unwrap();
 
@@ -256,18 +258,77 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn fee_for_relayer() -> Result<()> {
-        todo!()
+        let TestContext {
+            shielder,
+            token_a,
+            token_b,
+            connection,
+            mut sudo,
+            mut damian,
+            mut hans,
+        } = TestContext::local().await?;
+
+        let damian_balance_at_start = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        // Hansu will be our trusted relayer.
+        let hansu_balance_before_relaying = token_a
+            .balance_of(&connection, &hans.account_id)
+            .await
+            .unwrap();
+
+        let shield_amount = 100u64;
+
+        let fee_amount = 10u64;
+
+        let deposit_id = damian
+            .shield(TOKEN_A_ID, shield_amount, &shielder)
+            .await
+            .unwrap();
+
+        let deposit = damian.get_deposit(deposit_id).unwrap();
+
+        // Hansu here acts as a relayer: gets the fee but also withdraws
+        // to a different recipient - Damian.
+        hans.unshield(
+            &shielder,
+            deposit,
+            None,
+            fee_amount,
+            Some(damian.account_id.clone()),
+        )
+        .await
+        .unwrap();
+
+        let hansu_balance_after_relaying = token_a
+            .balance_of(&connection, &hans.account_id)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            hansu_balance_before_relaying + fee_amount as u128,
+            hansu_balance_after_relaying,
+            "Fee should go to relayer"
+        );
+
+        let damian_balance_after_unshielding = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            damian_balance_at_start,
+            damian_balance_after_unshielding + fee_amount as u128
+        );
+
+        Ok(())
     }
 
     #[tokio::test]
     #[serial]
-    async fn withdraw_to_different_recipient() -> Result<()> {
-        todo!()
-    }
-
-    #[tokio::test]
-    #[serial]
-    async fn withdraw_through_relayer() -> Result<()> {
+    async fn shielding_fails_insufficient_balance() -> Result<()> {
         todo!()
     }
 }

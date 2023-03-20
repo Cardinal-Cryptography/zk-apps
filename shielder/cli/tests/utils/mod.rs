@@ -67,14 +67,16 @@ impl User {
         deposit: Deposit,
         amount: Option<FrontendTokenAmount>,
         fee: u64,
+        recipient: Option<AccountId>,
     ) -> Result<()> {
         let withdraw_amount = amount.unwrap_or(deposit.token_amount);
+        let recipient = recipient.unwrap_or(self.account_id.clone());
         withdraw::withdraw(
             &shielder.instance,
             &self.conn,
             deposit,
             withdraw_amount,
-            &self.account_id,
+            &recipient,
             fee,
             &shielder.withdraw_pk_file,
             &mut self.app_state,
