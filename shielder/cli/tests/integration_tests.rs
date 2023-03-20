@@ -329,6 +329,33 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn shielding_fails_insufficient_balance() -> Result<()> {
-        todo!()
+        let TestContext {
+            shielder,
+            token_a,
+            token_b,
+            connection,
+            mut sudo,
+            mut damian,
+            mut hans,
+        } = TestContext::local().await?;
+
+        let damian_balance_at_start = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        let shield_amount = damian_balance_at_start + 1;
+
+        let shield_result = damian
+            .shield(TOKEN_A_ID, shield_amount as u64, &shielder)
+            .await;
+
+        // Expected to fail.
+        // Can't match on the returned type as we're dry-running calls (aleph-client's behavior)
+        // in which case the failure is not encoded as err in the return type
+        // but rather Ok(_) and a special flag in the response.
+        assert!(shield_result.is_err());
+
+        Ok(())
     }
 }
