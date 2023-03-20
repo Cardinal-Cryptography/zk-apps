@@ -248,7 +248,7 @@ mod tests {
 
     #[tokio::test]
     #[serial]
-    async fn fee_for_relayer() -> Result<()> {
+    async fn withdraw_via_relayer() -> Result<()> {
         let TestContext {
             shielder,
             token_a,
