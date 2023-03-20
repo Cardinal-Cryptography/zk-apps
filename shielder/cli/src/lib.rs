@@ -18,7 +18,7 @@ pub mod deposit;
 pub mod withdraw;
 
 /// Generates a Groth16 proof for the given `circuit` using proving key from the file.
-/// Returns an error when deserialization of the proving key fails.
+/// Returns an error when either reading file or deserialization of the proving key fails.
 pub fn generate_proof(
     circuit: impl ConstraintSynthesizer<CircuitField>,
     proving_key_file: PathBuf,
