@@ -4,7 +4,15 @@ mod psp22;
 #[allow(unused)]
 #[cfg(test)]
 mod tests {
-    use std::{env, fs::File, path::Path, str::FromStr};
+    use std::{
+        cell::RefCell,
+        env,
+        fs::File,
+        path::Path,
+        str::FromStr,
+        sync::atomic::{AtomicBool, Ordering},
+        thread,
+    };
 
     use aleph_client::{AccountId, Connection, KeyPair, SignedConnection};
     use anyhow::Result;
@@ -16,16 +24,39 @@ mod tests {
     use serial_test::serial;
     use shielder::{deposit, withdraw};
     use tracing::info;
-    use tracing_subscriber::EnvFilter;
+    use tracing_subscriber::{fmt::SubscriberBuilder, EnvFilter};
 
     use crate::{psp22::*, test_context::*};
 
     const LOG_CONFIGURATION_ENVVAR: &str = "RUST_LOG";
 
-    #[tokio::test]
-    #[serial]
-    async fn basic_interaction() -> Result<()> {
-        // We need to disable logging in our dependency crates by default.
+    // Flag determining whether tracing subscriber has been initialized already.
+    static LOGGER: AtomicBool = AtomicBool::new(false);
+
+    // Initialize tracing subscriber (logging).
+    // Makes sure it's initialized only once, globally. Otherwise subscribtions fails with an error.
+    pub(super) fn init_logger() -> Result<()> {
+        match LOGGER.compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed) {
+            Ok(true) => {
+                // Should not happen: it's only possible if LOGGER=true and we tried to set it to false.
+                panic!("[{:?}] Unexpected LOGGER state", thread::current().id())
+            }
+            Ok(false) => {
+                // For LOGGER=false and new=true
+                // No logger yet, subscribing a new one
+                {}
+            }
+            Err(true) => {
+                // For LOGGER=true
+                // There is a logger already, don't create a new one.
+                return Ok(());
+            }
+            Err(false) => {
+                // For LOGGER=false and new=true
+                panic!("[{:?}] Failed to create a logger", thread::current().id());
+            }
+        }
+
         let filter = EnvFilter::new(
             env::var(LOG_CONFIGURATION_ENVVAR)
                 .as_deref()
@@ -38,7 +69,12 @@ mod tests {
             .with_env_filter(filter);
 
         subscriber.try_init().unwrap();
+        Ok(())
+    }
 
+    #[tokio::test]
+    #[serial]
+    async fn basic_interaction() -> Result<()> {
         let TestContext {
             shielder,
             token_a,
@@ -105,18 +141,6 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn deposit_and_merge() -> Result<()> {
-        // We need to disable logging in our dependency crates by default.
-        let filter = EnvFilter::new(env::var(LOG_CONFIGURATION_ENVVAR).as_deref().unwrap_or(
-            "warn,shielder_cli=info,integration_tests::tests=debug,aleph_client::contract=debug",
-        ));
-
-        let subscriber = tracing_subscriber::fmt()
-            .with_writer(std::io::stdout)
-            .with_target(true)
-            .with_env_filter(filter);
-
-        subscriber.try_init().unwrap();
-
         let TestContext {
             shielder,
             token_a,
@@ -360,6 +384,8 @@ mod test_context {
 
     impl TestContext {
         pub(super) async fn local() -> Result<Self> {
+            crate::tests::init_logger().expect("Logger initialization to succeed");
+
             let resources_path = Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("tests")
                 .join("resources");
