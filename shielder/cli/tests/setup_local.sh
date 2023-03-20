@@ -17,6 +17,7 @@ log_progress() {
 
 
 function copy_metadata() {
+    mkdir -p ${SCRIPT_DIR}/resources/
     cp ${BASE_DIR}/contract/target/ink/shielder.json ${SCRIPT_DIR}/resources/
     cp ${BASE_DIR}/public_token/target/ink/public_token.json ${SCRIPT_DIR}/resources/
     log_progress "✅ Contracts' metadata copied to tests/resources"
