@@ -82,7 +82,6 @@ pub async fn withdraw(
             &proof,
         )
         .await?;
-    println!("leaf: {:?}", leaf_idx);
 
     // save new deposit to the state
     if new_token_amount > 0 {
