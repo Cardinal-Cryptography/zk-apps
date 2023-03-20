@@ -13,6 +13,7 @@ mod tests {
         ProvingSystem,
     };
     use serde::Deserialize;
+    use serial_test::serial;
     use shielder::{deposit, withdraw};
     use tracing::info;
     use tracing_subscriber::EnvFilter;
@@ -22,6 +23,7 @@ mod tests {
     const LOG_CONFIGURATION_ENVVAR: &str = "RUST_LOG";
 
     #[tokio::test]
+    #[serial]
     async fn basic_interaction() -> Result<()> {
         // We need to disable logging in our dependency crates by default.
         let filter = EnvFilter::new(
@@ -101,6 +103,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn deposit_and_merge() -> Result<()> {
         // We need to disable logging in our dependency crates by default.
         let filter = EnvFilter::new(env::var(LOG_CONFIGURATION_ENVVAR).as_deref().unwrap_or(
@@ -205,21 +208,25 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn withdraw_partial() -> Result<()> {
         todo!()
     }
 
     #[tokio::test]
+    #[serial]
     async fn fee_for_relayer() -> Result<()> {
         todo!()
     }
 
     #[tokio::test]
+    #[serial]
     async fn withdraw_to_different_recipient() -> Result<()> {
         todo!()
     }
 
     #[tokio::test]
+    #[serial]
     async fn withdraw_through_relayer() -> Result<()> {
         todo!()
     }
