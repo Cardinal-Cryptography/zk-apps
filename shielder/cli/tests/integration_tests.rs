@@ -176,7 +176,81 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn withdraw_partial() -> Result<()> {
-        todo!()
+        let TestContext {
+            shielder,
+            token_a,
+            token_b,
+            connection,
+            mut sudo,
+            mut damian,
+            mut hans,
+        } = TestContext::local().await?;
+
+        let damian_balance_at_start = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        let shield_amount = 100u64;
+
+        let deposit_id = damian
+            .shield(TOKEN_A_ID, shield_amount, &shielder)
+            .await
+            .unwrap();
+
+        let damian_balance_after_shield = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            damian_balance_after_shield + shield_amount as u128,
+            damian_balance_at_start,
+            "Shielding should decrease balance"
+        );
+
+        let diff_partial = 11;
+
+        let prev_deposit = damian
+            .get_deposit(deposit_id)
+            .expect("deposit to exist since we just created it");
+        let unshield_amount = prev_deposit.token_amount - diff_partial;
+
+        damian
+            .unshield(&shielder, prev_deposit, Some(unshield_amount), 0)
+            .await
+            .unwrap();
+
+        let damian_balance_after_partial_unshield = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            damian_balance_at_start - diff_partial as u128,
+            damian_balance_after_partial_unshield
+        );
+
+        // partial unshield replaces the deposit under previous id.
+        let partial_deposit = damian.get_deposit(deposit_id).unwrap();
+        assert_eq!(partial_deposit.token_amount, diff_partial);
+
+        damian
+            .unshield(&shielder, partial_deposit, None, 0)
+            .await
+            .unwrap();
+
+        let damian_balance_after_unshielding_all = token_a
+            .balance_of(&connection, &damian.account_id)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            damian_balance_after_unshielding_all,
+            damian_balance_at_start
+        );
+
+        Ok(())
     }
 
     #[tokio::test]
