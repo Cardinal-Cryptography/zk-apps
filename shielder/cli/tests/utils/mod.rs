@@ -98,7 +98,7 @@ pub struct TestContext {
 
 impl TestContext {
     pub async fn local() -> Result<Self> {
-        init_logger().expect("Logger initialization to succeed");
+        init_logger().expect("Logger failed to properly initialized");
 
         let resources_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests")

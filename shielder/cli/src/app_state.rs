@@ -119,7 +119,7 @@ impl AppState {
     ) -> DepositId {
         let deposit_id = self.deposit_counter;
         self.deposits.push(Deposit {
-            deposit_id: self.deposit_counter,
+            deposit_id,
             token_id,
             token_amount,
             leaf_idx,

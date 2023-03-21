@@ -1,4 +1,4 @@
-.PHONY: help test setup-test-network setup-resources
+.PHONY: help test-shielder test-shielder-clean setup-test-network setup-resources
 
 
 setup-test-network: ## Setups local docker network and deploys shielder and its dependencies
