@@ -15,9 +15,12 @@ log_progress() {
   echo "[$(get_timestamp)] [INFO] ${bold}${1}${normal}"
 }
 
+function setup_testdir() {
+    mkdir -p ${SCRIPT_DIR}/resources/
+}
+
 
 function copy_metadata() {
-    mkdir -p ${SCRIPT_DIR}/resources/
     cp ${BASE_DIR}/contract/target/ink/shielder.json ${SCRIPT_DIR}/resources/
     cp ${BASE_DIR}/public_token/target/ink/public_token.json ${SCRIPT_DIR}/resources/
     log_progress "✅ Contracts' metadata copied to tests/resources"
@@ -35,6 +38,7 @@ function copy_proving_keys() {
   log_progress "✅ Proving keys copied to tests/resources"
 }
 
+setup_testdir
 copy_metadata
 copy_addresses
 copy_proving_keys
