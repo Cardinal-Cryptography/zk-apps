@@ -9,7 +9,13 @@
 **/target/
 **/*.rs.bk
 
-addresses.json
+# Deployment metadata
+**/addresses.json
+**/public_token.json
+**/shielder.json
+
+# Test resources
+**/resources
 
 # Substrate
 *.log

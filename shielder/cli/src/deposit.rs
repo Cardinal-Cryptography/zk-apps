@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use aleph_client::SignedConnection;
 use anyhow::Result;
@@ -11,17 +11,17 @@ use rand::Rng;
 use crate::{
     app_state::{AppState, Deposit},
     contract::Shielder,
-    generate_proof, MERKLE_PATH_MAX_LEN,
+    generate_proof, DepositId, MERKLE_PATH_MAX_LEN,
 };
 
 pub async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
-    proving_key_file: PathBuf,
-    connection: SignedConnection,
-    contract: Shielder,
+    proving_key_file: &Path,
+    connection: &SignedConnection,
+    contract: &Shielder,
     app_state: &mut AppState,
-) -> Result<()> {
+) -> Result<DepositId> {
     let (trapdoor, nullifier) = rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
@@ -32,22 +32,23 @@ pub async fn first_deposit(
     let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract
-        .deposit(&connection, token_id, token_amount, note, &proof)
+        .deposit(connection, token_id, token_amount, note, &proof)
         .await?;
 
-    app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
+    let deposit_id =
+        app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
 
-    Ok(())
+    Ok(deposit_id)
 }
 
 pub async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
-    proving_key_file: PathBuf,
-    connection: SignedConnection,
-    contract: Shielder,
+    proving_key_file: &Path,
+    connection: &SignedConnection,
+    contract: &Shielder,
     app_state: &mut AppState,
-) -> Result<()> {
+) -> Result<DepositId> {
     let Deposit {
         token_id,
         token_amount: old_token_amount,
@@ -57,9 +58,9 @@ pub async fn deposit_and_merge(
         note: old_note,
         ..
     } = deposit;
-    let merkle_root = contract.get_merkle_root(&connection).await;
+    let merkle_root = contract.get_merkle_root(connection).await;
     let merkle_path = contract
-        .get_merkle_path(&connection, leaf_idx)
+        .get_merkle_path(connection, leaf_idx)
         .await
         .expect("Path does not exist");
 
@@ -89,7 +90,7 @@ pub async fn deposit_and_merge(
 
     let leaf_idx = contract
         .deposit_and_merge(
-            &connection,
+            connection,
             token_id,
             token_amount,
             merkle_root,
@@ -108,5 +109,5 @@ pub async fn deposit_and_merge(
         new_note,
     );
 
-    Ok(())
+    Ok(deposit.deposit_id)
 }
