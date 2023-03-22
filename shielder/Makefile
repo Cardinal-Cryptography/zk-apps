@@ -8,7 +8,7 @@ setup-resources: ## Setups resources required for running integration test for s
 	@./cli/tests/setup_local.sh
 
 test-shielder: setup-resources ## Setups resources and runs integration tests against already-running network.
-	@export E2E_TEST=1 && cd cli && cargo test --release ${TEST_CASES} -- --show-output --ignored
+	@cd cli && cargo test --release ${TEST_CASES} -- --show-output --ignored
 
 test-shielder-clean: setup-test-network test-shielder ## Restarts docker network and runs Shielder tests.
 
