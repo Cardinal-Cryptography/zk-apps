@@ -165,7 +165,7 @@ contract_instantiate() {
 }
 
 contract_call() {
-  docker_cargo "contract call --quiet --skip-confirm --url ${NODE} ${1}" &> /dev/null
+  docker_cargo "contract call --quiet --skip-confirm --url ${NODE} ${1}"
 }
 
 deploy_token_contracts() {
