@@ -39,7 +39,7 @@ ark-std = { version = "^0.3.0", default-features = false }
 
 # todo: change this for versioned `aleph-client` right away after publishing it
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/" }
-liminal-ark-relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node/" }
+liminal-ark-relations = "0.1.0"
 
 [dev-dependencies]
 serial_test = "1.0.0"
