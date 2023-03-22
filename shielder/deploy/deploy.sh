@@ -4,6 +4,8 @@ set -euo pipefail
 
 # Check if run in e2e shielder test context. Defaults to unset.
 E2E_TEST_CONTEXT=${E2E_TEST:-}
+# Check if running in CI context.
+CI=${CI:-}
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
@@ -43,9 +45,7 @@ get_timestamp() {
 }
 
 log_progress() {
-  bold=$(tput bold)
-  normal=$(tput sgr0)
-  echo "[$(get_timestamp)] [INFO] ${bold}${1}${normal}"
+  echo "[$(get_timestamp)] [INFO] ${1}"
 }
 
 random_salt() {
@@ -134,6 +134,14 @@ move_keys() {
 }
 
 docker_cargo() {
+  if [[ -z "${CI}" ]]; then
+    local_docker_cargo "$@"
+  else
+    ci_docker_cargo "$@"
+  fi
+}
+
+local_docker_cargo() {
   docker run --rm \
     -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
@@ -143,6 +151,15 @@ docker_cargo() {
     --entrypoint /bin/sh \
     "${CARGO_IMAGE}" \
     -c "cargo ${1}"
+}
+
+ci_docker_cargo() {
+  docker run --rm \
+      -v "${PWD}":/code \
+      --network host \
+      --entrypoint /bin/sh \
+      "${CARGO_IMAGE}" \
+      -c "cargo ${1}"
 }
 
 build() {
@@ -185,6 +202,7 @@ prefund_users() {
   for recipient in "${DAMIAN_PUBKEY}" "${HANS_PUBKEY}"; do
     transfer ${recipient}
   done
+  log_progress "✅ Test accounts prefunded with SNZERO tokens."
 }
 
 # Distribute TOKEN_PER_PERSON of TOKEN_A and TOKEN_B to DAMIAN and HANS.
@@ -196,13 +214,14 @@ distribute_tokens() {
       contract_call "--contract ${token} --message PSP22::transfer --args ${recipient} ${TOKEN_PER_PERSON} 0x00 --suri ${ADMIN}" 1>/dev/null
     done
   done
+  log_progress "✅ PSP22 tokens distributed"
 }
 
 deploy_shielder_contract() {
   cd "${SCRIPT_DIR}"/..
   SHIELDER_ADDRESS=$(contract_instantiate "--args ${MERKLE_LEAVES} --manifest-path contract/Cargo.toml" | jq -r '.contract')
   export SHIELDER_ADDRESS
-  log_progress "Shielder address: ${SHIELDER_ADDRESS}"
+  log_progress "✅ Shielder address: ${SHIELDER_ADDRESS}"
 }
 
 # Set allowance at TOKEN_ALLOWANCE on TOKEN_A and TOKEN_B from SHIELDER, from DAMIAN and HANS.
