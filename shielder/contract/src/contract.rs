@@ -246,7 +246,9 @@ mod shielder {
                 Relation::DepositAndMerge => DEPOSIT_AND_MERGE_VK_IDENTIFIER,
                 Relation::Withdraw => WITHDRAW_VK_IDENTIFIER,
             };
-            self.env().extension().store_key(identifier, vk)?;
+            self.env()
+                .extension()
+                .store_key(self.env().account_id(), identifier, vk)?;
             Ok(())
         }
 

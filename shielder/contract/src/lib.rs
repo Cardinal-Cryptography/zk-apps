@@ -25,11 +25,14 @@ type TokenAmount = u64;
 type Set<T> = Mapping<T, ()>;
 
 /// Verification key identifier for the `deposit` relation (to be registered in `pallet_snarcos`).
-const DEPOSIT_VK_IDENTIFIER: VerificationKeyIdentifier = [b'd', b'p', b's', b't'];
+const DEPOSIT_VK_IDENTIFIER: VerificationKeyIdentifier =
+    [b'd', b'd', b'e', b'p', b'o', b's', b'i', b't'];
 /// Verification key identifier for the `deposit` relation (to be registered in `pallet_snarcos`).
-const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier = [b'd', b'p', b'm', b'g'];
+const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier =
+    [b'd', b'e', b'p', b'o', b'n', b'm', b'r', b'g'];
 /// Verification key identifier for the `withdraw` relation (to be registered in `pallet_snarcos`).
-const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier = [b'w', b't', b'h', b'd'];
+const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier =
+    [b'w', b'i', b't', b'h', b'd', b'r', b'a', b'w'];
 /// The only supported proving system for now.
 const SYSTEM: ProvingSystem = ProvingSystem::Groth16;
 
