@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := help
+
 .PHONY: help test-shielder test-shielder-clean setup-test-network setup-resources
 
 
