@@ -114,7 +114,7 @@ transfer() {
   $DOCKER_SH \
     --network host \
     ${CLIAIN_IMAGE} \
-    -c "/usr/local/bin/cliain --node ${NODE} --seed ${ADMIN} transfer --amount-in-tokens ${TOKEN_PER_PERSON} --to-account ${1}" 1>/dev/null 2>/dev/null
+    -c "/usr/local/bin/cliain --node ${NODE} --seed ${ADMIN} transfer --amount-in-tokens ${TOKEN_PER_PERSON} --to-account ${1}" 1>/dev/null
 
   log_progress "✅ Transferred ${TOKEN_PER_PERSON} to ${1}"
 }
@@ -148,10 +148,10 @@ docker_cargo() {
 build() {
   cd "${SCRIPT_DIR}"/..
 
-  docker_cargo "contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null 2>/dev/null"
+  docker_cargo "contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
   log_progress "✅ Public token contract was built"
 
-  docker_cargo "contract build --release --manifest-path contract/Cargo.toml 1>/dev/null 2>/dev/null"
+  docker_cargo "contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
   log_progress "✅ Shielder contract was built"
 }
 
@@ -193,7 +193,7 @@ distribute_tokens() {
 
   for token in "${TOKEN_A_ADDRESS}" "${TOKEN_B_ADDRESS}"; do
     for recipient in "${DAMIAN_PUBKEY}" "${HANS_PUBKEY}"; do
-      contract_call "--contract ${token} --message PSP22::transfer --args ${recipient} ${TOKEN_PER_PERSON} 0x00 --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+      contract_call "--contract ${token} --message PSP22::transfer --args ${recipient} ${TOKEN_PER_PERSON} 0x00 --suri ${ADMIN}" 1>/dev/null
     done
   done
 }
@@ -212,7 +212,7 @@ set_allowances() {
 
   for token in "${TOKEN_A_ADDRESS}" "${TOKEN_B_ADDRESS}"; do
     for actor in "${DAMIAN}" "${HANS}"; do
-       contract_call "--contract ${token} --message PSP22::approve --args ${SHIELDER_ADDRESS} ${TOKEN_ALLOWANCE} --suri ${actor}" 1> /dev/null 2> /dev/null
+       contract_call "--contract ${token} --message PSP22::approve --args ${SHIELDER_ADDRESS} ${TOKEN_ALLOWANCE} --suri ${actor}" 1>/dev/null
     done
   done
 
@@ -239,22 +239,22 @@ register_vk() {
 
   pushd $SCRIPT_DIR/../contract
 
-  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}" 1> /dev/null 2> /dev/null
-  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args DepositAndMerge ${DEPOSIT_MERGE_VK_BYTES} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
-  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Withdraw        ${WITHDRAW_VK_BYTES}      --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}" 1>/dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args DepositAndMerge ${DEPOSIT_MERGE_VK_BYTES} --suri ${ADMIN}" 1>/dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Withdraw        ${WITHDRAW_VK_BYTES}      --suri ${ADMIN}" 1>/dev/null
 
   popd
 }
 
 register_tokens() {
   cd "${SCRIPT_DIR}"/../contract/
-  contract_call "--contract ${SHIELDER_ADDRESS} --message register_new_token --args 0 ${TOKEN_A_ADDRESS} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
-  contract_call "--contract ${SHIELDER_ADDRESS} --message register_new_token --args 1 ${TOKEN_B_ADDRESS} --suri ${ADMIN}" 1> /dev/null 2> /dev/null
+  contract_call "--contract ${SHIELDER_ADDRESS} --message register_new_token --args 0 ${TOKEN_A_ADDRESS} --suri ${ADMIN}" 1>/dev/null
+  contract_call "--contract ${SHIELDER_ADDRESS} --message register_new_token --args 1 ${TOKEN_B_ADDRESS} --suri ${ADMIN}" 1>/dev/null
 }
 
 setup_cli() {
   cd "${SCRIPT_DIR}"/..
-  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null 2>/dev/null"
+  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null"
   log_progress "✅ CLI was built"
 
   rm ~/.shielder-state 2>/dev/null || true
@@ -296,7 +296,7 @@ deploy() {
   store_contract_addresses
 
   # build and setup CLI
-  if [[ ! -z "${E2E_TEST_CONTEXT}" ]]; then
+  if [[ -z "${E2E_TEST_CONTEXT}" ]]; then
     log_progress "Setting up CLI..."
     setup_cli
   else
