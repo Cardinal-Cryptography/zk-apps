@@ -2,7 +2,7 @@
 
 
 setup-test-network: ## Setups local docker network and deploys shielder and its dependencies
-	@./deploy/deploy.sh
+	@export E2E_TEST=1 && ./deploy/deploy.sh
 
 setup-resources: ## Setups resources required for running integration test for shielder
 	@./cli/tests/setup_local.sh
