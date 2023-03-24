@@ -1,8 +1,7 @@
-use std::path::PathBuf;
+use std::path::Path;
 
-use aleph_client::{keypair_from_string, Connection, SignedConnection};
+use aleph_client::SignedConnection;
 use anyhow::Result;
-use inquire::Password;
 use liminal_ark_relations::{
     compute_note, DepositAndMergeRelationWithFullInput, DepositRelationWithFullInput,
     FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
@@ -11,67 +10,18 @@ use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},
-    config::DepositCmd,
     contract::Shielder,
-    generate_proof, MERKLE_PATH_MAX_LEN,
+    generate_proof, DepositId, MERKLE_PATH_MAX_LEN,
 };
 
-pub async fn do_deposit(
-    contract: Shielder,
-    connection: Connection,
-    cmd: DepositCmd,
-    app_state: &mut AppState,
-) -> Result<()> {
-    let DepositCmd {
-        token_id,
-        amount,
-        caller_seed,
-        ..
-    } = cmd;
-
-    let seed = match caller_seed {
-        Some(seed) => seed,
-        None => Password::new("Seed of the depositing account (the tokens owner):")
-            .without_confirmation()
-            .prompt()?,
-    };
-    let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
-
-    let old_deposit = app_state.get_last_deposit(token_id);
-    match old_deposit {
-        Some(old_deposit) => {
-            deposit_and_merge(
-                old_deposit,
-                amount,
-                cmd.deposit_and_merge_key_file,
-                connection,
-                contract,
-                app_state,
-            )
-            .await
-        }
-        None => {
-            first_deposit(
-                token_id,
-                amount,
-                cmd.deposit_key_file,
-                connection,
-                contract,
-                app_state,
-            )
-            .await
-        }
-    }
-}
-
-async fn first_deposit(
+pub async fn first_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
-    proving_key_file: PathBuf,
-    connection: SignedConnection,
-    contract: Shielder,
+    proving_key_file: &Path,
+    connection: &SignedConnection,
+    contract: &Shielder,
     app_state: &mut AppState,
-) -> Result<()> {
+) -> Result<DepositId> {
     let (trapdoor, nullifier) = rand::thread_rng().gen::<(FrontendTrapdoor, FrontendNullifier)>();
     let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
@@ -82,22 +32,23 @@ async fn first_deposit(
     let proof = generate_proof(circuit, proving_key_file)?;
 
     let leaf_idx = contract
-        .deposit(&connection, token_id, token_amount, note, &proof)
+        .deposit(connection, token_id, token_amount, note, &proof)
         .await?;
 
-    app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
+    let deposit_id =
+        app_state.add_deposit(token_id, token_amount, trapdoor, nullifier, leaf_idx, note);
 
-    Ok(())
+    Ok(deposit_id)
 }
 
-async fn deposit_and_merge(
+pub async fn deposit_and_merge(
     deposit: Deposit,
     token_amount: FrontendTokenAmount,
-    proving_key_file: PathBuf,
-    connection: SignedConnection,
-    contract: Shielder,
+    proving_key_file: &Path,
+    connection: &SignedConnection,
+    contract: &Shielder,
     app_state: &mut AppState,
-) -> Result<()> {
+) -> Result<DepositId> {
     let Deposit {
         token_id,
         token_amount: old_token_amount,
@@ -107,9 +58,9 @@ async fn deposit_and_merge(
         note: old_note,
         ..
     } = deposit;
-    let merkle_root = contract.get_merkle_root(&connection).await;
+    let merkle_root = contract.get_merkle_root(connection).await;
     let merkle_path = contract
-        .get_merkle_path(&connection, leaf_idx)
+        .get_merkle_path(connection, leaf_idx)
         .await
         .expect("Path does not exist");
 
@@ -139,7 +90,7 @@ async fn deposit_and_merge(
 
     let leaf_idx = contract
         .deposit_and_merge(
-            &connection,
+            connection,
             token_id,
             token_amount,
             merkle_root,
@@ -158,5 +109,5 @@ async fn deposit_and_merge(
         new_note,
     );
 
-    Ok(())
+    Ok(deposit.deposit_id)
 }

@@ -1,6 +1,7 @@
-use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
-use anyhow::{anyhow, Result};
-use inquire::{CustomType, Password, Select};
+use std::path::Path;
+
+use aleph_client::{sp_runtime::AccountId32, SignedConnection};
+use anyhow::Result;
 use liminal_ark_relations::{
     compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor,
     WithdrawRelationWithFullInput,
@@ -9,27 +10,21 @@ use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},
-    config::WithdrawCmd,
     contract::Shielder,
     generate_proof, MERKLE_PATH_MAX_LEN,
 };
 
-pub async fn do_withdraw(
-    contract: Shielder,
-    connection: Connection,
-    cmd: WithdrawCmd,
+#[allow(clippy::too_many_arguments)]
+pub async fn withdraw(
+    contract: &Shielder,
+    connection: &SignedConnection,
+    deposit: Deposit,
+    withdraw_amount: FrontendTokenAmount,
+    recipient: &AccountId32,
+    fee: u64,
+    withdraw_pk_file: &Path,
     app_state: &mut AppState,
 ) -> Result<()> {
-    let (deposit, withdraw_amount) = get_deposit_and_withdraw_amount(&cmd, app_state)?;
-
-    let WithdrawCmd {
-        recipient,
-        caller_seed,
-        fee,
-        proving_key_file,
-        ..
-    } = cmd;
-
     let Deposit {
         token_id,
         token_amount: whole_token_amount,
@@ -40,26 +35,11 @@ pub async fn do_withdraw(
         ..
     } = deposit;
 
-    let caller_seed = match caller_seed {
-        Some(seed) => seed,
-        None => Password::new(
-            "Seed of the withdrawing account (the caller, not necessarily recipient):",
-        )
-        .without_confirmation()
-        .prompt()?,
-    };
-    let signer = keypair_from_string(&caller_seed);
-    let recipient = match recipient {
-        Some(recipient) => recipient,
-        None => account_from_keypair(signer.signer()),
-    };
-    let connection = SignedConnection::from_connection(connection, signer);
-
     let recipient_bytes: [u8; 32] = recipient.clone().into();
 
-    let merkle_root = contract.get_merkle_root(&connection).await;
+    let merkle_root = contract.get_merkle_root(connection).await;
     let merkle_path = contract
-        .get_merkle_path(&connection, leaf_idx)
+        .get_merkle_path(connection, leaf_idx)
         .await
         .expect("Path does not exist");
 
@@ -87,11 +67,11 @@ pub async fn do_withdraw(
         new_token_amount,
     );
 
-    let proof = generate_proof(circuit, proving_key_file)?;
+    let proof = generate_proof(circuit, withdraw_pk_file)?;
 
     let leaf_idx = contract
         .withdraw(
-            &connection,
+            connection,
             token_id,
             withdraw_amount,
             recipient,
@@ -118,34 +98,4 @@ pub async fn do_withdraw(
     }
 
     Ok(())
-}
-
-fn get_deposit_and_withdraw_amount(
-    cmd: &WithdrawCmd,
-    app_state: &AppState,
-) -> Result<(Deposit, FrontendTokenAmount)> {
-    if !cmd.interactive {
-        if let Some(deposit) = app_state.get_deposit_by_id(cmd.deposit_id.unwrap()) {
-            return Ok((deposit, cmd.amount.unwrap()));
-        }
-        return Err(anyhow!("Incorrect deposit id"));
-    }
-
-    let deposit = Select::new("Select one of your deposits:", app_state.deposits())
-        .with_page_size(5)
-        .prompt()?;
-
-    let amount =
-        CustomType::<FrontendTokenAmount>::new("Specify how many tokens should be withdrawn:")
-            .with_default(deposit.token_amount)
-            .with_parser(&|a| match str::parse::<FrontendTokenAmount>(a) {
-                Ok(amount) if amount <= deposit.token_amount => Ok(amount),
-                _ => Err(()),
-            })
-            .with_error_message(
-                "You should provide a valid amount, no more than the whole deposit value",
-            )
-            .prompt()?;
-
-    Ok((deposit, amount))
 }
