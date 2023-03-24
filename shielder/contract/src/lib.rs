@@ -31,7 +31,8 @@ const DEPOSIT_VK_IDENTIFIER: VerificationKeyIdentifier =
 const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier =
     [b'd', b'e', b'p', b'o', b'n', b'm', b'r', b'g'];
 /// Verification key identifier for the `merge` relation (to be registered in `pallet_baby_liminal`).
-const MERGE_VK_IDENTIFIER: VerificationKeyIdentifier = [b'm', b'e', b'r', b'g', b'e', b'r', b'e', b'l'];
+const MERGE_VK_IDENTIFIER: VerificationKeyIdentifier =
+    [b'm', b'e', b'r', b'g', b'e', b'r', b'e', b'l'];
 /// Verification key identifier for the `withdraw` relation (to be registered in `pallet_snarcos`).
 const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier =
     [b'w', b'i', b't', b'h', b'd', b'r', b'a', b'w'];
