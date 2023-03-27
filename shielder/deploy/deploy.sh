@@ -9,9 +9,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
 # TODO: Replace with published snarkeling node.
-export NODE_IMAGE=${NODE_IMAGE:-public.ecr.aws/p6e8q1z1/aleph-node-liminal:275670e}
-export CLIAIN_IMAGE=${CLIAIN_IMAGE:-public.ecr.aws/p6e8q1z1/cliain-liminal:8e3643e}
-export CARGO_IMAGE=${CARGO_IMAGE:-public.ecr.aws/p6e8q1z1/ink-dev:1.0.0}
+export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:latest"
+export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d193272"
+export CARGO_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
 
 # actors
 DAMIAN=//0
