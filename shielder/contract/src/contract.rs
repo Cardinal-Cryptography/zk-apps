@@ -15,8 +15,12 @@ mod shielder {
         storage::Mapping,
     };
     use liminal_ark_relations::{
-        CircuitField, DepositAndMergeRelationWithPublicInput, DepositRelationWithPublicInput,
-        MergeRelationWithPublicInput, WithdrawRelationWithPublicInput,
+        environment::CircuitField,
+        shielder::{
+            DepositAndMergeRelationWithPublicInput, DepositRelationWithPublicInput,
+            MergeRelationWithPublicInput,
+            WithdrawRelationWithPublicInput,
+        },
     };
     use openbrush::{
         contracts::{
