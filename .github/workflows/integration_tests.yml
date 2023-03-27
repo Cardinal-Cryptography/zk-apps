@@ -19,9 +19,6 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
 
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
-
       - name: Run e2e tests for shielder
         run: |
           cd shielder && make test-shielder-clean
