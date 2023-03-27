@@ -123,12 +123,14 @@ generate_keys() {
   generate_relation_keys "deposit"
   generate_relation_keys "deposit-and-merge" "--max-path-len ${MERKLE_TREE_HEIGHT}"
   generate_relation_keys "withdraw" "--max-path-len ${MERKLE_TREE_HEIGHT}"
+  generate_relation_keys "merge" "--max-path-len ${MERKLE_TREE_HEIGHT}"
 }
 
 move_keys() {
   mv docker/keys/deposit.groth16.pk.bytes ../cli/deposit.pk.bytes
   mv docker/keys/deposit_and_merge.groth16.pk.bytes ../cli/deposit_and_merge.pk.bytes
   mv docker/keys/withdraw.groth16.pk.bytes ../cli/withdraw.pk.bytes
+  mv docker/keys/merge.groth16.pk.bytes ../cli/merge.pk.bytes
 
   log_progress "✅ Proving keys were made available to CLI"
 }
@@ -236,12 +238,14 @@ register_vk() {
   DEPOSIT_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit.groth16.vk.bytes | tr -d '\n')"
   DEPOSIT_MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit_and_merge.groth16.vk.bytes | tr -d '\n')"
   WITHDRAW_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
+  MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/merge.groth16.vk.bytes | tr -d '\n')"
 
   pushd $SCRIPT_DIR/../contract
 
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}" 1>/dev/null
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args DepositAndMerge ${DEPOSIT_MERGE_VK_BYTES} --suri ${ADMIN}" 1>/dev/null
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Withdraw        ${WITHDRAW_VK_BYTES}      --suri ${ADMIN}" 1>/dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Merge           ${MERGE_VK_BYTES}         --suri ${ADMIN}" 1>/dev/null
 
   popd
 }
