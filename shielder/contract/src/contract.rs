@@ -18,8 +18,7 @@ mod shielder {
         environment::CircuitField,
         shielder::{
             DepositAndMergeRelationWithPublicInput, DepositRelationWithPublicInput,
-            MergeRelationWithPublicInput,
-            WithdrawRelationWithPublicInput,
+            MergeRelationWithPublicInput, WithdrawRelationWithPublicInput,
         },
     };
     use openbrush::{
