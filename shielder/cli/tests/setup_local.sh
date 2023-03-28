@@ -34,6 +34,7 @@ function copy_addresses() {
 function copy_proving_keys() {
   cp ${BASE_DIR}/cli/deposit.pk.bytes ${SCRIPT_DIR}/resources/
   cp ${BASE_DIR}/cli/deposit_and_merge.pk.bytes ${SCRIPT_DIR}/resources/
+  cp ${BASE_DIR}/cli/merge.pk.bytes ${SCRIPT_DIR}/resources/
   cp ${BASE_DIR}/cli/withdraw.pk.bytes ${SCRIPT_DIR}/resources/
   log_progress "✅ Proving keys copied to tests/resources"
 }

@@ -18,7 +18,7 @@ mod shielder {
         environment::CircuitField,
         shielder::{
             DepositAndMergeRelationWithPublicInput, DepositRelationWithPublicInput,
-            WithdrawRelationWithPublicInput,
+            MergeRelationWithPublicInput, WithdrawRelationWithPublicInput,
         },
     };
     use openbrush::{
@@ -34,8 +34,8 @@ mod shielder {
     use crate::{
         array_to_tuple, error::ShielderError, tuple_to_array, MerkleHash, MerkleRoot, Note,
         Nullifier, Set, TokenAmount, TokenId, DEPOSIT_AND_MERGE_VK_IDENTIFIER,
-        DEPOSIT_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR, PSP22_TRANSFER_SELECTOR, SYSTEM,
-        WITHDRAW_VK_IDENTIFIER,
+        DEPOSIT_VK_IDENTIFIER, MERGE_VK_IDENTIFIER, PSP22_TRANSFER_FROM_SELECTOR,
+        PSP22_TRANSFER_SELECTOR, SYSTEM, WITHDRAW_VK_IDENTIFIER,
     };
 
     /// Supported relations - used for registering verifying keys.
@@ -44,6 +44,7 @@ mod shielder {
     pub enum Relation {
         Deposit,
         DepositAndMerge,
+        Merge,
         Withdraw,
     }
 
@@ -72,6 +73,14 @@ mod shielder {
         #[ink(topic)]
         token_id: TokenId,
         token_address: AccountId,
+    }
+
+    #[ink(event)]
+    pub struct Merged {
+        #[ink(topic)]
+        token_id: TokenId,
+        leaf_idx: u32,
+        new_note: Note,
     }
 
     type Result<T> = core::result::Result<T, ShielderError>;
@@ -247,6 +256,7 @@ mod shielder {
             let identifier = match relation {
                 Relation::Deposit => DEPOSIT_VK_IDENTIFIER,
                 Relation::DepositAndMerge => DEPOSIT_AND_MERGE_VK_IDENTIFIER,
+                Relation::Merge => MERGE_VK_IDENTIFIER,
                 Relation::Withdraw => WITHDRAW_VK_IDENTIFIER,
             };
             self.env()
@@ -316,6 +326,48 @@ mod shielder {
                     value,
                     leaf_idx: self.next_free_leaf - 1,
                     note,
+                }),
+            );
+
+            Ok(())
+        }
+
+        /// Trigger merge action to combine the value of two notes.
+        #[allow(clippy::too_many_arguments)]
+        #[ink(message, selector = 12)]
+        pub fn merge(
+            &mut self,
+            token_id: TokenId,
+            merkle_root: MerkleRoot,
+            first_nullifier: Nullifier,
+            second_nullifier: Nullifier,
+            note: Note,
+            proof: Vec<u8>,
+        ) -> Result<()> {
+            self.verify_merkle_root(merkle_root)?;
+            self.verify_nullifier(first_nullifier)?;
+            self.verify_nullifier(second_nullifier)?;
+
+            self.verify_merge(
+                token_id,
+                merkle_root,
+                first_nullifier,
+                second_nullifier,
+                note,
+                proof,
+            )?;
+
+            self.create_new_leaf(note)?;
+            self.merkle_roots.insert(self.current_root(), &());
+            self.nullifiers.insert(first_nullifier, &());
+            self.nullifiers.insert(second_nullifier, &());
+
+            Self::emit_event(
+                self.env(),
+                Event::Merged(Merged {
+                    token_id,
+                    leaf_idx: self.next_free_leaf - 1,
+                    new_note: note,
                 }),
             );
 
@@ -464,6 +516,36 @@ mod shielder {
 
             self.env().extension().verify(
                 DEPOSIT_AND_MERGE_VK_IDENTIFIER,
+                proof,
+                Self::serialize::<Vec<CircuitField>>(input.as_ref()),
+                SYSTEM,
+            )?;
+
+            Ok(())
+        }
+
+        #[allow(clippy::too_many_arguments)]
+        fn verify_merge(
+            &self,
+            token_id: TokenId,
+            merkle_root: MerkleRoot,
+            first_old_nullifier: Nullifier,
+            second_old_nullifier: Nullifier,
+            new_note: Note,
+            proof: Vec<u8>,
+        ) -> Result<()> {
+            let input = MergeRelationWithPublicInput::new(
+                self.max_path_len(),
+                token_id,
+                first_old_nullifier,
+                second_old_nullifier,
+                new_note,
+                merkle_root,
+            )
+            .serialize_public_input();
+
+            self.env().extension().verify(
+                MERGE_VK_IDENTIFIER,
                 proof,
                 Self::serialize::<Vec<CircuitField>>(input.as_ref()),
                 SYSTEM,
