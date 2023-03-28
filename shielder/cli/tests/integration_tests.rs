@@ -6,7 +6,7 @@ use aleph_client::AccountId;
 use anyhow::Result;
 use liminal_ark_relations::FrontendTokenAmount;
 use serial_test::serial;
-use shielder::deposit;
+use shielder::{deposit, merge};
 use tracing::info;
 
 use crate::utils::{TestContext, TOKEN_A_ID};
@@ -187,6 +187,128 @@ async fn deposit_and_merge() -> Result<()> {
             "Balance after unshielding merged notes");
 
     assert_eq!(damian_balance_after_unshielding, damian_balance_at_start);
+
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+#[serial]
+async fn merge() -> Result<()> {
+    let TestContext {
+        shielder,
+        token_a,
+        connection,
+        mut damian,
+        ..
+    } = TestContext::local().await?;
+
+    let damian_balance_at_start = token_a
+        .balance_of(&connection, &damian.account_id)
+        .await
+        .unwrap();
+
+    info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_at_start,
+                "Balance before shielding");
+
+    let first_shield_amount: FrontendTokenAmount = 100;
+    let first_deposit_id = damian
+        .shield(TOKEN_A_ID, first_shield_amount, &shielder)
+        .await
+        .unwrap();
+
+    let damian_balance_after_first_shield = token_a
+        .balance_of(&connection, &damian.account_id)
+        .await
+        .unwrap();
+
+    info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_first_shield,
+            "Balance after first shielding event");
+
+    let second_shield_amount: FrontendTokenAmount = 50;
+    let second_deposit_id = damian
+        .shield(TOKEN_A_ID, second_shield_amount, &shielder)
+        .await
+        .unwrap();
+
+    let damian_balance_after_second_shield = token_a
+        .balance_of(&connection, &damian.account_id)
+        .await
+        .unwrap();
+
+    info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_second_shield,
+            "Balance after second shielding event");
+
+    let first_deposit = damian.get_deposit(first_deposit_id).unwrap();
+    let second_deposit = damian.get_deposit(second_deposit_id).unwrap();
+
+    let merged_deposit_id = merge::merge(
+        first_deposit.clone(),
+        second_deposit.clone(),
+        &shielder.merge_pk_file,
+        &damian.conn,
+        &shielder.instance,
+        &mut damian.app_state,
+    )
+    .await
+    .unwrap();
+
+    let damian_balance_after_merging = token_a
+        .balance_of(&connection, &damian.account_id)
+        .await
+        .unwrap();
+
+    info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_merging,
+            "Balance after merging");
+
+    // We should not be able to withdraw with the nullifier and trapdoor of the second deposit.
+    let res = damian
+        .unshield(
+            &shielder,
+            second_deposit,
+            WITHDRAW_ALL,
+            NO_FEE,
+            WITHDRAW_TO_ISSUER,
+        )
+        .await;
+    assert!(res.is_err());
+
+    // Damian's token balance should be unchanged.
+    let damian_balance_after_failed_withdrawal = token_a
+        .balance_of(&connection, &damian.account_id)
+        .await
+        .unwrap();
+
+    assert_eq!(
+        damian_balance_after_failed_withdrawal, damian_balance_after_merging,
+        "Failed unshielding shouldn't change account's balance"
+    );
+
+    let merged_deposit = damian.get_deposit(merged_deposit_id).unwrap();
+
+    let _ = damian
+        .unshield(
+            &shielder,
+            merged_deposit,
+            WITHDRAW_ALL,
+            NO_FEE,
+            WITHDRAW_TO_ISSUER,
+        )
+        .await
+        .expect("Withdrawing merged note should succeed");
+
+    let damian_balance_after_unshielding = token_a
+        .balance_of(&connection, &damian.account_id)
+        .await
+        .unwrap();
+
+    info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_unshielding,
+            "Balance after unshielding merged notes");
+
+    assert_eq!(
+        damian_balance_after_unshielding, damian_balance_at_start,
+        "Balance should not change once shielding, merging and unshielding is completed"
+    );
 
     Ok(())
 }

@@ -15,6 +15,7 @@ pub const MERKLE_PATH_MAX_LEN: u8 = 16;
 pub mod app_state;
 pub mod contract;
 pub mod deposit;
+pub mod merge;
 pub mod withdraw;
 
 /// Generates a Groth16 proof for the given `circuit` using proving key from the file.
