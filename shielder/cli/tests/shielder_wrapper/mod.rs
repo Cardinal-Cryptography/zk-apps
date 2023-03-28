@@ -9,6 +9,7 @@ pub struct ShielderWrapper {
     pub instance: ShielderContract,
     pub deposit_pk_file: PathBuf,
     pub deposit_and_merge_pk_file: PathBuf,
+    pub merge_pk_file: PathBuf,
     pub withdraw_pk_file: PathBuf,
 }
 
@@ -21,6 +22,7 @@ impl ShielderWrapper {
             instance: shielder,
             deposit_pk_file: resources_path.join("deposit.pk.bytes"),
             deposit_and_merge_pk_file: resources_path.join("deposit_and_merge.pk.bytes"),
+            merge_pk_file: resources_path.join("merge.pk.bytes"),
             withdraw_pk_file: resources_path.join("withdraw.pk.bytes"),
         })
     }

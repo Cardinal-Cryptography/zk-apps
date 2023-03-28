@@ -143,6 +143,47 @@ impl Shielder {
         })
     }
 
+    /// Call `merge` message of the contract.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn merge(
+        &self,
+        connection: &SignedConnection,
+        token_id: FrontendTokenId,
+        merkle_root: FrontendMerkleRoot,
+        first_old_nullifier: FrontendNullifier,
+        second_old_nullifier: FrontendNullifier,
+        new_note: FrontendNote,
+        proof: &[u8],
+    ) -> Result<u32> {
+        let new_note_bytes = bytes_from_note(&new_note);
+        let merkle_root_bytes = bytes_from_note(&merkle_root);
+
+        let args = [
+            &*token_id.to_string(),
+            &*format!("0x{}", hex::encode(merkle_root_bytes)),
+            &*first_old_nullifier.to_string(),
+            &*second_old_nullifier.to_string(),
+            &*format!("0x{}", hex::encode(new_note_bytes)),
+            &*format!("0x{}", hex::encode(proof)),
+        ];
+
+        debug!("Calling merge tx with arguments {:?}", &args);
+
+        let tx_info = self
+            .contract
+            .contract_exec(connection, "merge", &args)
+            .await?;
+
+        let event = self
+            .get_event(connection.as_connection(), "Merged", tx_info)
+            .await?;
+
+        Self::extract_leaf_idx_from_event(&event).map(|idx| {
+            info!("Successfully merged tokens.");
+            idx
+        })
+    }
+
     /// Fetch the current merkle root.
     pub async fn get_merkle_root(&self, connection: &SignedConnection) -> FrontendMerkleRoot {
         self.contract
