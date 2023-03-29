@@ -12,7 +12,7 @@ Of course, you can choose to connect to the #Smarknet chain on Aleph Zero, but f
 Bootstrapping a working instance of the Shielder is easy as π.
 
 There are some basic dependencies you need to have on your machine before proceeding:
-* docker (click [here](https://docs.docker.com/engine/install/) for intallation instructions)
+* docker (click [here](https://docs.docker.com/engine/install/) for installation instructions)
 * docker-compose (for now this repo uses the standalone version, click [here](https://docs.docker.com/compose/install/other/) for installation instructions)
 * jq ([installation instructions](https://lindevs.com/install-jq-on-ubuntu))
 * Rust (https://www.rust-lang.org/tools/install)
