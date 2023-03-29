@@ -34,7 +34,7 @@ First of all, it's worth noting that we already have pretty much everything set 
 
 ### Showing assets
 
-We can view what's inside the shielder contract (however, note that this gives you virtually no information about who actually put what there). In order to do that, we will need to use the `shielder-cli`. The easiest way to obtain it is to get it from the `cli/target/release/` folder, like so:
+We can view what we've deposited inside the Shielder contract (however, note that this gives you virtually no information about who actually put what there). In order to do that, we will need to use the `shielder-cli`. The easiest way to obtain it is to get it from the `cli/target/release/` folder, like so:
 ```bash
 cd cli
 ./target/release/shielder-cli show-assets
@@ -54,7 +54,7 @@ Depositing some PSP22 tokens will be only slightly more involved. We need to run
 ./target/release/shielder-cli deposit 0 10
 ```
 
-This will deposit 10 units of the first token into the Shielder (we have two PSP22 tokens registered with id-s 0 and 1).
+This will deposit 10 units of the first token into Shielder (we have two PSP22 tokens registered with id-s 0 and 1).
 It will ask you for the seed of the account depositing the tokens. Type `//0` for Damian and `//1` for Hans (and press 'Enter').
 
 Now, running `show-assets` should be slightly more interesting and show you something like this:
