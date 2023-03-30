@@ -115,7 +115,7 @@ pub struct DepositCmd {
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub struct WithdrawCmd {
     /// Which note should be spent, last created if none provided.
-    #[clap(long)]
+    #[clap(long, required_unless_present("interactive"))]
     pub deposit_id: Option<DepositId>,
 
     /// How many tokens should be withdrawn.
