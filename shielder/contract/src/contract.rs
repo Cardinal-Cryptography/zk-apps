@@ -261,7 +261,7 @@ mod shielder {
             };
             self.env()
                 .extension()
-                .store_key(self.env().account_id(), identifier, vk)?;
+                .store_key(self.env().caller(), identifier, vk)?;
             Ok(())
         }
 
