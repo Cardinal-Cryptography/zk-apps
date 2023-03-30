@@ -5,7 +5,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use config::{DepositCmd, LoggingFormat, WithdrawCmd};
 use inquire::{CustomType, Password, Select};
-use liminal_ark_relations::FrontendTokenAmount;
+use liminal_ark_relations::shielder::types::FrontendTokenAmount;
 use shielder::{app_state::AppState, contract::Shielder, deposit::*, withdraw::*};
 use tracing::info;
 use tracing_subscriber::EnvFilter;

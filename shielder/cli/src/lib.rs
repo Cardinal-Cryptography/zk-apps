@@ -3,7 +3,9 @@ use std::{fs, path::Path};
 use anyhow::Result;
 use ark_serialize::CanonicalDeserialize;
 use liminal_ark_relations::{
-    serialize, CircuitField, ConstraintSynthesizer, Groth16, ProvingSystem,
+    environment::{CircuitField, Groth16, ProvingSystem},
+    serialization::serialize,
+    ConstraintSynthesizer,
 };
 
 pub type DepositId = u16;

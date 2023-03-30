@@ -7,10 +7,8 @@ E2E_TEST_CONTEXT=${E2E_TEST:-}
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-# bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
-# TODO: Replace with published snarkeling node.
-export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:d193272"
-export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d193272"
+export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:8e987e4"
+export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:8e987e4"
 export CARGO_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
 
 # actors

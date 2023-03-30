@@ -2320,9 +2320,9 @@ dependencies = [
 
 [[package]]
 name = "liminal-ark-relation-macro"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3051609a81c111cb4a6e2315c2e056869acf522dedde2d319bd6db71d220278"
+checksum = "7750d50af80de80d9c5390fe9569bff89b2c321520ed09617efa1852b94b9c95"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2332,9 +2332,9 @@ dependencies = [
 
 [[package]]
 name = "liminal-ark-relations"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f0a4bb2733016dd32bdfc35081f8dade35ebac5248ed26a3eb360a406ba9c6a"
+checksum = "e9d6dcccb01fc432a64d12be4a3c6e4618260d1ecae6e22a6b4fbe5b2a26acaf"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",

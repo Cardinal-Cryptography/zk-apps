@@ -4,7 +4,7 @@ pub mod utils;
 
 use aleph_client::AccountId;
 use anyhow::Result;
-use liminal_ark_relations::FrontendTokenAmount;
+use liminal_ark_relations::shielder::types::FrontendTokenAmount;
 use serial_test::serial;
 use shielder::{deposit, merge};
 use tracing::info;
