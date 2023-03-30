@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use aleph_client::AccountId;
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use liminal_ark_relations::{FrontendTokenAmount, FrontendTokenId};
+use liminal_ark_relations::shielder::types::{FrontendTokenAmount, FrontendTokenId};
 use shielder::DepositId;
 
 #[derive(Clone, Eq, PartialEq, Parser)]

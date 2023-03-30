@@ -8,9 +8,12 @@ use aleph_client::{
     AccountId, AsConnection, Connection, SignedConnection, TxInfo,
 };
 use anyhow::{anyhow, Result};
-use liminal_ark_relations::{
-    bytes_from_note, FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
-    FrontendTokenAmount, FrontendTokenId,
+use liminal_ark_relations::shielder::{
+    bytes_from_note,
+    types::{
+        FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
+        FrontendTokenAmount, FrontendTokenId,
+    },
 };
 use tracing::{debug, info};
 
@@ -76,6 +79,7 @@ impl Shielder {
     ) -> Result<u32> {
         let new_note_bytes = bytes_from_note(&new_note);
         let merkle_root_bytes = bytes_from_note(&merkle_root);
+        let old_nullifier_bytes = bytes_from_note(&old_nullifier);
 
         let args = [
             &*token_id.to_string(),
@@ -83,7 +87,7 @@ impl Shielder {
             &*recipient.to_string(),
             &*format!("{:?}", Some(fee_for_caller)),
             &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*old_nullifier.to_string(),
+            &*format!("0x{}", hex::encode(old_nullifier_bytes)),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
         ];
@@ -116,12 +120,13 @@ impl Shielder {
     ) -> Result<u32> {
         let new_note_bytes = bytes_from_note(&new_note);
         let merkle_root_bytes = bytes_from_note(&merkle_root);
+        let old_nullifier_bytes = bytes_from_note(&old_nullifier);
 
         let args = [
             &*token_id.to_string(),
             &*value.to_string(),
             &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*old_nullifier.to_string(),
+            &*format!("0x{}", hex::encode(old_nullifier_bytes)),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
         ];
@@ -157,12 +162,14 @@ impl Shielder {
     ) -> Result<u32> {
         let new_note_bytes = bytes_from_note(&new_note);
         let merkle_root_bytes = bytes_from_note(&merkle_root);
+        let first_old_nullifier_bytes = bytes_from_note(&first_old_nullifier);
+        let second_old_nullifier_bytes = bytes_from_note(&second_old_nullifier);
 
         let args = [
             &*token_id.to_string(),
             &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*first_old_nullifier.to_string(),
-            &*second_old_nullifier.to_string(),
+            &*format!("0x{}", hex::encode(first_old_nullifier_bytes)),
+            &*format!("0x{}", hex::encode(second_old_nullifier_bytes)),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
         ];

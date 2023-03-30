@@ -2,7 +2,7 @@ use std::{fs::File, path::Path};
 
 use aleph_client::{AccountId, Connection, KeyPair, SignedConnection};
 use anyhow::Result;
-use liminal_ark_relations::{FrontendTokenAmount, FrontendTokenId};
+use liminal_ark_relations::shielder::types::{FrontendTokenAmount, FrontendTokenId};
 use serde::Deserialize;
 use shielder::{
     app_state::{AppState, Deposit},

@@ -2,8 +2,9 @@ use std::path::Path;
 
 use aleph_client::{sp_runtime::AccountId32, SignedConnection};
 use anyhow::Result;
-use liminal_ark_relations::{
-    compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor,
+use liminal_ark_relations::shielder::{
+    compute_note,
+    types::{FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor},
     WithdrawRelationWithFullInput,
 };
 use rand::Rng;

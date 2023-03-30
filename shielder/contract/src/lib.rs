@@ -7,15 +7,14 @@ use ink::storage::Mapping;
 mod contract;
 mod error;
 
-type Scalar = u64;
-type Nullifier = Scalar;
-
 /// Tangling output type.
 type MerkleHash = [u64; 4];
 /// Type of the value in the Merkle tree leaf.
 type Note = MerkleHash;
 /// Type of the value in the Merkle tree root.
 type MerkleRoot = MerkleHash;
+/// Type of the nullifier.
+type Nullifier = MerkleHash;
 
 /// Short identifier of a registered token contract.
 type TokenId = u16;

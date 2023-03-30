@@ -2,8 +2,10 @@ use std::path::Path;
 
 use aleph_client::SignedConnection;
 use anyhow::Result;
-use liminal_ark_relations::{
-    compute_note, FrontendNullifier, FrontendTrapdoor, MergeRelationWithFullInput,
+use liminal_ark_relations::shielder::{
+    compute_note,
+    types::{FrontendNullifier, FrontendTrapdoor},
+    MergeRelationWithFullInput,
 };
 use rand::Rng;
 

@@ -804,9 +804,9 @@ dependencies = [
 
 [[package]]
 name = "liminal-ark-relations"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba1c468fffce5d9337f144703cbec95e536cb261d17df63886252baf36348554"
+checksum = "e9d6dcccb01fc432a64d12be4a3c6e4618260d1ecae6e22a6b4fbe5b2a26acaf"
 dependencies = [
  "ark-bls12-381",
  "ark-ff",
