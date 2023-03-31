@@ -32,7 +32,7 @@ async fn basic_interaction() -> Result<()> {
         .await
         .unwrap();
 
-    let shield_amount = 100u64;
+    let shield_amount = 100u128;
 
     info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_before_shield,
             "Balance before shielding");

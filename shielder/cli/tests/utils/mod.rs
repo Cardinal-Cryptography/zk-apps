@@ -66,7 +66,7 @@ impl User {
         shielder: &ShielderWrapper,
         deposit: Deposit,
         amount: Option<FrontendTokenAmount>,
-        fee: u64,
+        fee: u128,
         recipient: Option<AccountId>,
     ) -> Result<()> {
         let withdraw_amount = amount.unwrap_or(deposit.token_amount);

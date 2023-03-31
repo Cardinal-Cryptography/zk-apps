@@ -22,7 +22,7 @@ pub async fn withdraw(
     deposit: Deposit,
     withdraw_amount: FrontendTokenAmount,
     recipient: &AccountId32,
-    fee: u64,
+    fee: u128,
     withdraw_pk_file: &Path,
     app_state: &mut AppState,
 ) -> Result<()> {
