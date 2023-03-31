@@ -7,8 +7,8 @@ E2E_TEST_CONTEXT=${E2E_TEST:-}
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:8e987e4"
-export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:8e987e4"
+export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:d93048e"
+export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d93048e"
 export CARGO_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
 
 # actors

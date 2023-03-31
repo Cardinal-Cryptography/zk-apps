@@ -18,8 +18,8 @@ type Nullifier = MerkleHash;
 
 /// Short identifier of a registered token contract.
 type TokenId = u16;
-/// `arkworks` does not support serializing `u128` and thus we have to operate on `u64` amounts.
-type TokenAmount = u64;
+/// Type for the amount of deposited / withdrawn tokens.
+type TokenAmount = u128;
 
 type Set<T> = Mapping<T, ()>;
 

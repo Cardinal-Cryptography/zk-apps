@@ -21,7 +21,7 @@ scale-info = { version = "2.3", default-features = false, features = ["derive"],
 ink = { version = "~4.0.1",  default-features = false }
 openbrush = { git = "https://github.com/727-Ventures/openbrush-contracts/", tag = "3.0.0", default-features = false, features = ["psp22", "ownable"] }
 
-liminal-ark-relations = { version = "0.3.0", default-features = false }
+liminal-ark-relations = { version = "0.4.0", default-features = false }
 baby-liminal-extension = { git = "https://github.com/Cardinal-Cryptography/aleph-node", default-features = false, features = ["ink", "ink-as-dependency"] }
 
 [features]
