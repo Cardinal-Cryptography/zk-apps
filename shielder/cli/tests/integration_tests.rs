@@ -32,7 +32,7 @@ async fn basic_interaction() -> Result<()> {
         .await
         .unwrap();
 
-    let shield_amount = 100u128;
+    let shield_amount = 10;
 
     info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_before_shield,
             "Balance before shielding");
@@ -51,7 +51,7 @@ async fn basic_interaction() -> Result<()> {
             "Balance after shielding");
 
     assert_eq!(
-        damian_balance_after_shield + shield_amount as u128,
+        damian_balance_after_shield + shield_amount,
         damian_balance_before_shield,
         "Shielding should decrease balance"
     );
@@ -105,7 +105,7 @@ async fn deposit_and_merge() -> Result<()> {
     info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_at_start,
                 "Balance before shielding");
 
-    let first_shield_amount: FrontendTokenAmount = 100;
+    let first_shield_amount = 10;
 
     let first_deposit_id = damian
         .shield(TOKEN_A_ID, first_shield_amount, &shielder)
@@ -121,7 +121,7 @@ async fn deposit_and_merge() -> Result<()> {
             "Balance after shielding");
 
     let first_deposit = damian.get_deposit(first_deposit_id).unwrap();
-    let second_shield_amount: FrontendTokenAmount = 50;
+    let second_shield_amount = 5;
 
     let merged_deposit_id = deposit::deposit_and_merge(
         first_deposit.clone(),
@@ -211,7 +211,7 @@ async fn merge() -> Result<()> {
     info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_at_start,
                 "Balance before shielding");
 
-    let first_shield_amount: FrontendTokenAmount = 100;
+    let first_shield_amount = 10;
     let first_deposit_id = damian
         .shield(TOKEN_A_ID, first_shield_amount, &shielder)
         .await
@@ -225,7 +225,7 @@ async fn merge() -> Result<()> {
     info!(token_id = ?TOKEN_A_ID, account = ?damian.account_id, balance = ?damian_balance_after_first_shield,
             "Balance after first shielding event");
 
-    let second_shield_amount: FrontendTokenAmount = 50;
+    let second_shield_amount = 5;
     let second_deposit_id = damian
         .shield(TOKEN_A_ID, second_shield_amount, &shielder)
         .await
@@ -330,7 +330,7 @@ async fn withdraw_partial() -> Result<()> {
         .await
         .unwrap();
 
-    let shield_amount: FrontendTokenAmount = 100;
+    let shield_amount = 10;
 
     let deposit_id = damian
         .shield(TOKEN_A_ID, shield_amount, &shielder)
@@ -348,7 +348,7 @@ async fn withdraw_partial() -> Result<()> {
         "Shielding should decrease balance"
     );
 
-    let diff_partial = 11;
+    let diff_partial = 4;
 
     let prev_deposit = damian
         .get_deposit(deposit_id)
@@ -428,9 +428,9 @@ async fn withdraw_via_relayer() -> Result<()> {
         .await
         .unwrap();
 
-    let shield_amount: FrontendTokenAmount = 100;
+    let shield_amount = 10;
 
-    let fee_amount: FrontendTokenAmount = 10;
+    let fee_amount = 1;
 
     let deposit_id = damian
         .shield(TOKEN_A_ID, shield_amount, &shielder)
@@ -457,7 +457,7 @@ async fn withdraw_via_relayer() -> Result<()> {
         .unwrap();
 
     assert_eq!(
-        hansu_balance_before_relaying + fee_amount as u128,
+        hansu_balance_before_relaying + fee_amount,
         hansu_balance_after_relaying,
         "Fee should go to relayer"
     );
@@ -469,7 +469,7 @@ async fn withdraw_via_relayer() -> Result<()> {
 
     assert_eq!(
         damian_balance_at_start,
-        damian_balance_after_unshielding + fee_amount as u128
+        damian_balance_after_unshielding + fee_amount
     );
 
     Ok(())
@@ -492,7 +492,7 @@ async fn shielding_fails_insufficient_balance() -> Result<()> {
         .await
         .unwrap();
 
-    let shield_amount = damian_balance_at_start as FrontendTokenAmount + 1;
+    let shield_amount = damian_balance_at_start + 1;
 
     let shield_result = damian.shield(TOKEN_A_ID, shield_amount, &shielder).await;
 
