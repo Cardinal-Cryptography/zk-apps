@@ -1,3 +1,7 @@
+// Note: All integration test will be run against shared state and accounts. Therefore, you have to
+// ensure that your case won't prevent other from succeeding. In particular keep in mind that
+// Shielder allowance is shared. Remember also that the execution order is not deterministic.
+
 pub mod psp22;
 pub mod shielder_wrapper;
 pub mod utils;
