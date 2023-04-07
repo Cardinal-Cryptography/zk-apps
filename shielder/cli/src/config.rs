@@ -66,6 +66,8 @@ pub enum ContractInteractionCommand {
     Deposit(DepositCmd),
     /// Unshield some tokens.
     Withdraw(WithdrawCmd),
+    /// Merge two tokens.
+    Merge(MergeCmd),
 }
 
 impl ContractInteractionCommand {
@@ -75,6 +77,9 @@ impl ContractInteractionCommand {
                 metadata_file.clone()
             }
             ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
+                metadata_file.clone()
+            }
+            ContractInteractionCommand::Merge(MergeCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
         }
@@ -148,6 +153,34 @@ pub struct WithdrawCmd {
     ///
     /// If not found, command will fail - the tool won't generate it for you.
     #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
+    pub proving_key_file: PathBuf,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Args)]
+pub struct MergeCmd {
+    /// First of the notes that should be spent. The merged amount will be stored under the leaf
+    /// index of the first deposit. The second deposit will be deleted.
+    #[clap(long)]
+    pub first_deposit_id: DepositId,
+
+    /// Second of the notes that should be spent.
+    #[clap(long)]
+    pub second_deposit_id: DepositId,
+
+    /// Seed for submitting the transaction.
+    ///
+    /// If not provided, will be prompted.
+    #[clap(long)]
+    pub caller_seed: Option<String>,
+
+    /// File with contract metadata.
+    #[clap(long, default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
+
+    /// File with raw proving key bytes for the merging of deposits.
+    ///
+    /// If not found, command will fail - the tool won't generate it for you.
+    #[clap(default_value = "merge.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
 

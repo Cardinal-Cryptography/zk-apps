@@ -3,13 +3,13 @@ use std::{env, io};
 use aleph_client::{account_from_keypair, keypair_from_string, Connection, SignedConnection};
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use config::{DepositCmd, LoggingFormat, WithdrawCmd};
+use config::{DepositCmd, LoggingFormat, MergeCmd, WithdrawCmd};
 use inquire::{CustomType, Password, Select};
 use liminal_ark_relations::shielder::types::FrontendTokenAmount;
-use shielder::{app_state::AppState, contract::Shielder, deposit::*, withdraw::*};
+use shielder::{app_state::AppState, contract::Shielder, deposit::*, merge::*, withdraw::*};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
-use ContractInteractionCommand::{Deposit, Withdraw};
+use ContractInteractionCommand::{Deposit, Merge, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
@@ -71,6 +71,7 @@ async fn perform_contract_action(
     match command {
         Deposit(cmd) => do_deposit(contract, connection, cmd, app_state).await?,
         Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state).await?,
+        Merge(cmd) => do_merge(contract, connection, cmd, app_state).await?,
     };
     Ok(())
 }
@@ -175,6 +176,48 @@ async fn do_deposit(
             Ok(())
         }
     }
+}
+
+async fn do_merge(
+    contract: Shielder,
+    connection: Connection,
+    cmd: MergeCmd,
+    app_state: &mut AppState,
+) -> Result<()> {
+    let MergeCmd {
+        first_deposit_id,
+        second_deposit_id,
+        caller_seed,
+        proving_key_file,
+        ..
+    } = cmd;
+
+    let seed = match caller_seed {
+        Some(seed) => seed,
+        None => Password::new("Seed of the merging account (the tokens owner):")
+            .without_confirmation()
+            .prompt()?,
+    };
+    let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
+
+    let first_deposit = app_state
+        .get_deposit_by_id(first_deposit_id)
+        .ok_or(anyhow!("Cannot match first deposit id to actual deposit!"))?;
+    let second_deposit = app_state
+        .get_deposit_by_id(second_deposit_id)
+        .ok_or(anyhow!("Cannot match second deposit id to actual deposit!"))?;
+
+    merge(
+        first_deposit,
+        second_deposit,
+        &proving_key_file,
+        &connection,
+        &contract,
+        app_state,
+    )
+    .await?;
+
+    Ok(())
 }
 
 async fn do_withdraw(

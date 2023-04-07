@@ -8,14 +8,23 @@ use aleph_client::{
     AccountId, AsConnection, Connection, SignedConnection, TxInfo,
 };
 use anyhow::{anyhow, Result};
-use liminal_ark_relations::shielder::{
-    bytes_from_note,
-    types::{
-        FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
-        FrontendTokenAmount, FrontendTokenId,
-    },
+use ink_primitives;
+use liminal_ark_relations::shielder::types::{
+    FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier, FrontendTokenAmount,
+    FrontendTokenId,
 };
-use tracing::{debug, info};
+use tracing::info;
+
+use crate::ink_contract::Instance;
+
+impl From<&ContractInstance> for Instance {
+    fn from(contract: &ContractInstance) -> Self {
+        let account_id = contract.address();
+        let inner: [u8; 32] = *account_id.as_ref();
+        let ink_account_id: ink_primitives::AccountId = inner.into();
+        ink_account_id.into()
+    }
+}
 
 #[derive(Debug)]
 pub struct Shielder {
@@ -38,21 +47,12 @@ impl Shielder {
         note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let note_bytes = bytes_from_note(&note);
+        let ink_contract: Instance = (&self.contract).into();
 
-        let args = [
-            &*token_id.to_string(),
-            &*token_amount.to_string(),
-            &*format!("0x{}", hex::encode(note_bytes)),
-            &*format!("0x{}", hex::encode(proof)),
-        ];
-
-        debug!("Calling deposit tx with arguments {:?}", &args);
-
-        let tx_info = self
-            .contract
-            .contract_exec(connection, "deposit", &args)
+        let tx_info = ink_contract
+            .deposit(connection, token_id, token_amount, note, proof.to_vec())
             .await?;
+
         let event = self
             .get_event(connection.as_connection(), "Deposited", tx_info)
             .await?;
@@ -77,29 +77,28 @@ impl Shielder {
         new_note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let new_note_bytes = bytes_from_note(&new_note);
-        let merkle_root_bytes = bytes_from_note(&merkle_root);
-        let old_nullifier_bytes = bytes_from_note(&old_nullifier);
+        let ink_contract: Instance = (&self.contract).into();
+        let inner: [u8; 32] = *recipient.as_ref();
+        let ink_recipient: ink_primitives::AccountId = inner.into();
 
-        let args = [
-            &*token_id.to_string(),
-            &*value.to_string(),
-            &*recipient.to_string(),
-            &*format!("{:?}", Some(fee_for_caller)),
-            &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*format!("0x{}", hex::encode(old_nullifier_bytes)),
-            &*format!("0x{}", hex::encode(new_note_bytes)),
-            &*format!("0x{}", hex::encode(proof)),
-        ];
-
-        debug!("Calling withdraw tx with arguments {:?}", &args);
-        let tx_info = self
-            .contract
-            .contract_exec(connection, "withdraw", &args)
+        let tx_info = ink_contract
+            .withdraw(
+                connection,
+                token_id,
+                value,
+                ink_recipient,
+                Some(fee_for_caller),
+                merkle_root,
+                old_nullifier,
+                new_note,
+                proof.to_vec(),
+            )
             .await?;
+
         let event = self
             .get_event(connection.as_connection(), "Withdrawn", tx_info)
             .await?;
+
         Self::extract_leaf_idx_from_event(&event).map(|idx| {
             info!("Successfully withdrawn tokens.");
             idx
@@ -118,24 +117,18 @@ impl Shielder {
         new_note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let new_note_bytes = bytes_from_note(&new_note);
-        let merkle_root_bytes = bytes_from_note(&merkle_root);
-        let old_nullifier_bytes = bytes_from_note(&old_nullifier);
+        let ink_contract: Instance = (&self.contract).into();
 
-        let args = [
-            &*token_id.to_string(),
-            &*value.to_string(),
-            &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*format!("0x{}", hex::encode(old_nullifier_bytes)),
-            &*format!("0x{}", hex::encode(new_note_bytes)),
-            &*format!("0x{}", hex::encode(proof)),
-        ];
-
-        debug!("Calling deposit-and-merge tx with arguments {:?}", &args);
-
-        let tx_info = self
-            .contract
-            .contract_exec(connection, "deposit_and_merge", &args)
+        let tx_info = ink_contract
+            .deposit_and_merge(
+                connection,
+                token_id,
+                value,
+                merkle_root,
+                old_nullifier,
+                new_note,
+                proof.to_vec(),
+            )
             .await?;
 
         let event = self
@@ -160,25 +153,18 @@ impl Shielder {
         new_note: FrontendNote,
         proof: &[u8],
     ) -> Result<u32> {
-        let new_note_bytes = bytes_from_note(&new_note);
-        let merkle_root_bytes = bytes_from_note(&merkle_root);
-        let first_old_nullifier_bytes = bytes_from_note(&first_old_nullifier);
-        let second_old_nullifier_bytes = bytes_from_note(&second_old_nullifier);
+        let ink_contract: Instance = (&self.contract).into();
 
-        let args = [
-            &*token_id.to_string(),
-            &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*format!("0x{}", hex::encode(first_old_nullifier_bytes)),
-            &*format!("0x{}", hex::encode(second_old_nullifier_bytes)),
-            &*format!("0x{}", hex::encode(new_note_bytes)),
-            &*format!("0x{}", hex::encode(proof)),
-        ];
-
-        debug!("Calling merge tx with arguments {:?}", &args);
-
-        let tx_info = self
-            .contract
-            .contract_exec(connection, "merge", &args)
+        let tx_info = ink_contract
+            .merge(
+                connection,
+                token_id,
+                merkle_root,
+                first_old_nullifier,
+                second_old_nullifier,
+                new_note,
+                proof.to_vec(),
+            )
             .await?;
 
         let event = self
