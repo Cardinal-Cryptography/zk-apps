@@ -15,7 +15,7 @@ use crate::{
     generate_proof, DepositId, MERKLE_PATH_MAX_LEN,
 };
 
-pub async fn first_deposit(
+pub async fn new_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
     proving_key_file: &Path,

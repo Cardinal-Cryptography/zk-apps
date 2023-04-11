@@ -138,6 +138,7 @@ async fn do_deposit(
         token_id,
         amount,
         caller_seed,
+        require_new_deposit,
         ..
     } = cmd;
 
@@ -150,8 +151,9 @@ async fn do_deposit(
     let connection = SignedConnection::from_connection(connection, keypair_from_string(&seed));
 
     let old_deposit = app_state.get_last_deposit(token_id);
-    match old_deposit {
-        Some(old_deposit) => {
+
+    match (old_deposit, require_new_deposit) {
+        (Some(old_deposit), false) => {
             let _ = deposit_and_merge(
                 old_deposit,
                 amount,
@@ -163,8 +165,8 @@ async fn do_deposit(
             .await?;
             Ok(())
         }
-        None => {
-            let _ = first_deposit(
+        (_, _) => {
+            let _ = new_deposit(
                 token_id,
                 amount,
                 &cmd.deposit_key_file,

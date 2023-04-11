@@ -94,6 +94,10 @@ pub struct DepositCmd {
     /// Amount of the token to be shielded.
     pub amount: FrontendTokenAmount,
 
+    /// When provided, a new deposit is to be created even if a previous one exists.
+    #[clap(long, action)]
+    pub require_new_deposit: bool,
+
     /// Seed for submitting the transaction.
     ///
     /// If not provided, will be prompted.
@@ -160,11 +164,9 @@ pub struct WithdrawCmd {
 pub struct MergeCmd {
     /// First of the notes that should be spent. The merged amount will be stored under the leaf
     /// index of the first deposit. The second deposit will be deleted.
-    #[clap(long)]
     pub first_deposit_id: DepositId,
 
     /// Second of the notes that should be spent.
-    #[clap(long)]
     pub second_deposit_id: DepositId,
 
     /// Seed for submitting the transaction.

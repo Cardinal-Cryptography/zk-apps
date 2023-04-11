@@ -1,5 +1,7 @@
 use scale::Encode as _;
 
+// This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).
+
 #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
 pub enum ShielderError {
     InsufficientPermission(OwnableError),
@@ -71,7 +73,7 @@ impl From<Instance> for ink_primitives::AccountId {
 
 impl Instance {
     /// Instantiate the contract. Set the caller as the owner.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn new<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         conn: &C,
         salt: Vec<u8>,
@@ -91,7 +93,7 @@ impl Instance {
     }
 
     ///  Trigger deposit action (see ADR for detailed description).
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn deposit<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
         conn: &C,
@@ -112,7 +114,7 @@ impl Instance {
     }
 
     ///  Trigger withdraw action (see ADR for detailed description).
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn withdraw<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
         conn: &C,
@@ -141,7 +143,7 @@ impl Instance {
     }
 
     ///  Read the current root of the Merkle tree with notes.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn current_merkle_root<E, C: ink_wrapper_types::Connection<E>>(
         &self,
         conn: &C,
@@ -151,7 +153,7 @@ impl Instance {
     }
 
     ///  Retrieve the path from the leaf to the root. `None` if the leaf does not exist.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn merkle_path<E, C: ink_wrapper_types::Connection<E>>(
         &self,
         conn: &C,
@@ -166,7 +168,7 @@ impl Instance {
     }
 
     ///  Check whether `nullifier` has been already used.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn contains_nullifier<E, C: ink_wrapper_types::Connection<E>>(
         &self,
         conn: &C,
@@ -183,7 +185,7 @@ impl Instance {
     ///  Register a verifying key for one of the `Relation`.
     ///
     ///  For owner use only.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn register_vk<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
         conn: &C,
@@ -200,7 +202,7 @@ impl Instance {
     }
 
     ///  Check if there is a token address registered at `token_id`.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn registered_token_address<E, C: ink_wrapper_types::Connection<E>>(
         &self,
         conn: &C,
@@ -217,7 +219,7 @@ impl Instance {
     ///  Register a token contract (`token_address`) at `token_id`.
     ///
     ///  For owner use only.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn register_new_token<
         TxInfo,
         E,
@@ -238,7 +240,7 @@ impl Instance {
     }
 
     ///  Trigger deposit and merge action (see ADR for detailed description).
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn deposit_and_merge<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
         conn: &C,
@@ -263,7 +265,7 @@ impl Instance {
     }
 
     ///  Trigger merge action to combine the value of two notes.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     pub async fn merge<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
         conn: &C,
