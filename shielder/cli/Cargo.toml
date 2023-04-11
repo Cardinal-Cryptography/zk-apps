@@ -38,8 +38,6 @@ ark-snark = { version = "^0.3.0", default-features = false }
 ark-std = { version = "^0.3.0", default-features = false }
 
 # todo: change this for versioned `aleph-client` right away after publishing it
-# aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/" }
-# todo: change this to version without `rev`
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "r-10.0" }
 liminal-ark-relations = "0.4.0"
 
