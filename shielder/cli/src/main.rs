@@ -209,6 +209,19 @@ async fn do_merge(
         .get_deposit_by_id(second_deposit_id)
         .ok_or(anyhow!("Cannot match second deposit id to actual deposit!"))?;
 
+    anyhow::ensure!(
+        first_deposit != second_deposit,
+        "Cannot merge a deposit with itself!"
+    );
+
+    let first_token_id = first_deposit.token_id;
+    let second_token_id = second_deposit.token_id;
+
+    anyhow::ensure!(
+        first_token_id == second_token_id,
+        "Cannot merge deposits with different token ids!"
+    );
+
     merge(
         first_deposit,
         second_deposit,
