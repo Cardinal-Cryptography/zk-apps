@@ -145,7 +145,7 @@ While depositing a second batch of tokens for Damian, let us require a new depos
 ./target/release/shielder-cli deposit 0 15 --require-new-deposit
 ```
 
-Now, the assets will reflect the split between two `deposit-id`s:
+The assets will reflect the split between two `deposit-id`s:
 
 ```
 assets=[Asset { token_id: 0, token_amount: 10, deposit_id: 0 }, Asset { token_id: 0, token_amount: 15, deposit_id: 1 }]
@@ -161,7 +161,7 @@ This results in the following state:
 assets=[Asset { token_id: 0, token_amount: 25, deposit_id: 0 }]
 ```
 
-Mind that the merged deposit carries over the `deposit-id` of the first deposit provided to the merge command. Also, it is only possible to merge tokens deposited by one account. Trying to merge Damian's funds with Hans' will not work!
+Mind that the merged deposit carries over the `deposit-id` of the first deposit provided to the merge command.
 
 ### Closing remarks
 
