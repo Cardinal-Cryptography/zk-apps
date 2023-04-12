@@ -17,11 +17,15 @@ use tracing::info;
 
 use crate::ink_contract::Instance;
 
+fn inkify_account_id(account_id: &AccountId) -> ink_primitives::AccountId {
+    let inner: [u8; 32] = *account_id.as_ref();
+    inner.into()
+}
+
 impl From<&ContractInstance> for Instance {
     fn from(contract: &ContractInstance) -> Self {
         let account_id = contract.address();
-        let inner: [u8; 32] = *account_id.as_ref();
-        let ink_account_id: ink_primitives::AccountId = inner.into();
+        let ink_account_id = inkify_account_id(account_id);
         ink_account_id.into()
     }
 }
@@ -78,8 +82,7 @@ impl Shielder {
         proof: &[u8],
     ) -> Result<u32> {
         let ink_contract: Instance = (&self.contract).into();
-        let inner: [u8; 32] = *recipient.as_ref();
-        let ink_recipient: ink_primitives::AccountId = inner.into();
+        let ink_recipient = inkify_account_id(recipient);
 
         let tx_info = ink_contract
             .withdraw(
