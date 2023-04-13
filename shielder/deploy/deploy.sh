@@ -64,6 +64,18 @@ prepare_fs() {
   log_progress "✅ Directories are set up"
 }
 
+install_ink_wrapper() {
+  cargo install --git https://github.com/Cardinal-Cryptography/ink-wrapper ink-wrapper
+}
+
+prepare_ink_types() {
+  # ensure that we are in shielder/cli folder
+  cd "${SCRIPT_DIR}"/../cli/
+  ink-wrapper -m shielder-metadata.json | rustfmt --edition 2021 > src/ink_contract.rs
+
+  log_progress "✅ Ink types were generated"
+}
+
 generate_chainspec() {
   CHAINSPEC_ARGS="\
     --base-path /data \
@@ -283,6 +295,10 @@ deploy() {
   # build contracts
   build
   move_build_artifacts
+
+  # generate ink types based on current contract metadata
+  install_ink_wrapper
+  prepare_ink_types
 
   prefund_users
 

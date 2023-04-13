@@ -130,6 +130,39 @@ Note that you will still need to type in the seed of the withdrawer, not the rec
 
 You can now check if Hans' balance has been increased accordingly (we bet you 10 TZERO it has!).
 
+### Merging assets
+Merging assets allows you to combine two `deposit-id`s into one, preserving the value of the tokens.
+
+Starting from a fresh deployment, you can deposit funds for Damian, following the previously-outlined procedure:
+
+```bash
+./target/release/shielder-cli deposit 0 10 
+```
+
+While depositing a second batch of tokens for Damian, let us require a new deposit to be created:
+
+```bash
+./target/release/shielder-cli deposit 0 15 --require-new-deposit
+```
+
+The assets will reflect the split between two `deposit-id`s:
+
+```
+assets=[Asset { token_id: 0, token_amount: 10, deposit_id: 0 }, Asset { token_id: 0, token_amount: 15, deposit_id: 1 }]
+```
+
+These two deposits can now be merged:
+```bash
+./target/release/shielder-cli merge 0 1
+```
+
+This results in the following state: 
+```
+assets=[Asset { token_id: 0, token_amount: 25, deposit_id: 0 }]
+```
+
+Mind that the merged deposit carries over the `deposit-id` of the first deposit provided to the merge command.
+
 ### Closing remarks
 
 If you made it this far: congrats! You've just completed your first foray into the land of privacy and zero-knowledge. Now you're ready to shield your tokens and make transfers through Shielder!

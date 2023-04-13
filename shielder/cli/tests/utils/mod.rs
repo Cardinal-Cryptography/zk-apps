@@ -49,7 +49,7 @@ impl User {
         token_amount: FrontendTokenAmount,
         shielder: &ShielderWrapper,
     ) -> Result<DepositId> {
-        let deposit_id = deposit::first_deposit(
+        let deposit_id = deposit::new_deposit(
             token_id,
             token_amount,
             &shielder.deposit_pk_file,

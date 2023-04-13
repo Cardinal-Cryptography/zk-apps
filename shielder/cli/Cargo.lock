@@ -80,11 +80,12 @@ dependencies = [
 
 [[package]]
 name = "aleph_client"
-version = "2.15.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/#92f84cb82c9f5c515a0063f41141143325c2133c"
+version = "2.13.0"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node.git?rev=r-10.0#5172d74220fb7a1ead675f7ed4105d87bf07c6c7"
 dependencies = [
  "anyhow",
  "async-trait",
+ "contract-metadata 2.1.0",
  "contract-transcode",
  "frame-support",
  "futures",
@@ -771,6 +772,19 @@ checksum = "13418e745008f7349ec7e449155f419a61b92b58a99cc3616942b926825ec76b"
 
 [[package]]
 name = "contract-metadata"
+version = "2.0.0-beta.1"
+source = "git+https://github.com/paritytech/cargo-contract?rev=7ca8c365fc1e157cd52901c54949b2faf1cd8899#7ca8c365fc1e157cd52901c54949b2faf1cd8899"
+dependencies = [
+ "anyhow",
+ "impl-serde",
+ "semver 1.0.17",
+ "serde",
+ "serde_json",
+ "url",
+]
+
+[[package]]
+name = "contract-metadata"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38765f12af802e382a9d8075dac1c3d28f9fbd7b5ee2776740ee8c9a8dd4f8c9"
@@ -785,14 +799,11 @@ dependencies = [
 
 [[package]]
 name = "contract-transcode"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73db6f39c07b43a0fb49410a2a4d8dbf6eaf1d8a646cb7430003e56e5b3522ed"
+version = "2.0.0-beta.1"
+source = "git+https://github.com/paritytech/cargo-contract?rev=7ca8c365fc1e157cd52901c54949b2faf1cd8899#7ca8c365fc1e157cd52901c54949b2faf1cd8899"
 dependencies = [
  "anyhow",
- "base58",
- "blake2 0.10.6",
- "contract-metadata",
+ "contract-metadata 2.0.0-beta.1",
  "escape8259",
  "hex",
  "indexmap",
@@ -802,11 +813,11 @@ dependencies = [
  "nom",
  "nom-supreme",
  "parity-scale-codec",
- "primitive-types",
  "scale-info",
  "serde",
  "serde_json",
- "thiserror",
+ "sp-core 7.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sp-runtime 7.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 
@@ -1892,6 +1903,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ink-wrapper-types"
+version = "0.1.0"
+source = "git+https://github.com/Cardinal-Cryptography/ink-wrapper/#ad0076e34a0f98558b2b7f0078e6b49c6b099bd5"
+dependencies = [
+ "aleph_client",
+ "anyhow",
+ "async-trait",
+ "ink_primitives",
+ "pallet-contracts-primitives",
+ "parity-scale-codec",
+ "subxt",
+]
+
+[[package]]
 name = "ink_allocator"
 version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2898,8 +2923,8 @@ dependencies = [
 
 [[package]]
 name = "primitives"
-version = "0.6.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/#92f84cb82c9f5c515a0063f41141143325c2133c"
+version = "0.5.5"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node.git?rev=r-10.0#5172d74220fb7a1ead675f7ed4105d87bf07c6c7"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -3657,6 +3682,8 @@ dependencies = [
  "chacha20poly1305",
  "clap",
  "hex",
+ "ink-wrapper-types",
+ "ink_primitives",
  "inquire",
  "itertools",
  "liminal-ark-relations",
