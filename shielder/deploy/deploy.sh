@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:d93048e"
 export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d93048e"
-export CARGO_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
+export INK_DEV_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.1.0"
 
 # actors
 DAMIAN=//0
@@ -64,14 +64,10 @@ prepare_fs() {
   log_progress "✅ Directories are set up"
 }
 
-install_ink_wrapper() {
-  cargo install --git https://github.com/Cardinal-Cryptography/ink-wrapper ink-wrapper
-}
-
-prepare_ink_types() {
+generate_ink_types() {
   # ensure that we are in shielder/cli folder
   cd "${SCRIPT_DIR}"/../cli/
-  ink-wrapper -m shielder-metadata.json | rustfmt --edition 2021 > src/ink_contract.rs
+  docker_ink_dev "ink-wrapper -m shielder-metadata.json | rustfmt --edition 2021 > src/ink_contract.rs"
 
   log_progress "✅ Ink types were generated"
 }
@@ -145,7 +141,7 @@ move_keys() {
   log_progress "✅ Proving keys were made available to CLI"
 }
 
-docker_cargo() {
+docker_ink_dev() {
   docker run --rm \
     -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
@@ -153,17 +149,17 @@ docker_cargo() {
     -v ~/.cargo/registry:/usr/local/cargo/registry \
     --network host \
     --entrypoint /bin/sh \
-    "${CARGO_IMAGE}" \
-    -c "cargo ${1}"
+    "${INK_DEV_IMAGE}" \
+    -c "${1}"
 }
 
 build() {
   cd "${SCRIPT_DIR}"/..
 
-  docker_cargo "contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
   log_progress "✅ Public token contract was built"
 
-  docker_cargo "contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
   log_progress "✅ Shielder contract was built"
 }
 
@@ -173,11 +169,11 @@ move_build_artifacts() {
 }
 
 contract_instantiate() {
-  docker_cargo "contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
+  docker_ink_dev "cargo contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
 }
 
 contract_call() {
-  docker_cargo "contract call --quiet --skip-confirm --url ${NODE} ${1}"
+  docker_ink_dev "cargo contract call --quiet --skip-confirm --url ${NODE} ${1}"
 }
 
 deploy_token_contracts() {
@@ -268,7 +264,7 @@ register_tokens() {
 
 setup_cli() {
   cd "${SCRIPT_DIR}"/..
-  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo build --release --manifest-path cli/Cargo.toml 1>/dev/null"
   log_progress "✅ CLI was built"
 
   rm ~/.shielder-state 2>/dev/null || true
@@ -296,9 +292,8 @@ deploy() {
   build
   move_build_artifacts
 
-  # generate ink types based on current contract metadata
-  install_ink_wrapper
-  prepare_ink_types
+  # use ink-wrapper to generate ink types based on current contract metadata
+  generate_ink_types
 
   prefund_users
 
