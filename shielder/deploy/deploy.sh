@@ -64,10 +64,6 @@ prepare_fs() {
   log_progress "✅ Directories are set up"
 }
 
-install_ink_wrapper() {
-  cargo install --git https://github.com/Cardinal-Cryptography/ink-wrapper ink-wrapper
-}
-
 generate_ink_types() {
   # ensure that we are in shielder/cli folder
   cd "${SCRIPT_DIR}"/../cli/
