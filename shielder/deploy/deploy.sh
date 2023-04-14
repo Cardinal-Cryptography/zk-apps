@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:d93048e"
 export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d93048e"
-export CARGO_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.1.0"
+export INK_DEV_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.1.0"
 
 # actors
 DAMIAN=//0
@@ -149,7 +149,7 @@ docker_shell() {
     -v ~/.cargo/registry:/usr/local/cargo/registry \
     --network host \
     --entrypoint /bin/sh \
-    "${CARGO_IMAGE}" \
+    "${INK_DEV_IMAGE}" \
     -c "${1}"
 }
 
