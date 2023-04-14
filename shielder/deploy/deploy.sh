@@ -67,7 +67,7 @@ prepare_fs() {
 generate_ink_types() {
   # ensure that we are in shielder/cli folder
   cd "${SCRIPT_DIR}"/../cli/
-  docker_shell "ink-wrapper -m shielder-metadata.json | rustfmt --edition 2021 > src/ink_contract.rs"
+  docker_ink_dev "ink-wrapper -m shielder-metadata.json | rustfmt --edition 2021 > src/ink_contract.rs"
 
   log_progress "✅ Ink types were generated"
 }
@@ -141,7 +141,7 @@ move_keys() {
   log_progress "✅ Proving keys were made available to CLI"
 }
 
-docker_shell() {
+docker_ink_dev() {
   docker run --rm \
     -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
@@ -156,10 +156,10 @@ docker_shell() {
 build() {
   cd "${SCRIPT_DIR}"/..
 
-  docker_shell "cargo contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
   log_progress "✅ Public token contract was built"
 
-  docker_shell "cargo contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
   log_progress "✅ Shielder contract was built"
 }
 
@@ -169,11 +169,11 @@ move_build_artifacts() {
 }
 
 contract_instantiate() {
-  docker_shell "cargo contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
+  docker_ink_dev "cargo contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
 }
 
 contract_call() {
-  docker_shell "cargo contract call --quiet --skip-confirm --url ${NODE} ${1}"
+  docker_ink_dev "cargo contract call --quiet --skip-confirm --url ${NODE} ${1}"
 }
 
 deploy_token_contracts() {
@@ -264,7 +264,7 @@ register_tokens() {
 
 setup_cli() {
   cd "${SCRIPT_DIR}"/..
-  docker_shell "cargo build --release --manifest-path cli/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo build --release --manifest-path cli/Cargo.toml 1>/dev/null"
   log_progress "✅ CLI was built"
 
   rm ~/.shielder-state 2>/dev/null || true
