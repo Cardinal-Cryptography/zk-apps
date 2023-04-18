@@ -2,8 +2,9 @@ use std::path::Path;
 
 use aleph_client::{sp_runtime::AccountId32, SignedConnection};
 use anyhow::Result;
-use liminal_ark_relations::{
-    compute_note, FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor,
+use liminal_ark_relations::shielder::{
+    compute_note,
+    types::{FrontendNullifier, FrontendTokenAmount, FrontendTrapdoor},
     WithdrawRelationWithFullInput,
 };
 use rand::Rng;
@@ -21,7 +22,7 @@ pub async fn withdraw(
     deposit: Deposit,
     withdraw_amount: FrontendTokenAmount,
     recipient: &AccountId32,
-    fee: u64,
+    fee: u128,
     withdraw_pk_file: &Path,
     app_state: &mut AppState,
 ) -> Result<()> {

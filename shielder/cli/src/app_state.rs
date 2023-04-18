@@ -5,7 +5,7 @@ use std::{
 
 use aleph_client::AccountId;
 use itertools::Itertools;
-use liminal_ark_relations::{
+use liminal_ark_relations::shielder::types::{
     FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
 };
 use serde::{Deserialize, Serialize};

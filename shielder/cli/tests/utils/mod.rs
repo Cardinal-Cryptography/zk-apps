@@ -2,7 +2,7 @@ use std::{fs::File, path::Path};
 
 use aleph_client::{AccountId, Connection, KeyPair, SignedConnection};
 use anyhow::Result;
-use liminal_ark_relations::{FrontendTokenAmount, FrontendTokenId};
+use liminal_ark_relations::shielder::types::{FrontendTokenAmount, FrontendTokenId};
 use serde::Deserialize;
 use shielder::{
     app_state::{AppState, Deposit},
@@ -49,7 +49,7 @@ impl User {
         token_amount: FrontendTokenAmount,
         shielder: &ShielderWrapper,
     ) -> Result<DepositId> {
-        let deposit_id = deposit::first_deposit(
+        let deposit_id = deposit::new_deposit(
             token_id,
             token_amount,
             &shielder.deposit_pk_file,
@@ -66,7 +66,7 @@ impl User {
         shielder: &ShielderWrapper,
         deposit: Deposit,
         amount: Option<FrontendTokenAmount>,
-        fee: u64,
+        fee: u128,
         recipient: Option<AccountId>,
     ) -> Result<()> {
         let withdraw_amount = amount.unwrap_or(deposit.token_amount);

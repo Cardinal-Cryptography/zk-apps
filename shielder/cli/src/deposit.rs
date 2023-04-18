@@ -2,9 +2,10 @@ use std::path::Path;
 
 use aleph_client::SignedConnection;
 use anyhow::Result;
-use liminal_ark_relations::{
-    compute_note, DepositAndMergeRelationWithFullInput, DepositRelationWithFullInput,
-    FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
+use liminal_ark_relations::shielder::{
+    compute_note,
+    types::{FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor},
+    DepositAndMergeRelationWithFullInput, DepositRelationWithFullInput,
 };
 use rand::Rng;
 
@@ -14,7 +15,7 @@ use crate::{
     generate_proof, DepositId, MERKLE_PATH_MAX_LEN,
 };
 
-pub async fn first_deposit(
+pub async fn new_deposit(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
     proving_key_file: &Path,

@@ -9,11 +9,9 @@ CI=${CI:-}
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-# bump corresponding tag whenever a new version is released (updates should not be quite via `latest` tag)
-# TODO: Replace with published snarkeling node.
-export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:d193272"
-export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d193272"
-export CARGO_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
+export NODE_IMAGE="public.ecr.aws/p6e8q1z1/aleph-node-liminal:d93048e"
+export CLIAIN_IMAGE="public.ecr.aws/p6e8q1z1/cliain-liminal:d93048e"
+export INK_DEV_IMAGE="public.ecr.aws/p6e8q1z1/ink-dev:1.1.0"
 
 # actors
 DAMIAN=//0
@@ -64,6 +62,14 @@ prepare_fs() {
   mkdir -p docker/keys/
 
   log_progress "✅ Directories are set up"
+}
+
+generate_ink_types() {
+  # ensure that we are in shielder/cli folder
+  cd "${SCRIPT_DIR}"/../cli/
+  docker_ink_dev "ink-wrapper -m shielder-metadata.json | rustfmt --edition 2021 > src/ink_contract.rs"
+
+  log_progress "✅ Ink types were generated"
 }
 
 generate_chainspec() {
@@ -122,12 +128,14 @@ transfer() {
 generate_keys() {
   generate_relation_keys "deposit"
   generate_relation_keys "deposit-and-merge" "--max-path-len ${MERKLE_TREE_HEIGHT}"
+  generate_relation_keys "merge" "--max-path-len ${MERKLE_TREE_HEIGHT}"
   generate_relation_keys "withdraw" "--max-path-len ${MERKLE_TREE_HEIGHT}"
 }
 
 move_keys() {
   mv docker/keys/deposit.groth16.pk.bytes ../cli/deposit.pk.bytes
   mv docker/keys/deposit_and_merge.groth16.pk.bytes ../cli/deposit_and_merge.pk.bytes
+  mv docker/keys/merge.groth16.pk.bytes ../cli/merge.pk.bytes
   mv docker/keys/withdraw.groth16.pk.bytes ../cli/withdraw.pk.bytes
 
   log_progress "✅ Proving keys were made available to CLI"
@@ -149,8 +157,8 @@ local_docker_cargo() {
     -v ~/.cargo/registry:/usr/local/cargo/registry \
     --network host \
     --entrypoint /bin/sh \
-    "${CARGO_IMAGE}" \
-    -c "cargo ${1}"
+    "${INK_DEV_IMAGE}" \
+    -c "${1}"
 }
 
 ci_docker_cargo() {
@@ -158,17 +166,17 @@ ci_docker_cargo() {
       -v "${PWD}":/code \
       --network host \
       --entrypoint /bin/sh \
-      "${CARGO_IMAGE}" \
+      "${INK_DEV_IMAGE}" \
       -c "cargo ${1}"
 }
 
 build() {
   cd "${SCRIPT_DIR}"/..
 
-  docker_cargo "contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo contract build --release --manifest-path public_token/Cargo.toml 1>/dev/null"
   log_progress "✅ Public token contract was built"
 
-  docker_cargo "contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo contract build --release --manifest-path contract/Cargo.toml 1>/dev/null"
   log_progress "✅ Shielder contract was built"
 }
 
@@ -178,11 +186,11 @@ move_build_artifacts() {
 }
 
 contract_instantiate() {
-  docker_cargo "contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
+  docker_ink_dev "cargo contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}"
 }
 
 contract_call() {
-  docker_cargo "contract call --quiet --skip-confirm --url ${NODE} ${1}"
+  docker_ink_dev "cargo contract call --quiet --skip-confirm --url ${NODE} ${1}"
 }
 
 deploy_token_contracts() {
@@ -254,12 +262,14 @@ store_contract_addresses() {
 register_vk() {
   DEPOSIT_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit.groth16.vk.bytes | tr -d '\n')"
   DEPOSIT_MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/deposit_and_merge.groth16.vk.bytes | tr -d '\n')"
+  MERGE_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/merge.groth16.vk.bytes | tr -d '\n')"
   WITHDRAW_VK_BYTES="0x$(xxd -ps <"${SCRIPT_DIR}"/docker/keys/withdraw.groth16.vk.bytes | tr -d '\n')"
 
   pushd $SCRIPT_DIR/../contract
 
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Deposit         ${DEPOSIT_VK_BYTES}       --suri ${ADMIN}" 1>/dev/null
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args DepositAndMerge ${DEPOSIT_MERGE_VK_BYTES} --suri ${ADMIN}" 1>/dev/null
+  contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Merge           ${MERGE_VK_BYTES}         --suri ${ADMIN}" 1>/dev/null
   contract_call "--contract  ${SHIELDER_ADDRESS} --message register_vk --args Withdraw        ${WITHDRAW_VK_BYTES}      --suri ${ADMIN}" 1>/dev/null
 
   popd
@@ -273,7 +283,7 @@ register_tokens() {
 
 setup_cli() {
   cd "${SCRIPT_DIR}"/..
-  docker_cargo "build --release --manifest-path cli/Cargo.toml 1>/dev/null"
+  docker_ink_dev "cargo build --release --manifest-path cli/Cargo.toml 1>/dev/null"
   log_progress "✅ CLI was built"
 
   rm ~/.shielder-state 2>/dev/null || true
@@ -300,6 +310,9 @@ deploy() {
   # build contracts
   build
   move_build_artifacts
+
+  # use ink-wrapper to generate ink types based on current contract metadata
+  generate_ink_types
 
   prefund_users
 

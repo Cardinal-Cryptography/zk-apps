@@ -7,20 +7,19 @@ use ink::storage::Mapping;
 mod contract;
 mod error;
 
-type Scalar = u64;
-type Nullifier = Scalar;
-
 /// Tangling output type.
 type MerkleHash = [u64; 4];
 /// Type of the value in the Merkle tree leaf.
 type Note = MerkleHash;
 /// Type of the value in the Merkle tree root.
 type MerkleRoot = MerkleHash;
+/// Type of the nullifier.
+type Nullifier = MerkleHash;
 
 /// Short identifier of a registered token contract.
 type TokenId = u16;
-/// `arkworks` does not support serializing `u128` and thus we have to operate on `u64` amounts.
-type TokenAmount = u64;
+/// Type for the amount of deposited / withdrawn tokens.
+type TokenAmount = u128;
 
 type Set<T> = Mapping<T, ()>;
 
@@ -30,6 +29,9 @@ const DEPOSIT_VK_IDENTIFIER: VerificationKeyIdentifier =
 /// Verification key identifier for the `deposit` relation (to be registered in `pallet_snarcos`).
 const DEPOSIT_AND_MERGE_VK_IDENTIFIER: VerificationKeyIdentifier =
     [b'd', b'e', b'p', b'o', b'n', b'm', b'r', b'g'];
+/// Verification key identifier for the `merge` relation (to be registered in `pallet_baby_liminal`).
+const MERGE_VK_IDENTIFIER: VerificationKeyIdentifier =
+    [b'm', b'e', b'r', b'g', b'e', b'r', b'e', b'l'];
 /// Verification key identifier for the `withdraw` relation (to be registered in `pallet_snarcos`).
 const WITHDRAW_VK_IDENTIFIER: VerificationKeyIdentifier =
     [b'w', b'i', b't', b'h', b'd', b'r', b'a', b'w'];

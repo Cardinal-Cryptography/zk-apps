@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use aleph_client::AccountId;
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use liminal_ark_relations::{FrontendTokenAmount, FrontendTokenId};
+use liminal_ark_relations::shielder::types::{FrontendTokenAmount, FrontendTokenId};
 use shielder::DepositId;
 
 #[derive(Clone, Eq, PartialEq, Parser)]
@@ -66,6 +66,8 @@ pub enum ContractInteractionCommand {
     Deposit(DepositCmd),
     /// Unshield some tokens.
     Withdraw(WithdrawCmd),
+    /// Merge two tokens.
+    Merge(MergeCmd),
 }
 
 impl ContractInteractionCommand {
@@ -75,6 +77,9 @@ impl ContractInteractionCommand {
                 metadata_file.clone()
             }
             ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
+                metadata_file.clone()
+            }
+            ContractInteractionCommand::Merge(MergeCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
         }
@@ -88,6 +93,10 @@ pub struct DepositCmd {
 
     /// Amount of the token to be shielded.
     pub amount: FrontendTokenAmount,
+
+    /// When provided, a new deposit is to be created even if a previous one exists.
+    #[clap(long, action)]
+    pub require_new_deposit: bool,
 
     /// Seed for submitting the transaction.
     ///
@@ -115,7 +124,7 @@ pub struct DepositCmd {
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub struct WithdrawCmd {
     /// Which note should be spent, last created if none provided.
-    #[clap(long)]
+    #[clap(long, required_unless_present("interactive"))]
     pub deposit_id: Option<DepositId>,
 
     /// How many tokens should be withdrawn.
@@ -148,6 +157,32 @@ pub struct WithdrawCmd {
     ///
     /// If not found, command will fail - the tool won't generate it for you.
     #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
+    pub proving_key_file: PathBuf,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Args)]
+pub struct MergeCmd {
+    /// First of the notes that should be spent. The merged amount will be stored under the leaf
+    /// index of the first deposit. The second deposit will be deleted.
+    pub first_deposit_id: DepositId,
+
+    /// Second of the notes that should be spent.
+    pub second_deposit_id: DepositId,
+
+    /// Seed for submitting the transaction.
+    ///
+    /// If not provided, will be prompted.
+    #[clap(long)]
+    pub caller_seed: Option<String>,
+
+    /// File with contract metadata.
+    #[clap(long, default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
+
+    /// File with raw proving key bytes for the merging of deposits.
+    ///
+    /// If not found, command will fail - the tool won't generate it for you.
+    #[clap(default_value = "merge.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
 
