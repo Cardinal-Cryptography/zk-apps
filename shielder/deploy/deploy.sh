@@ -134,11 +134,11 @@ move_keys() {
 }
 
 docker_cargo() {
-  if [[ -z "${CI}" ]]; then
+  # if [[ -z "${CI}" ]]; then
     local_docker_cargo "$@"
-  else
-    ci_docker_cargo "$@"
-  fi
+  # else
+    # ci_docker_cargo "$@"
+  # fi
 }
 
 local_docker_cargo() {
