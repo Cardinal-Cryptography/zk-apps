@@ -141,7 +141,7 @@ move_keys() {
   log_progress "✅ Proving keys were made available to CLI"
 }
 
-docker_cargo() {
+docker_ink_dev() {
   # if [[ -z "${CI}" ]]; then
     local_docker_cargo "$@"
   # else
