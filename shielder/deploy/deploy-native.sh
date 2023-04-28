@@ -158,11 +158,11 @@ move_build_artifacts() {
 }
 
 contract_instantiate() {
-  cargo contract instantiate --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}
+  cargo contract instantiate -x --skip-confirm --url ${NODE} --suri ${ADMIN} --output-json --salt 0x$(random_salt) ${1}
 }
 
 contract_call() {
-  cargo contract call --quiet --skip-confirm --url ${NODE} ${1}
+  cargo contract call -x --quiet --skip-confirm --url ${NODE} ${1}
 }
 
 deploy_token_contracts() {
