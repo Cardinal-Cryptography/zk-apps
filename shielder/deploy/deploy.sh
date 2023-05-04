@@ -36,7 +36,8 @@ TOKEN_PER_PERSON=1000
 TOKEN_ALLOWANCE=500
 
 # command aliases
-DOCKER_SH="docker run --rm -e RUST_LOG=debug -u ${DOCKER_USER} --entrypoint /bin/sh"
+#DOCKER_SH="docker run --rm -e RUST_LOG=debug -u ${DOCKER_USER} --entrypoint /bin/sh"
+DOCKER_SH="docker run --rm -e RUST_LOG=debug --entrypoint /bin/sh"
 
 get_timestamp() {
   date +'%Y-%m-%d %H:%M:%S'
