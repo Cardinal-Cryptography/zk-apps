@@ -92,7 +92,7 @@ generate_chainspec() {
   id -g
   docker ps
 
-
+  echo $DOCKER_SH -v "${SCRIPT_DIR}/docker/node_data:/data" "${NODE_IMAGE}" -c "ls -al /data && aleph-node bootstrap-chain ${CHAINSPEC_ARGS} > /data/chainspec.snarkeling.json"
 
   $DOCKER_SH \
     -v "${SCRIPT_DIR}/docker/node_data:/data" \
