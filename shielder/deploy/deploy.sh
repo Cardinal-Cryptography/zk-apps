@@ -150,6 +150,9 @@ docker_ink_dev() {
 }
 
 local_docker_cargo() {
+  echo "${DOCKER_USER}"
+  ls -al ~/.cargo
+  ls -al ~/.cargo/git
   docker run --rm \
     -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
