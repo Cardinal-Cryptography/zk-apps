@@ -167,8 +167,16 @@ local_docker_cargo() {
   #mkdir -p ~/.cargo/git
   #mkdir -p ~/.cargo/registry
   #ls -al ~/.cargo
+#  docker run --rm \
+#    -u "${DOCKER_USER}" \
+#    -v "${PWD}":/code \
+#    -v ~/.cargo/git:/usr/local/cargo/git \
+#    -v ~/.cargo/registry:/usr/local/cargo/registry \
+#    --network host \
+#    --entrypoint /bin/sh \
+#    "${INK_DEV_IMAGE}" \
+#    -c "${1}"
   docker run --rm \
-    -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
     -v ~/.cargo/git:/usr/local/cargo/git \
     -v ~/.cargo/registry:/usr/local/cargo/registry \
@@ -176,6 +184,7 @@ local_docker_cargo() {
     --entrypoint /bin/sh \
     "${INK_DEV_IMAGE}" \
     -c "${1}"
+
 }
 
 ci_docker_cargo() {
