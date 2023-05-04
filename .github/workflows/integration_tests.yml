@@ -25,4 +25,7 @@ jobs:
 
       - name: Run e2e tests for shielder
         run: |
+          id -u
+          id -g
+          ls -al ~/.cargo
           cd shielder && make test-shielder-clean
