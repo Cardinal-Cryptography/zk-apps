@@ -151,8 +151,6 @@ docker_ink_dev() {
 
 local_docker_cargo() {
   echo "${DOCKER_USER}"
-  ls -al ~/.cargo
-  ls -al ~/.cargo/git
   mkdir -p ~/.cargo/git
   mkdir -p ~/.cargo/registry
   ls -al ~/.cargo
