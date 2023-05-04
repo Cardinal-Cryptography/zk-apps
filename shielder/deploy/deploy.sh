@@ -150,6 +150,10 @@ docker_ink_dev() {
 }
 
 local_docker_cargo() {
+  mkdir -p ~/.cargo/git
+  mkdir -p ~/.cargo/registry
+  chown ${DOCKER_USER} ~/.cargo/git
+  chown ${DOCKER_USER} ~/.cargo/registry
   docker run --rm \
     -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
