@@ -82,6 +82,18 @@ generate_chainspec() {
     --token-symbol SNZERO \
     --chain-name 'Aleph Zero Snarkeling'"
 
+  ls -al ${SCRIPT_DIR}
+  
+  echo DOCKER_HOST
+
+  ls -al ${SCRIPT_DIR}/docker
+  ls -al ${SCRIPT_DIR}/docker/node_data
+  id -u
+  id -g
+  docker ps
+
+
+
   $DOCKER_SH \
     -v "${SCRIPT_DIR}/docker/node_data:/data" \
     "${NODE_IMAGE}" \
@@ -150,10 +162,10 @@ docker_ink_dev() {
 }
 
 local_docker_cargo() {
-  echo "${DOCKER_USER}"
-  mkdir -p ~/.cargo/git
-  mkdir -p ~/.cargo/registry
-  ls -al ~/.cargo
+  #echo "${DOCKER_USER}"
+  #mkdir -p ~/.cargo/git
+  #mkdir -p ~/.cargo/registry
+  #ls -al ~/.cargo
   docker run --rm \
     -u "${DOCKER_USER}" \
     -v "${PWD}":/code \
