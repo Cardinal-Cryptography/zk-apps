@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   rust-checks:
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64, large]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -53,7 +53,7 @@ jobs:
         run: cd shielder/public_token/ && cargo test
 
   build-contracts:
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64, large]
     env:
       DOCKER_IMAGE: "public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
     steps:
