@@ -10,9 +10,7 @@ get_timestamp() {
 }
 
 log_progress() {
-  bold=$(tput bold)
-  normal=$(tput sgr0)
-  echo "[$(get_timestamp)] [INFO] ${bold}${1}${normal}"
+  echo "[$(get_timestamp)] [INFO] ${1}"
 }
 
 function setup_testdir() {
