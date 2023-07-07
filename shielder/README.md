@@ -5,7 +5,6 @@ This repository contains an implementation of Shielder: a construct allowing you
 Shielder is a part of, and a first project within the [Liminal](https://alephzero.org/ecosystem/liminal) privacy framework.
 
 What you will find here is not only the smart contract implementing the Shielder functionality (in conjunction with the [Aleph Zero](https://alephzero.org) blockchain, which facilitates certain privacy-related operations) but also a handful of utilities, including a basic PSP22 token implementaion. These allow you to quickly bootstrap a local chain with Shielder already deployed and get straight to experimentation.
-Of course, you can choose to connect to the #Smarknet chain on Aleph Zero, but for getting familiar with the concepts and experimentation we strongly recommend using a local chain.
 
 ## Installation
 
