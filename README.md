@@ -4,7 +4,7 @@ This repository is a collection of smart-contract applications based on ZK-SNARK
 
 Included:
 
-- [shielder](shielder/) - shielding and unshielding PSP22 tokens
+- [shielder](legacy-shielder/) - shielding and unshielding PSP22 tokens
 
 ## License
 
