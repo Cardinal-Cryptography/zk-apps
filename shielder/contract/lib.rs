@@ -10,7 +10,7 @@ type Set<T> = Mapping<T, ()>;
 
 #[ink::contract]
 mod contract {
-    use ink::{storage::Mapping};
+    use ink::storage::Mapping;
 
     use crate::{Scalar, Set, merkle::MerkleTree, psp22::PSP22};
     #[derive(scale::Encode, scale::Decode)]
