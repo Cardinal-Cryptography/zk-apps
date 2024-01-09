@@ -2,13 +2,11 @@
 
 use ink::storage::Mapping;
 
-use crate::types::{Scalar, Set};
+use crate::{types::{Scalar, Set}, errors::ShielderError};
 
-
-const DEPTH: u32 = 10;
 
 #[ink::storage_item]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MerkleTree {
     nodes: Mapping<u32, Scalar>,
     roots_log: Set<Scalar>,
@@ -21,19 +19,18 @@ fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
 }
 
 impl MerkleTree {
-    pub fn new() -> Self {
+    pub fn new(depth: u32) -> Self {
         Self {
             nodes: Mapping::default(),
-            roots_log: Set::default(),
+            roots_log: Mapping::default(),
             next_leaf_id: 0,
-            sz: (1<<DEPTH),
+            sz: (1<<depth),
         }
     }
 
-    pub fn add_leaf(&mut self, leaf_value: Scalar) {
+    pub fn add_leaf(&mut self, leaf_value: Scalar) -> Result<(), ShielderError>{
         if self.next_leaf_id == self.sz {
-            //TODO: throw specific error
-            return;
+            return Err(ShielderError::MerkleTreeLimitExceeded);
         }
         let mut id = self.next_leaf_id + self.sz;
         self.nodes.insert(id, &leaf_value);
@@ -47,14 +44,14 @@ impl MerkleTree {
             id /= 2;
         }
         self.next_leaf_id += 1;
+        Ok(())
     }
 
-    pub fn is_historical_root(&self, merkle_root_possible: Scalar) -> bool {
-        self.roots_log.contains(merkle_root_possible)
-    }
-
-    pub fn root(&self) -> Scalar {
-        self.node_value(1)
+    pub fn is_historical_root(&self, merkle_root_possible: Scalar) -> Result<(), ShielderError> {
+        self.roots_log
+            .contains(merkle_root_possible)
+            .then_some(())
+            .ok_or(ShielderError::MerkleTreeVerificationFail)
     }
 
     fn node_value(&self, id: u32) -> Scalar {
