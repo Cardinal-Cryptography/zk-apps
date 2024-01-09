@@ -1,18 +1,15 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-use ink::storage::Mapping;
-
 mod merkle;
 mod psp22;
-
-type Scalar = [u8; 32];
-type Set<T> = Mapping<T, ()>;
+mod types;
 
 #[ink::contract]
 mod contract {
     use ink::storage::Mapping;
 
-    use crate::{Scalar, Set, merkle::MerkleTree, psp22::PSP22};
+    use crate::{merkle::MerkleTree, psp22::PSP22, types::{Set, Scalar}};
+
     #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(
         feature = "std", 
@@ -22,6 +19,12 @@ mod contract {
         Deposit(u128, AccountId, AccountId),
         Withdraw(u128, AccountId, AccountId)
     }
+
+    #[derive(scale::Encode, scale::Decode)]
+    #[cfg_attr(
+        feature = "std", 
+        derive(scale_info::TypeInfo)
+    )]
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
@@ -40,20 +43,35 @@ mod contract {
                 notes: MerkleTree::new(),
             }
         }
+
         #[ink(message)]
-        pub fn add_node(&mut self, op_pub: OpPub, h_note: Scalar) {
+        pub fn add_note(&mut self, op_pub: OpPub, h_note_new: Scalar) {
             self.process_operation(op_pub);
-            self.notes.add_leaf(h_note);
+            self.notes.add_leaf(h_note_new);
         }
 
-        pub fn process_operation(&mut self, op_pub: OpPub) {
+        #[ink(message)]
+        pub fn update_note(
+            &mut self,
+            op_pub: OpPub,
+            h_note_new: Scalar,
+            merkle_root: Scalar,
+            nullifier_old: u128,
+        ) {
+            self.process_operation(op_pub);
+            assert!(self.notes.is_historical_root(merkle_root));
+            assert!(!self.nullifier_set.contains(nullifier_old));
+            self.notes.add_leaf(h_note_new);
+            self.nullifier_set.insert(nullifier_old, &());
+        }
+
+        fn process_operation(&mut self, op_pub: OpPub) {
             match op_pub {
                 OpPub::Deposit(amount, token_id, user) => {
                     let mut psp22: ink::contract_ref!(PSP22) = token_id.into();
-                    assert!(psp22.allowance(self.env().caller(), user) >= amount);
                     psp22.transfer_from(
                         user,
-                        self.env().caller(),
+                        self.env().account_id(),
                         amount,
                         [].to_vec()
                     ).unwrap();
