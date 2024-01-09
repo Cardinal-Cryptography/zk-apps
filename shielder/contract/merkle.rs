@@ -1,9 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-use ink::storage::Mapping;
+use ink::{storage::Mapping, env::hash::{Sha2x256, CryptoHash}};
 
 use crate::{types::{Scalar, Set}, errors::ShielderError};
 
+
+pub const DEPTH: usize = 10;
 
 #[ink::storage_item]
 #[derive(Debug, Default)]
@@ -14,17 +16,19 @@ pub struct MerkleTree {
     sz: u32,
 }
 
-fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
-    first
+pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
+    let mut res = [0x0; 32];
+    Sha2x256::hash([first, second].concat().as_slice(), &mut res);
+    res
 }
 
 impl MerkleTree {
-    pub fn new(depth: u32) -> Self {
+    pub fn new() -> Self {
         Self {
             nodes: Mapping::default(),
             roots_log: Mapping::default(),
             next_leaf_id: 0,
-            sz: (1<<depth),
+            sz: (1<<DEPTH),
         }
     }
 
