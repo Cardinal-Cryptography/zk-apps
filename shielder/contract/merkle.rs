@@ -8,7 +8,7 @@ use crate::{types::{Scalar, Set}, errors::ShielderError};
 pub const DEPTH: usize = 10;
 
 #[ink::storage_item]
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MerkleTree {
     nodes: Mapping<u32, Scalar>,
     roots_log: Set<Scalar>,
@@ -25,8 +25,8 @@ pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
 impl MerkleTree {
     pub fn new() -> Self {
         Self {
-            nodes: Mapping::default(),
-            roots_log: Mapping::default(),
+            nodes: Mapping::new(),
+            roots_log: Mapping::new(),
             next_leaf_id: 0,
             sz: (1<<DEPTH),
         }

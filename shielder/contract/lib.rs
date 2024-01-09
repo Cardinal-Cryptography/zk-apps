@@ -9,6 +9,8 @@ mod mocked_zk;
 #[ink::contract]
 mod contract {
 
+    use ink::storage::Mapping;
+
     use crate::{merkle::MerkleTree, psp22::PSP22, types::{Set, Scalar}, errors::ShielderError, mocked_zk::{ZkProof, self}};
 
     #[derive(Clone, Copy, scale::Encode, scale::Decode)]
@@ -22,7 +24,6 @@ mod contract {
     }
 
     #[ink(storage)]
-    #[derive(Default)]
     pub struct Contract {
         nullifier_set: Set<Scalar>,
         notes: MerkleTree,
@@ -31,9 +32,10 @@ mod contract {
     impl Contract {
         #[ink(constructor)]
         pub fn new() -> Self {
-            let mut shielder = Self::default();
-            shielder.notes = MerkleTree::new();
-            shielder
+            Self {
+                nullifier_set: Mapping::new(),
+                notes: MerkleTree::new()
+            }
         }
 
         #[ink(message)]
