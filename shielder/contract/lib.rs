@@ -15,7 +15,7 @@ mod contract {
     use crate::{
         errors::ShielderError,
         merkle::MerkleTree,
-        mocked_zk::{self, ZkProof},
+        mocked_zk::relations::ZkProof,
         types::{Scalar, Set},
     };
 
@@ -51,7 +51,12 @@ mod contract {
         }
 
         #[ink(message)]
-        pub fn add_note(&mut self, h_note_new: Scalar) -> Result<(), ShielderError> {
+        pub fn add_note(
+            &mut self,
+            h_note_new: Scalar,
+            proof: ZkProof,
+        ) -> Result<(), ShielderError> {
+            proof.verify_creation(h_note_new)?;
             self.notes.add_leaf(h_note_new)?;
             Ok(())
         }
@@ -67,7 +72,7 @@ mod contract {
         ) -> Result<(), ShielderError> {
             self.process_operation(op_pub)?;
             self.notes.is_historical_root(merkle_root)?;
-            mocked_zk::verify_update(proof, op_pub, h_note_new, merkle_root, nullifier_old)?;
+            proof.verify_update(op_pub, h_note_new, merkle_root, nullifier_old)?;
             self.nullify(nullifier_old)?;
             self.notes.add_leaf(h_note_new)?;
             Ok(())
