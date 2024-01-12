@@ -1,7 +1,5 @@
 // mocked zk relation
 
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 use crate::{
     contract::OpPub,
     errors::ShielderError,
@@ -13,15 +11,13 @@ trait Hashable {
     fn hash(&self) -> Scalar;
 }
 
+/// empty private operation
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-
-// empty private operation
 struct OpPriv {}
 
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-
 struct Operation {
     op_pub: OpPub,
 }
@@ -69,23 +65,22 @@ impl Hashable for Account {
 const USDT_TOKEN: [u8; 32] = [0x2_u8; 32];
 
 impl Account {
-    // TODO: increase and decrease balances
     fn update(&self, operation: Operation) -> Self {
         match operation.op_pub {
-            OpPub::Deposit(amount, token, _) => {
-                let balance_usdt = self.balance_usdt;
+            OpPub::Deposit { amount, token, .. } => {
+                let mut balance_usdt = self.balance_usdt;
                 if token.as_ref() == USDT_TOKEN {
-                    // decrease scalar by amount
+                    balance_usdt = (u128::from(balance_usdt) + amount).into();
                 }
                 Self {
                     balance_aleph: self.balance_aleph,
                     balance_usdt,
                 }
             }
-            OpPub::Withdraw(amount, token, _) => {
-                let balance_usdt = self.balance_usdt;
+            OpPub::Withdraw { amount, token, .. } => {
+                let mut balance_usdt = self.balance_usdt;
                 if token.as_ref() == USDT_TOKEN {
-                    // increase scalar by amount
+                    balance_usdt = (u128::from(balance_usdt) - amount).into();
                 }
                 Self {
                     balance_aleph: self.balance_aleph,
@@ -96,10 +91,10 @@ impl Account {
     }
 }
 
+/// mocked proof of knowledge, not ZK
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-
-pub struct MockedZkProof {
+pub struct ZkProof {
     id: Scalar,
     trapdoor_new: Scalar,
     trapdoor_old: Scalar,
@@ -119,7 +114,7 @@ fn verify_hash<T: Hashable>(to_hash: T, hash: Scalar) -> Result<Scalar, Shielder
 }
 
 fn verify_acccount_update(
-    proof: MockedZkProof,
+    proof: ZkProof,
     op: Operation,
     h_acc_old: Scalar,
 ) -> Result<Account, ShielderError> {
@@ -129,7 +124,7 @@ fn verify_acccount_update(
 }
 
 fn verify_merkle_proof(
-    proof: MockedZkProof,
+    proof: ZkProof,
     h_note_old: Scalar,
     merkle_root: Scalar,
 ) -> Result<(), ShielderError> {
@@ -150,7 +145,7 @@ fn verify_merkle_proof(
 }
 
 pub fn verify_update(
-    proof: MockedZkProof,
+    proof: ZkProof,
     op_pub: OpPub,
     h_note_new: Scalar,
     merkle_root: Scalar,

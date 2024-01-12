@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 use ink::{
     env::hash::{CryptoHash, Sha2x256},
     storage::Mapping,
@@ -10,21 +8,26 @@ use crate::{
     types::{Scalar, Set},
 };
 
+/// depth of the tree
 pub const DEPTH: usize = 10;
 
 #[ink::storage_item]
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct MerkleTree {
+    /// mapping of tree indexes to values held in nodes
     nodes: Mapping<u32, Scalar>,
+    /// set of historical roots (nodes[1]) of tree
     roots_log: Set<Scalar>,
-    next_leaf_id: u32,
+    /// index of next available leaf
+    next_leaf_idx: u32,
+    /// number of leaves in the tree, should be equal to 2^DEPTH
     size: u32,
 }
 
 pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
     let mut res = [0x0; 32];
-    Sha2x256::hash([first, second].concat().as_slice(), &mut res);
-    res
+    Sha2x256::hash([first.bytes, second.bytes].concat().as_slice(), &mut res);
+    Scalar { bytes: res }
 }
 
 impl MerkleTree {
@@ -32,16 +35,16 @@ impl MerkleTree {
         Self {
             nodes: Mapping::new(),
             roots_log: Mapping::new(),
-            next_leaf_id: 0,
+            next_leaf_idx: 0,
             size: (1 << DEPTH),
         }
     }
 
     pub fn add_leaf(&mut self, leaf_value: Scalar) -> Result<(), ShielderError> {
-        if self.next_leaf_id == self.size {
+        if self.next_leaf_idx == self.size {
             return Err(ShielderError::MerkleTreeLimitExceeded);
         }
-        let mut id = self.next_leaf_id + self.size;
+        let mut id = self.next_leaf_idx + self.size;
         self.nodes.insert(id, &leaf_value);
 
         id /= 2;
@@ -52,7 +55,7 @@ impl MerkleTree {
             self.nodes.insert(id, &hash);
             id /= 2;
         }
-        self.next_leaf_id += 1;
+        self.next_leaf_idx += 1;
         Ok(())
     }
 

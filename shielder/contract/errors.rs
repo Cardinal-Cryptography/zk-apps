@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 use psp22::PSP22Error;
 
 #[derive(scale::Encode, scale::Decode)]
