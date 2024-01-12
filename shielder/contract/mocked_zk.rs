@@ -1,29 +1,26 @@
 // mocked zk relation
 
-
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-use crate::{errors::ShielderError, types::Scalar, contract::OpPub, merkle::{self, compute_hash}};
+use crate::{
+    contract::OpPub,
+    errors::ShielderError,
+    merkle::{self, compute_hash},
+    types::Scalar,
+};
 
 trait Hashable {
     fn hash(&self) -> Scalar;
 }
 
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(
-    feature = "std", 
-    derive(scale_info::TypeInfo)
-)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 
 // empty private operation
-struct OpPriv {
-}
+struct OpPriv {}
 
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(
-    feature = "std", 
-    derive(scale_info::TypeInfo)
-)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 
 struct Operation {
     op_pub: OpPub,
@@ -31,15 +28,12 @@ struct Operation {
 
 impl Operation {
     fn combine(op_pub: OpPub, _op_priv: OpPriv) -> Self {
-        Operation{op_pub}
+        Operation { op_pub }
     }
 }
 
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(
-    feature = "std", 
-    derive(scale_info::TypeInfo)
-)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 struct Note {
     id: Scalar,
     trapdoor: Scalar,
@@ -53,20 +47,14 @@ impl Hashable for Note {
             self.id,
             merkle::compute_hash(
                 self.trapdoor,
-                merkle::compute_hash(
-                    self.nullifier, 
-                    self.account_hash,
-                )
-            )
+                merkle::compute_hash(self.nullifier, self.account_hash),
+            ),
         )
     }
 }
 
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(
-    feature = "std", 
-    derive(scale_info::TypeInfo)
-)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 struct Account {
     balance_aleph: Scalar,
     balance_usdt: Scalar,
@@ -74,11 +62,7 @@ struct Account {
 
 impl Hashable for Account {
     fn hash(&self) -> Scalar {
-        merkle::compute_hash(
-            self.balance_aleph,
-
-            self.balance_usdt
-        )
+        merkle::compute_hash(self.balance_aleph, self.balance_usdt)
     }
 }
 
@@ -97,7 +81,7 @@ impl Account {
                     balance_aleph: self.balance_aleph,
                     balance_usdt,
                 }
-            },
+            }
             OpPub::Withdraw(amount, token, _) => {
                 let balance_usdt = self.balance_usdt;
                 if token.as_ref() == USDT_TOKEN {
@@ -112,14 +96,10 @@ impl Account {
     }
 }
 
-
 #[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(
-    feature = "std", 
-    derive(scale_info::TypeInfo)
-)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 
-pub struct ZkProof {
+pub struct MockedZkProof {
     id: Scalar,
     trapdoor_new: Scalar,
     trapdoor_old: Scalar,
@@ -133,13 +113,13 @@ pub struct ZkProof {
 fn verify_hash<T: Hashable>(to_hash: T, hash: Scalar) -> Result<Scalar, ShielderError> {
     let real_hash = to_hash.hash();
     if real_hash != hash {
-        return Err(ShielderError::ZkpVerificationFail)
+        return Err(ShielderError::ZkpVerificationFail);
     }
     Ok(real_hash)
 }
 
 fn verify_acccount_update(
-    proof: ZkProof,
+    proof: MockedZkProof,
     op: Operation,
     h_acc_old: Scalar,
 ) -> Result<Account, ShielderError> {
@@ -149,33 +129,32 @@ fn verify_acccount_update(
 }
 
 fn verify_merkle_proof(
-    proof: ZkProof,
+    proof: MockedZkProof,
     h_note_old: Scalar,
-    merkle_root: Scalar
+    merkle_root: Scalar,
 ) -> Result<(), ShielderError> {
     let mut id = proof.merkle_proof_leaf_id;
     let mut scalar = h_note_old;
     for node in proof.merkle_proof {
-        if id % 2 == 0{
+        if id % 2 == 0 {
             scalar = compute_hash(scalar, node);
-        }
-        else {
+        } else {
             scalar = compute_hash(node, scalar);
         }
         id /= 2;
     }
     if scalar != merkle_root {
-        return Err(ShielderError::ZkpVerificationFail)
+        return Err(ShielderError::ZkpVerificationFail);
     }
     Ok(())
 }
 
-pub fn verify_update (
-    proof: ZkProof,
+pub fn verify_update(
+    proof: MockedZkProof,
     op_pub: OpPub,
     h_note_new: Scalar,
     merkle_root: Scalar,
-    nullifier_old: Scalar
+    nullifier_old: Scalar,
 ) -> Result<(), ShielderError> {
     let h_acc_old = proof.acc_old.hash();
     let op = Operation::combine(op_pub, proof.op_priv);
