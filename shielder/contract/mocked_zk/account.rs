@@ -1,7 +1,7 @@
 use ink::env::hash::{CryptoHash, Sha2x256};
 
 use super::{ops::Operation, traits::Hashable, USDT_TOKEN};
-use crate::{contract::OpPub, types::Scalar};
+use crate::{contract::OpPub, errors::ShielderError, types::Scalar};
 
 #[derive(Default, Clone, Copy, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -30,27 +30,33 @@ impl Account {
             balance_usdt: 0_u128.into(),
         }
     }
-    pub fn update(&self, operation: Operation) -> Self {
+    pub fn update(&self, operation: Operation) -> Result<Self, ShielderError> {
         match operation.op_pub {
             OpPub::Deposit { amount, token, .. } => {
                 let mut balance_usdt = self.balance_usdt;
                 if token.as_ref() == USDT_TOKEN {
-                    balance_usdt = (u128::from(balance_usdt) + amount).into();
+                    balance_usdt = (u128::from(balance_usdt)
+                        .checked_add(amount)
+                        .ok_or(ShielderError::ArithmeticError)?)
+                    .into();
                 }
-                Self {
+                Ok(Self {
                     balance_aleph: self.balance_aleph,
                     balance_usdt,
-                }
+                })
             }
             OpPub::Withdraw { amount, token, .. } => {
                 let mut balance_usdt = self.balance_usdt;
                 if token.as_ref() == USDT_TOKEN {
-                    balance_usdt = (u128::from(balance_usdt) - amount).into();
+                    balance_usdt = (u128::from(balance_usdt)
+                        .checked_sub(amount)
+                        .ok_or(ShielderError::ArithmeticError)?)
+                    .into();
                 }
-                Self {
+                Ok(Self {
                     balance_aleph: self.balance_aleph,
                     balance_usdt,
-                }
+                })
             }
         }
     }

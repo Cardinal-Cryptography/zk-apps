@@ -1,4 +1,4 @@
-use psp22::PSP22Error;
+use crate::traits::psp22::PSP22Error;
 
 #[derive(PartialEq, Debug, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -9,6 +9,7 @@ pub enum ShielderError {
     MerkleTreeLimitExceeded,
     MerkleTreeProofGenFail,
     ZkpVerificationFail,
+    ArithmeticError,
 }
 
 impl From<PSP22Error> for ShielderError {

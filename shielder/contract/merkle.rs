@@ -12,7 +12,7 @@ use crate::{
 pub const DEPTH: usize = 10;
 
 #[ink::storage_item]
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct MerkleTree {
     /// mapping of tree indexes to values held in nodes
     nodes: Mapping<u32, Scalar>,
@@ -30,32 +30,41 @@ pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
     Scalar { bytes: res }
 }
 
-impl MerkleTree {
-    pub fn new() -> Self {
+impl Default for MerkleTree {
+    fn default() -> Self {
         Self {
-            nodes: Mapping::new(),
-            roots_log: Mapping::new(),
+            nodes: Default::default(),
+            roots_log: Default::default(),
             next_leaf_idx: 0,
             size: (1 << DEPTH),
         }
     }
+}
 
+impl MerkleTree {
     pub fn add_leaf(&mut self, leaf_value: Scalar) -> Result<(), ShielderError> {
         if self.next_leaf_idx == self.size {
             return Err(ShielderError::MerkleTreeLimitExceeded);
         }
-        let mut id = self.next_leaf_idx + self.size;
+        let mut id = self
+            .next_leaf_idx
+            .checked_add(self.size)
+            .ok_or(ShielderError::ArithmeticError)?;
         self.nodes.insert(id, &leaf_value);
 
         id /= 2;
         while id > 0 {
-            let left_n = self.node_value(id * 2);
-            let right_n = self.node_value(id * 2 + 1);
+            let id_mul_2 = id.checked_mul(2).ok_or(ShielderError::ArithmeticError)?;
+            let left_n = self.node_value(id_mul_2);
+            let right_n = self.node_value(id.checked_add(1).ok_or(ShielderError::ArithmeticError)?);
             let hash = compute_hash(left_n, right_n);
             self.nodes.insert(id, &hash);
             id /= 2;
         }
-        self.next_leaf_idx += 1;
+        self.next_leaf_idx = self
+            .next_leaf_idx
+            .checked_add(1)
+            .ok_or(ShielderError::ArithmeticError)?;
         Ok(())
     }
 

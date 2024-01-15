@@ -1,39 +1,52 @@
+//! Smart contract implementing shielder specification
+//! https://docs.alephzero.org/aleph-zero/shielder/introduction-informal
+
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
+#![deny(missing_docs)]
 
 mod errors;
 mod merkle;
 mod mocked_zk;
+mod traits;
 mod types;
 
+/// Contract module
 #[ink::contract]
-#[allow(clippy::large_enum_variant)]
-mod contract {
-
-    use ink::storage::Mapping;
-    use psp22::PSP22;
+pub mod contract {
 
     use crate::{
         errors::ShielderError,
         merkle::MerkleTree,
         mocked_zk::relations::ZkProof,
+        traits::psp22::PSP22,
         types::{Scalar, Set},
     };
 
+    /// Enum
     #[derive(Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum OpPub {
+        /// Deposit PSP-22 token
         Deposit {
+            /// amount of deposit
             amount: u128,
+            /// PSP-22 token address
             token: AccountId,
+            /// User address, from whom tokens are transferred
             user: AccountId,
         },
+        /// Withdraw PSP-22 token
         Withdraw {
+            /// amount of withdrawal
             amount: u128,
+            /// PSP-22 token address
             token: AccountId,
+            /// User address, from whom tokens are transferred
             user: AccountId,
         },
     }
 
+    /// Contract storage
     #[ink(storage)]
     #[derive(Default)]
     pub struct Contract {
@@ -42,14 +55,16 @@ mod contract {
     }
 
     impl Contract {
+        /// Constructor
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {
-                nullifier_set: Mapping::new(),
-                notes: MerkleTree::new(),
+                ..Default::default()
             }
         }
 
+        /// Adds empty note to shielder storage
+        /// Registers new account with empty balance
         #[ink(message)]
         pub fn add_note(
             &mut self,
@@ -61,6 +76,8 @@ mod contract {
             Ok(())
         }
 
+        /// Updates existing note
+        /// Applies operation to private account stored in shielder
         #[ink(message)]
         pub fn update_note(
             &mut self,
@@ -70,11 +87,11 @@ mod contract {
             nullifier_old: Scalar,
             proof: ZkProof,
         ) -> Result<(), ShielderError> {
-            self.process_operation(op_pub)?;
             self.notes.is_historical_root(merkle_root)?;
-            proof.verify_update(op_pub, h_note_new, merkle_root, nullifier_old)?;
             self.nullify(nullifier_old)?;
+            proof.verify_update(op_pub, h_note_new, merkle_root, nullifier_old)?;
             self.notes.add_leaf(h_note_new)?;
+            self.process_operation(op_pub)?;
             Ok(())
         }
 
@@ -101,12 +118,10 @@ mod contract {
         }
 
         fn nullify(&mut self, nullifier: Scalar) -> Result<(), ShielderError> {
-            if self.nullifier_set.contains(nullifier) {
-                Err(ShielderError::NullifierIsInSet)
-            } else {
-                self.nullifier_set.insert(nullifier, &());
-                Ok(())
-            }
+            self.nullifier_set
+                .insert(nullifier, &())
+                .map(|_| {})
+                .ok_or(ShielderError::NullifierIsInSet)
         }
     }
 }

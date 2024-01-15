@@ -40,7 +40,7 @@ fn update_account(
         user: AccountId::from([0x1; 32]),
     };
     let operation = Operation::combine(op_pub, op_priv).unwrap();
-    let acc_updated = proof.update_account(operation);
+    let acc_updated = proof.update_account(operation).unwrap();
     let note = Note::new(id, trapdoor, nullifier, acc_updated.hash());
     let new_proof = proof.transition(
         trapdoor,

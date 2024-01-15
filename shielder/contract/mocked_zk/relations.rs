@@ -79,7 +79,7 @@ impl ZkProof {
         }
     }
 
-    pub fn update_account(&self, operation: Operation) -> Account {
+    pub fn update_account(&self, operation: Operation) -> Result<Account, ShielderError> {
         self.acc_new.update(operation)
     }
 
@@ -88,7 +88,7 @@ impl ZkProof {
         op: Operation,
         h_acc_old: Scalar,
     ) -> Result<Account, ShielderError> {
-        let acc_new = self.acc_old.update(op);
+        let acc_new = self.acc_old.update(op)?;
         verify_hash(self.acc_old, h_acc_old)?;
         Ok(acc_new)
     }
