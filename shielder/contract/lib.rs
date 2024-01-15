@@ -58,9 +58,7 @@ pub mod contract {
         /// Constructor
         #[ink(constructor)]
         pub fn new() -> Self {
-            Self {
-                ..Default::default()
-            }
+            Self::default()
         }
 
         /// Adds empty note to shielder storage
