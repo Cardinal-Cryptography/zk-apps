@@ -3,14 +3,14 @@ use ink::primitives::AccountId;
 use crate::{contract::OpPub, errors::ShielderError};
 
 /// empty private operation
-#[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Clone, Copy)]
 pub struct OpPriv {
     pub user: AccountId,
 }
 
-#[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Clone, Copy)]
 pub struct Operation {
     pub op_pub: OpPub,
 }

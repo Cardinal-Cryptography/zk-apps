@@ -3,8 +3,8 @@ use ink::env::hash::{CryptoHash, Sha2x256};
 use super::traits::Hashable;
 use crate::types::Scalar;
 
-#[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Clone, Copy)]
 pub struct Note {
     id: Scalar,
     trapdoor: Scalar,

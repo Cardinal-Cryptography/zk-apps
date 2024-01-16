@@ -23,8 +23,8 @@ pub mod contract {
     };
 
     /// Enum
-    #[derive(Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[ink::scale_derive(Encode, Decode, TypeInfo)]
+    #[derive(Clone, Copy)]
     pub enum OpPub {
         /// Deposit PSP-22 token
         Deposit {

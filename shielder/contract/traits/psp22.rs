@@ -3,8 +3,8 @@ use ink::{
     primitives::AccountId,
 };
 
-#[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum PSP22Error {
     /// Custom error type for implementation-based errors.
     Custom(String),

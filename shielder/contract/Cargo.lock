@@ -982,8 +982,6 @@ name = "shielder-contract"
 version = "0.1.0"
 dependencies = [
  "ink",
- "parity-scale-codec",
- "scale-info",
 ]
 
 [[package]]

@@ -2,11 +2,9 @@ use ink::storage::Mapping;
 
 pub type Set<T> = Mapping<T, ()>;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, scale::Decode, scale::Encode)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-)]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(ink::storage::traits::StorageLayout))]
 pub struct Scalar {
     pub bytes: [u8; 32],
 }

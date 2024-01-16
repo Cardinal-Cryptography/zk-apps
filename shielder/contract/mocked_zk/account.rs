@@ -3,8 +3,8 @@ use ink::env::hash::{CryptoHash, Sha2x256};
 use super::{ops::Operation, traits::Hashable, USDT_TOKEN};
 use crate::{contract::OpPub, errors::ShielderError, types::Scalar};
 
-#[derive(Default, Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Default, Clone, Copy)]
 pub struct Account {
     balance_aleph: Scalar,
     balance_usdt: Scalar,

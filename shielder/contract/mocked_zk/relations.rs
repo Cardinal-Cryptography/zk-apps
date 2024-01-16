@@ -14,8 +14,8 @@ use crate::{
 /// mocked proof of knowledge, not ZK
 /// you can imagine ZkProof object as someone's "knowledge"
 /// functions starting with verify_ are mocks of relation
-#[derive(Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(Clone, Copy)]
 pub struct ZkProof {
     id: Scalar,
     trapdoor_new: Scalar,

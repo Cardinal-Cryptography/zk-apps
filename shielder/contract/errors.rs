@@ -1,7 +1,7 @@
 use crate::traits::psp22::PSP22Error;
 
-#[derive(PartialEq, Debug, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+#[derive(PartialEq, Debug)]
 pub enum ShielderError {
     PSP22(PSP22Error),
     NullifierIsInSet,
