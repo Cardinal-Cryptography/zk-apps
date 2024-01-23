@@ -10,6 +10,7 @@ edition = "2021"
 ink = { version = "5.0.0-rc", default-features = false }
 
 [dev-dependencies]
+drink = "0.8.6"
 
 [lib]
 path = "lib.rs"

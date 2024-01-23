@@ -2,13 +2,15 @@
 //! https://docs.alephzero.org/aleph-zero/shielder/introduction-informal
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 
 mod errors;
 mod merkle;
-mod mocked_zk;
+pub mod mocked_zk;
 mod traits;
 mod types;
+#[cfg(test)]
+mod tests;
 
 /// Contract module
 #[ink::contract]
