@@ -136,7 +136,6 @@ pub mod contract {
 #[cfg(test)]
 mod tests {
     use drink::{
-        contract_api::decode_debug_buffer,
         runtime::MinimalRuntime,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
         ContractBundle,
