@@ -2,6 +2,7 @@ use ink::{
     env::hash::{CryptoHash, Sha2x256},
     storage::Mapping,
 };
+
 use crate::{
     errors::ShielderError,
     types::{Scalar, Set},
@@ -55,7 +56,11 @@ impl MerkleTree {
         while id > 0 {
             let id_mul_2 = id.checked_mul(2).ok_or(ShielderError::ArithmeticError)?;
             let left_n = self.node_value(id_mul_2);
-            let right_n = self.node_value(id_mul_2.checked_add(1).ok_or(ShielderError::ArithmeticError)?);
+            let right_n = self.node_value(
+                id_mul_2
+                    .checked_add(1)
+                    .ok_or(ShielderError::ArithmeticError)?,
+            );
             let hash = compute_hash(left_n, right_n);
             self.nodes.insert(id, &hash);
             id /= 2;

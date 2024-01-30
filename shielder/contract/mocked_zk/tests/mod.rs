@@ -11,7 +11,7 @@ use super::{
 use crate::{contract::OpPub, errors::ShielderError, mocked_zk::USDT_TOKEN, types::Scalar};
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
-    let acc_new = Account::new(Scalar{bytes:[0x0;32]});
+    let acc_new = Account::new(Scalar { bytes: [0x0; 32] });
     let note = Note::new(id, trapdoor, nullifier, acc_new.hash());
     let proof = ZkProof::new(
         id,
@@ -94,7 +94,7 @@ fn test_update_note() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: Scalar{bytes:USDT_TOKEN},
+        token: Scalar { bytes: USDT_TOKEN },
         user: 1_u128.into(),
     };
 
@@ -131,12 +131,12 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: Scalar{bytes: USDT_TOKEN},
+        token: Scalar { bytes: USDT_TOKEN },
         user: 1_u128.into(),
     };
     let op_pub_fake = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: Scalar{bytes: USDT_TOKEN},
+        token: Scalar { bytes: USDT_TOKEN },
         user: 2_u128.into(),
     };
 
