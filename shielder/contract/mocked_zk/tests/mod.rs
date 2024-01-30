@@ -1,6 +1,4 @@
-mod merkle;
-
-use ink::primitives::AccountId;
+pub mod merkle;
 
 use self::merkle::MerkleTree;
 use super::{
@@ -13,14 +11,14 @@ use super::{
 use crate::{contract::OpPub, errors::ShielderError, mocked_zk::USDT_TOKEN, types::Scalar};
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
-    let acc_new = Account::new();
+    let acc_new = Account::new(Scalar{bytes:[0x0;32]});
     let note = Note::new(id, trapdoor, nullifier, acc_new.hash());
     let proof = ZkProof::new(
         id,
         trapdoor,
         nullifier,
         OpPriv {
-            user: AccountId::from([0x1; 32]),
+            user: 1_u128.into(),
         },
         acc_new,
     );
@@ -37,7 +35,7 @@ fn update_account(
     merkle_proof_leaf_id: u32,
 ) -> (Scalar, ZkProof) {
     let op_priv = OpPriv {
-        user: AccountId::from([0x1; 32]),
+        user: 1_u128.into(),
     };
     let operation = Operation::combine(op_pub, op_priv).unwrap();
     let acc_updated = proof.update_account(operation).unwrap();
@@ -96,8 +94,8 @@ fn test_update_note() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: AccountId::from(USDT_TOKEN),
-        user: AccountId::from([0x1; 32]),
+        token: Scalar{bytes:USDT_TOKEN},
+        user: 1_u128.into(),
     };
 
     let (h_new_note, proof) = update_account(
@@ -133,13 +131,13 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: AccountId::from(USDT_TOKEN),
-        user: AccountId::from([0x1; 32]),
+        token: Scalar{bytes: USDT_TOKEN},
+        user: 1_u128.into(),
     };
     let op_pub_fake = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: AccountId::from(USDT_TOKEN),
-        user: AccountId::from([0x2; 32]),
+        token: Scalar{bytes: USDT_TOKEN},
+        user: 2_u128.into(),
     };
 
     let (h_new_note, proof) = update_account(

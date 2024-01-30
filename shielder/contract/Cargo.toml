@@ -19,6 +19,7 @@ path = "lib.rs"
 default = ["std"]
 std = [
     "ink/std",
+    "ink/ink-debug",
 ]
 ink-as-dependency = []
 e2e-tests = []

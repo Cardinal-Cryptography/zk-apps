@@ -46,6 +46,10 @@ impl MerkleTree {
         Ok(self.nodes[1])
     }
 
+    pub fn root(&self) -> Scalar {
+        self.nodes[1]
+    }
+
     pub fn gen_proof(&self, leaf_id: usize) -> Result<[Scalar; DEPTH], ShielderError> {
         let mut res = [Scalar { bytes: [0x0; 32] }; DEPTH];
         if self.next_leaf_idx == self.size {

@@ -1,12 +1,10 @@
-use ink::primitives::AccountId;
-
-use crate::{contract::OpPub, errors::ShielderError};
+use crate::{contract::OpPub, errors::ShielderError, types::Scalar};
 
 /// empty private operation
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct OpPriv {
-    pub user: AccountId,
+    pub user: Scalar,
 }
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]

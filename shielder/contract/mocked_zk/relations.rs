@@ -15,7 +15,7 @@ use crate::{
 /// you can imagine ZkProof object as someone's "knowledge"
 /// functions starting with verify_ are mocks of relation
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct ZkProof {
     id: Scalar,
     trapdoor_new: Scalar,
@@ -50,7 +50,7 @@ impl ZkProof {
             nullifier_new: nullifier,
             acc_new: acc,
             trapdoor_old: 0_u128.into(),
-            acc_old: Account::new(),
+            acc_old: acc,
             op_priv,
             merkle_proof: [0_u128.into(); DEPTH],
             merkle_proof_leaf_id: 0,
@@ -115,8 +115,7 @@ impl ZkProof {
     }
 
     pub fn verify_creation(&self, h_note_new: Scalar) -> Result<(), ShielderError> {
-        let acc_new = Account::new();
-        let h_acc_new = acc_new.hash();
+        let h_acc_new = self.acc_new.hash();
         let note_new = Note::new(self.id, self.trapdoor_new, self.nullifier_new, h_acc_new);
         verify_hash(note_new, h_note_new)?;
         Ok(())
