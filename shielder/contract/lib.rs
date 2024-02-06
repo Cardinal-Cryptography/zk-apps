@@ -2,7 +2,6 @@
 //! https://docs.alephzero.org/aleph-zero/shielder/introduction-informal
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-// #![deny(missing_docs)]
 
 #[cfg(test)]
 mod drink_tests;
