@@ -12,13 +12,13 @@ use crate::{
     types::Scalar,
 };
 
-const MOCKED_TOKEN: [u8; 32] = [228 as u8; 32];
+const MOCKED_TOKEN: Scalar = Scalar {
+    bytes: [228 as u8; 32],
+};
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
-    tokens[0] = Scalar {
-        bytes: MOCKED_TOKEN,
-    };
+    tokens[0] = MOCKED_TOKEN;
 
     let acc_new = Account::new(tokens);
     let note = Note::new(id, trapdoor, nullifier, acc_new.hash());
@@ -103,9 +103,7 @@ fn test_update_note() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: Scalar {
-            bytes: MOCKED_TOKEN,
-        },
+        token: MOCKED_TOKEN,
         user: 1_u128.into(),
     };
 
@@ -142,16 +140,12 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: Scalar {
-            bytes: MOCKED_TOKEN,
-        },
+        token: MOCKED_TOKEN,
         user: 1_u128.into(),
     };
     let op_pub_fake = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: Scalar {
-            bytes: MOCKED_TOKEN,
-        },
+        token: MOCKED_TOKEN,
         user: 2_u128.into(),
     };
 
