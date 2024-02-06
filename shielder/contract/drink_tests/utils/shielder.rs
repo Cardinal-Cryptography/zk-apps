@@ -5,29 +5,23 @@ use drink::{
 };
 
 use crate::{
-    contract::OpPub,
-    drink_tests::BundleProvider,
+    drink_tests::{BundleProvider, UpdateOperation},
     mocked_zk::{
         account::Account,
+        merkle::MerkleTree,
         note::Note,
         ops::{OpPriv, Operation},
         relations::ZkProof,
-        tests::merkle::MerkleTree,
         traits::Hashable,
+        TOKENS_NUMBER,
     },
     types::Scalar,
 };
-
 pub struct ShielderUserEnv {
     pub id: Scalar,
     pub proof: ZkProof,
     pub nullifier: Scalar,
     pub tree_leaf_id: u32,
-}
-
-pub struct UpdateOperation {
-    pub op_pub: OpPub,
-    pub op_priv: OpPriv,
 }
 
 pub fn deploy_shielder(
@@ -45,13 +39,22 @@ pub fn deploy_shielder(
 
 pub fn create_shielder_account(
     session: &mut Session<MinimalRuntime>,
-    shielder_address: AccountId32,
-    token: AccountId32,
+    shielder_address: &AccountId32,
+    token: &AccountId32,
     merkle_tree: &mut MerkleTree,
 ) -> Result<ShielderUserEnv, Box<dyn std::error::Error>> {
-    let acc = Account::new(Scalar {
-        bytes: *(token.as_ref()),
-    });
+    let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
+    tokens[0] = Scalar {
+        bytes: *((*token).as_ref()),
+    };
+
+    let acc = Account::new(
+        Scalar {
+            bytes: *((*token).as_ref()),
+        },
+        tokens,
+    );
+
     let id = 0_128.into();
     let nullifier = 0_u128.into();
     let trapdoor = 0_u128.into();
@@ -87,7 +90,7 @@ pub fn create_shielder_account(
 
 pub fn shielder_update(
     session: &mut Session<MinimalRuntime>,
-    shielder_address: AccountId32,
+    shielder_address: &AccountId32,
     upd_op: UpdateOperation,
     user_shielded_data: ShielderUserEnv,
     merkle_tree: &mut MerkleTree,

@@ -30,13 +30,13 @@ pub fn deploy_test_token(
 
 pub fn get_psp22_balance(
     session: &mut Session<MinimalRuntime>,
-    token: AccountId32,
-    address: AccountId32,
+    token: &AccountId32,
+    address: &AccountId32,
 ) -> Result<u128, Box<dyn std::error::Error>> {
     let res: u128 = session.call_with_address(
         token.clone(),
         "PSP22::balance_of",
-        &[&*address.to_string()],
+        &[&*(*address).to_string()],
         NO_ENDOWMENT,
     )??;
     Ok(res)
@@ -44,14 +44,14 @@ pub fn get_psp22_balance(
 
 pub fn get_psp22_allowance(
     session: &mut Session<MinimalRuntime>,
-    token: AccountId32,
-    from: AccountId32,
-    to: AccountId32,
+    token: &AccountId32,
+    from: &AccountId32,
+    to: &AccountId32,
 ) -> Result<u128, Box<dyn std::error::Error>> {
     let res: u128 = session.call_with_address(
         token.clone(),
         "PSP22::allowance",
-        &[&*from.to_string(), &*to.to_string()],
+        &[&*(*from).to_string(), &*(*to).to_string()],
         NO_ENDOWMENT,
     )??;
     Ok(res)
@@ -59,8 +59,8 @@ pub fn get_psp22_allowance(
 
 pub fn psp22_approve(
     session: &mut Session<MinimalRuntime>,
-    token: AccountId32,
-    to: AccountId32,
+    token: &AccountId32,
+    to: &AccountId32,
     amount: u128,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let formatted_amount: String = format!("{}", amount);

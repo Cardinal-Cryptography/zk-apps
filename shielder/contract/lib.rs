@@ -4,13 +4,13 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 // #![deny(missing_docs)]
 
+#[cfg(test)]
+mod drink_tests;
 mod errors;
 mod merkle;
 pub mod mocked_zk;
 mod traits;
 mod types;
-#[cfg(test)]
-mod drink_tests;
 
 /// Contract module
 #[ink::contract]

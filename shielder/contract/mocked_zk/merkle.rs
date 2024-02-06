@@ -1,6 +1,6 @@
-use ink::env::hash::{CryptoHash, Sha2x256};
-
 use crate::{errors::ShielderError, types::Scalar};
+use ink::env::hash::{CryptoHash, Sha2x256};
+use std::num::Wrapping;
 
 /// depth of the tree
 pub const DEPTH: usize = 10;
@@ -31,18 +31,18 @@ impl MerkleTree {
         if self.next_leaf_idx == self.size {
             return Err(ShielderError::MerkleTreeLimitExceeded);
         }
-        let mut id = self.next_leaf_idx + self.size;
+        let mut id = (Wrapping(self.next_leaf_idx) + Wrapping(self.size)).0;
         self.nodes[id] = leaf_value;
 
         id /= 2;
         while id > 0 {
-            let left_n = self.nodes[id * 2];
-            let right_n = self.nodes[id * 2 + 1];
+            let left_n = self.nodes[(Wrapping(id) * Wrapping(2)).0];
+            let right_n = self.nodes[(Wrapping(id) * Wrapping(2) + Wrapping(1)).0];
             let hash = compute_hash(left_n, right_n);
             self.nodes[id] = hash;
             id /= 2;
         }
-        self.next_leaf_idx += 1;
+        self.next_leaf_idx = (Wrapping(self.next_leaf_idx) + Wrapping(1)).0;
         Ok(self.nodes[1])
     }
 
@@ -55,9 +55,9 @@ impl MerkleTree {
         if self.next_leaf_idx == self.size {
             return Err(ShielderError::MerkleTreeProofGenFail);
         }
-        let mut id = leaf_id + self.size;
-        for i in 0..DEPTH {
-            res[i] = self.nodes[id ^ 1];
+        let mut id = (Wrapping(leaf_id) + Wrapping(self.size)).0;
+        for node in res.iter_mut().take(DEPTH) {
+            *node = self.nodes[id ^ 1];
             id /= 2;
         }
         Ok(res)
