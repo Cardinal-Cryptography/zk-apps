@@ -20,7 +20,7 @@ fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (
         bytes: MOCKED_TOKEN,
     };
 
-    let acc_new = Account::new(Scalar { bytes: [0x0; 32] }, tokens);
+    let acc_new = Account::new(tokens);
     let note = Note::new(id, trapdoor, nullifier, acc_new.hash());
     let proof = ZkProof::new(
         id,

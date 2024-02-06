@@ -48,12 +48,7 @@ pub fn create_shielder_account(
         bytes: *((*token).as_ref()),
     };
 
-    let acc = Account::new(
-        Scalar {
-            bytes: *((*token).as_ref()),
-        },
-        tokens,
-    );
+    let acc = Account::new(tokens);
 
     let id = 0_128.into();
     let nullifier = 0_u128.into();
