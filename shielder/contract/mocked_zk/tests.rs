@@ -8,12 +8,9 @@ use super::{
 use crate::{
     contract::OpPub,
     errors::ShielderError,
-    mocked_zk::{merkle::MerkleTree, TOKENS_NUMBER},
+    mocked_zk::{MOCKED_TOKEN, TOKENS_NUMBER},
+    test_utils::merkle::MerkleTree,
     types::Scalar,
-};
-
-const MOCKED_TOKEN: Scalar = Scalar {
-    bytes: [228 as u8; 32],
 };
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {

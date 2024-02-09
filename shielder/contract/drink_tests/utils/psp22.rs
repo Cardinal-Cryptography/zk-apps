@@ -36,7 +36,7 @@ pub fn get_psp22_balance(
     let res: u128 = session.call_with_address(
         token.clone(),
         "PSP22::balance_of",
-        &[&*(*address).to_string()],
+        &[&address.to_string()],
         NO_ENDOWMENT,
     )??;
     Ok(res)
@@ -51,7 +51,7 @@ pub fn get_psp22_allowance(
     let res: u128 = session.call_with_address(
         token.clone(),
         "PSP22::allowance",
-        &[&*(*from).to_string(), &*(*to).to_string()],
+        &[&from.to_string(), &to.to_string()],
         NO_ENDOWMENT,
     )??;
     Ok(res)

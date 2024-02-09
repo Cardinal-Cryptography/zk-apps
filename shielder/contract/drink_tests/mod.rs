@@ -4,7 +4,7 @@ use drink::{session::Session, AccountId32};
 
 use crate::{
     drink_tests::utils::{chain::*, ops::*, psp22::*, shielder::*},
-    mocked_zk::merkle::MerkleTree,
+    test_utils::merkle::MerkleTree,
 };
 
 #[drink::contract_bundle_provider]

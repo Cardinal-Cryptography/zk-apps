@@ -7,6 +7,7 @@ help: # Show help for each of the Makefile recipes.
 .PHONY: build-psp22
 build-psp22: ## Builds psp22 contracts.
 	@echo "Building psp22 contract" ; \
+	git submodule update --init ; \
 	cargo contract build --quiet --manifest-path PSP22/Cargo.toml --features "contract" --release ; \
 
 .PHONY: build-shielder
@@ -17,10 +18,10 @@ build-shielder: ## Builds shielder contracts.
 .PHONY: setup-tests
 setup-tests: build-psp22 ## Builds contracts and generates wrappers.
 
-.PHONY: drink-tests
-drink-tests: ## Runs tests for drink contract.
+.PHONY: tests
+tests: ## Runs tests for contract.
 	@echo "Running drink tests" ; \
 	cargo test --quiet --manifest-path contract/Cargo.toml --release -- --nocapture ; \
 
 .PHONY:
-all: setup-tests drink-tests ## Runs all tests.
+all: setup-tests tests ## Runs all tests.

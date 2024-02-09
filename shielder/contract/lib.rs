@@ -8,6 +8,8 @@ mod drink_tests;
 mod errors;
 mod merkle;
 pub mod mocked_zk;
+#[cfg(test)]
+pub mod test_utils;
 mod traits;
 mod types;
 

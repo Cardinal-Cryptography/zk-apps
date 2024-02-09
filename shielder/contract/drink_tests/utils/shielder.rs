@@ -8,13 +8,13 @@ use crate::{
     drink_tests::{BundleProvider, UpdateOperation},
     mocked_zk::{
         account::Account,
-        merkle::MerkleTree,
         note::Note,
         ops::{OpPriv, Operation},
         relations::ZkProof,
         traits::Hashable,
         TOKENS_NUMBER,
     },
+    test_utils::merkle::MerkleTree,
     types::Scalar,
 };
 pub struct ShielderUserEnv {

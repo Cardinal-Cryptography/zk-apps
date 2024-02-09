@@ -1,6 +1,4 @@
 pub mod account;
-#[cfg(feature = "std")]
-pub mod merkle;
 pub mod note;
 pub mod ops;
 pub mod relations;
@@ -8,4 +6,9 @@ pub mod relations;
 mod tests;
 pub mod traits;
 
+use crate::types::Scalar;
+
 pub const TOKENS_NUMBER: usize = 10;
+pub const MOCKED_TOKEN: Scalar = Scalar {
+    bytes: [228_u8; 32],
+};
