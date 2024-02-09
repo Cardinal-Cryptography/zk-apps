@@ -52,16 +52,11 @@ pub fn create_shielder_account(
     let id = 0_128.into();
     let nullifier = 0_u128.into();
     let trapdoor = 0_u128.into();
+    let op_priv = OpPriv {
+        user: 0_u128.into(),
+    };
 
-    let proof = ZkProof::new(
-        id,
-        trapdoor,
-        nullifier,
-        OpPriv {
-            user: 0_u128.into(),
-        },
-        acc,
-    );
+    let proof = ZkProof::new(id, trapdoor, nullifier, op_priv, acc);
 
     let h_note_new = Note::new(id, trapdoor, nullifier, acc.hash()).hash();
 

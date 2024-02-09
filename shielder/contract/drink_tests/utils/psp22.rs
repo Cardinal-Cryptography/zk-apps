@@ -8,7 +8,7 @@ pub fn deploy_test_token(
     session: &mut Session<MinimalRuntime>,
     supply: u128,
 ) -> Result<AccountId32, Box<dyn std::error::Error>> {
-    let formatted_supply: String = format!("{}", supply);
+    let formatted_supply = format!("{}", supply);
 
     let psp22_bundle =
         ContractBundle::load(std::path::Path::new("../PSP22/target/ink/psp22.contract"))?;
@@ -33,7 +33,7 @@ pub fn get_psp22_balance(
     token: &AccountId32,
     address: &AccountId32,
 ) -> Result<u128, Box<dyn std::error::Error>> {
-    let res: u128 = session.call_with_address(
+    let res = session.call_with_address(
         token.clone(),
         "PSP22::balance_of",
         &[&address.to_string()],
@@ -48,7 +48,7 @@ pub fn get_psp22_allowance(
     from: &AccountId32,
     to: &AccountId32,
 ) -> Result<u128, Box<dyn std::error::Error>> {
-    let res: u128 = session.call_with_address(
+    let res = session.call_with_address(
         token.clone(),
         "PSP22::allowance",
         &[&from.to_string(), &to.to_string()],
@@ -63,7 +63,7 @@ pub fn psp22_approve(
     to: &AccountId32,
     amount: u128,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let formatted_amount: String = format!("{}", amount);
+    let formatted_amount = format!("{}", amount);
     session.call_with_address(
         token.clone(),
         "PSP22::approve",
