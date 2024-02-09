@@ -18,7 +18,6 @@ use crate::{
     types::Scalar,
 };
 pub struct ShielderUserEnv {
-    pub id: Scalar,
     pub proof: ZkProof,
     pub nullifier: Scalar,
     pub tree_leaf_id: u32,
@@ -76,7 +75,6 @@ pub fn create_shielder_account(
     merkle_tree.add_leaf(h_note_new).unwrap();
 
     Ok(ShielderUserEnv {
-        id,
         proof,
         nullifier,
         tree_leaf_id: 0,
@@ -100,29 +98,24 @@ pub fn shielder_update(
     let op_pub = upd_op.op_pub;
     let op_priv = upd_op.op_priv;
     let operation = Operation::combine(op_pub, op_priv).unwrap();
-    let acc_updated = user_shielded_data.proof.update_account(operation).unwrap();
-    let note = Note::new(
-        user_shielded_data.id,
-        trapdoor_new,
-        nullifier_new,
-        acc_updated.hash(),
-    );
-    let new_proof = user_shielded_data.proof.transition(
-        trapdoor_new,
-        nullifier_new,
-        acc_updated,
-        op_priv,
-        merkle_proof,
-        user_shielded_data.tree_leaf_id,
-    );
-    merkle_tree.add_leaf(note.hash()).unwrap();
+    let (note_hash, new_proof) = user_shielded_data
+        .proof
+        .update_account(
+            operation,
+            trapdoor_new,
+            nullifier_new,
+            merkle_proof,
+            user_shielded_data.tree_leaf_id,
+        )
+        .unwrap();
+    merkle_tree.add_leaf(note_hash).unwrap();
 
     session.call_with_address(
         shielder_address.clone(),
         "update_note",
         &[
             format!("{:?}", op_pub),
-            format!("{:?}", note.hash()),
+            format!("{:?}", note_hash),
             format!("{:?}", merkle_root),
             format!("{:?}", user_shielded_data.nullifier),
             format!("{:?}", new_proof),
@@ -131,7 +124,6 @@ pub fn shielder_update(
     )??;
 
     Ok(ShielderUserEnv {
-        id: user_shielded_data.id,
         proof: new_proof,
         nullifier: nullifier_new,
         tree_leaf_id: user_shielded_data.tree_leaf_id + 1,

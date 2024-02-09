@@ -114,8 +114,8 @@ fn deploy_single_deposit_multiple_withdraw(
         &mut merkle_tree,
     )?;
 
-    // SWITCH TO bob
     for withdrawer_addr in withdrawers {
+        // SWITCH TO withdrawer
         session = session.with_actor(withdrawer_addr.clone());
 
         // WITHDRAW

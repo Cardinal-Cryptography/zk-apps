@@ -32,7 +32,6 @@ fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (
 }
 
 fn update_account(
-    id: Scalar,
     nullifier: Scalar,
     trapdoor: Scalar,
     op_pub: OpPub,
@@ -44,17 +43,15 @@ fn update_account(
         user: 1_u128.into(),
     };
     let operation = Operation::combine(op_pub, op_priv).unwrap();
-    let acc_updated = proof.update_account(operation).unwrap();
-    let note = Note::new(id, trapdoor, nullifier, acc_updated.hash());
-    let new_proof = proof.transition(
-        trapdoor,
-        nullifier,
-        acc_updated,
-        op_priv,
-        merkle_proof,
-        merkle_proof_leaf_id,
-    );
-    (note.hash(), new_proof)
+    proof
+        .update_account(
+            operation,
+            trapdoor,
+            nullifier,
+            merkle_proof,
+            merkle_proof_leaf_id,
+        )
+        .unwrap()
 }
 
 #[test]
@@ -104,15 +101,8 @@ fn test_update_note() -> Result<(), ShielderError> {
         user: 1_u128.into(),
     };
 
-    let (h_new_note, proof) = update_account(
-        id,
-        nullifier_new,
-        trapdoor_new,
-        op_pub,
-        proof,
-        merkle_proof,
-        0,
-    );
+    let (h_new_note, proof) =
+        update_account(nullifier_new, trapdoor_new, op_pub, proof, merkle_proof, 0);
     proof.verify_update(op_pub, h_new_note, merkle_root, nullifier)?;
 
     Ok(())
@@ -146,15 +136,8 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
         user: 2_u128.into(),
     };
 
-    let (h_new_note, proof) = update_account(
-        id,
-        nullifier_new,
-        trapdoor_new,
-        op_pub,
-        proof,
-        merkle_proof,
-        0,
-    );
+    let (h_new_note, proof) =
+        update_account(nullifier_new, trapdoor_new, op_pub, proof, merkle_proof, 0);
 
     assert_eq!(
         ShielderError::ZkpVerificationFail,

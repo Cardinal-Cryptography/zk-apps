@@ -11,22 +11,23 @@ pub struct OpPriv {
 #[derive(Clone, Copy)]
 pub struct Operation {
     pub op_pub: OpPub,
+    pub op_priv: OpPriv,
 }
 
 impl Operation {
-    pub fn combine(op_pub: OpPub, _op_priv: OpPriv) -> Result<Self, ShielderError> {
+    pub fn combine(op_pub: OpPub, op_priv: OpPriv) -> Result<Self, ShielderError> {
         match op_pub {
             OpPub::Deposit { user, .. } => {
-                if user != _op_priv.user {
+                if user != op_priv.user {
                     return Err(ShielderError::ZkpVerificationFail);
                 }
             }
             OpPub::Withdraw { user, .. } => {
-                if user != _op_priv.user {
+                if user != op_priv.user {
                     return Err(ShielderError::ZkpVerificationFail);
                 }
             }
         }
-        Ok(Operation { op_pub })
+        Ok(Operation { op_pub, op_priv })
     }
 }

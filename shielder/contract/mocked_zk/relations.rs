@@ -57,7 +57,7 @@ impl ZkProof {
         }
     }
 
-    pub fn transition(
+    fn transition(
         &self,
         trapdoor: Scalar,
         nullifier: Scalar,
@@ -79,8 +79,25 @@ impl ZkProof {
         }
     }
 
-    pub fn update_account(&self, operation: Operation) -> Result<Account, ShielderError> {
-        self.acc_new.update(operation)
+    pub fn update_account(
+        &self,
+        operation: Operation,
+        trapdoor: Scalar,
+        nullifier: Scalar,
+        merkle_proof: [Scalar; DEPTH],
+        merkle_proof_leaf_id: u32,
+    ) -> Result<(Scalar, Self), ShielderError> {
+        let acc_updated = self.acc_new.update(operation)?;
+        let note = Note::new(self.id, trapdoor, nullifier, acc_updated.hash());
+        let new_proof = self.transition(
+            trapdoor,
+            nullifier,
+            acc_updated,
+            operation.op_priv,
+            merkle_proof,
+            merkle_proof_leaf_id,
+        );
+        Ok((note.hash(), new_proof))
     }
 
     pub fn verify_acccount_update(
