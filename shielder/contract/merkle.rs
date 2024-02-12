@@ -27,7 +27,7 @@ pub struct MerkleTree {
 pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
     let mut res = [0x0; 32];
     Sha2x256::hash([first.bytes, second.bytes].concat().as_slice(), &mut res);
-    Scalar { bytes: res }
+    Scalar::from_bytes(res)
 }
 
 impl Default for MerkleTree {

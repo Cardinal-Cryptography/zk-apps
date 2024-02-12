@@ -15,7 +15,7 @@ impl Hashable for Account {
         for i in 1..TOKENS_NUMBER {
             Sha2x256::hash(self.balances[i].1.bytes.as_slice(), &mut res);
         }
-        Scalar { bytes: res }
+        Scalar::from_bytes(res)
     }
 }
 

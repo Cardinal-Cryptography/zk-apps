@@ -37,6 +37,6 @@ impl Hashable for Note {
             .as_slice(),
             &mut res,
         );
-        Scalar { bytes: res }
+        Scalar::from_bytes(res)
     }
 }

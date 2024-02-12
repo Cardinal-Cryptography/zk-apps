@@ -15,17 +15,11 @@ pub fn deposit_op(
     UpdateOperation {
         op_pub: OpPub::Deposit {
             amount,
-            token: Scalar {
-                bytes: *((*psp22_address).as_ref()),
-            },
-            user: Scalar {
-                bytes: *((*user).as_ref()),
-            },
+            token: Scalar::from_bytes(*((*psp22_address).as_ref())),
+            user: Scalar::from_bytes(*((*user).as_ref())),
         },
         op_priv: OpPriv {
-            user: Scalar {
-                bytes: *((*user).as_ref()),
-            },
+            user: Scalar::from_bytes(*((*user).as_ref())),
         },
     }
 }
@@ -38,17 +32,11 @@ pub fn withdraw_op(
     UpdateOperation {
         op_pub: OpPub::Withdraw {
             amount,
-            token: Scalar {
-                bytes: *((*psp22_address).as_ref()),
-            },
-            user: Scalar {
-                bytes: *((*user).as_ref()),
-            },
+            token: Scalar::from_bytes(*((*psp22_address).as_ref())),
+            user: Scalar::from_bytes(*((*user).as_ref())),
         },
         op_priv: OpPriv {
-            user: Scalar {
-                bytes: *((*user).as_ref()),
-            },
+            user: Scalar::from_bytes(*((*user).as_ref())),
         },
     }
 }

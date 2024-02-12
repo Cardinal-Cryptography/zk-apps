@@ -9,6 +9,4 @@ pub mod traits;
 use crate::types::Scalar;
 
 pub const TOKENS_NUMBER: usize = 10;
-pub const MOCKED_TOKEN: Scalar = Scalar {
-    bytes: [228_u8; 32],
-};
+pub const MOCKED_TOKEN: Scalar = Scalar::from_bytes([228_u8; 32]);

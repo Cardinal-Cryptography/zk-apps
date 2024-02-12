@@ -15,13 +15,13 @@ pub struct MerkleTree {
 pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
     let mut res = [0x0; 32];
     Sha2x256::hash([first.bytes, second.bytes].concat().as_slice(), &mut res);
-    Scalar { bytes: res }
+    Scalar::from_bytes(res)
 }
 
 impl MerkleTree {
     pub fn new() -> Self {
         Self {
-            nodes: vec![Scalar { bytes: [0x0; 32] }; 1 << (DEPTH + 1)],
+            nodes: vec![Scalar::from_bytes([0x0; 32]); 1 << (DEPTH + 1)],
             next_leaf_idx: 0,
             size: (1 << DEPTH),
         }
@@ -51,7 +51,7 @@ impl MerkleTree {
     }
 
     pub fn gen_proof(&self, leaf_id: usize) -> Result<[Scalar; DEPTH], ShielderError> {
-        let mut res = [Scalar { bytes: [0x0; 32] }; DEPTH];
+        let mut res = [Scalar::from_bytes([0x0; 32]); DEPTH];
         if self.next_leaf_idx == self.size {
             return Err(ShielderError::MerkleTreeProofGenFail);
         }

@@ -43,9 +43,7 @@ pub fn create_shielder_account(
     merkle_tree: &mut MerkleTree,
 ) -> Result<ShielderUserEnv, Box<dyn std::error::Error>> {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
-    tokens[0] = Scalar {
-        bytes: *((*token).as_ref()),
-    };
+    tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
 
     let acc = Account::new(tokens);
 
