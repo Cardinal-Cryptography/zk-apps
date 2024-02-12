@@ -3994,6 +3994,7 @@ dependencies = [
 name = "shielder-contract"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "drink",
  "ink",
 ]

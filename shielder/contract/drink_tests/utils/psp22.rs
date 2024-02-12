@@ -3,11 +3,12 @@ use drink::{
     session::{Session, NO_ENDOWMENT, NO_SALT},
     AccountId32, ContractBundle,
 };
+use anyhow::Result;
 
 pub fn deploy_test_token(
     session: &mut Session<MinimalRuntime>,
     supply: u128,
-) -> Result<AccountId32, Box<dyn std::error::Error>> {
+) -> Result<AccountId32> {
     let formatted_supply = format!("{}", supply);
 
     let psp22_bundle =
@@ -32,7 +33,7 @@ pub fn get_psp22_balance(
     session: &mut Session<MinimalRuntime>,
     token: &AccountId32,
     address: &AccountId32,
-) -> Result<u128, Box<dyn std::error::Error>> {
+) -> Result<u128> {
     let res = session.call_with_address(
         token.clone(),
         "PSP22::balance_of",
@@ -47,7 +48,7 @@ pub fn get_psp22_allowance(
     token: &AccountId32,
     from: &AccountId32,
     to: &AccountId32,
-) -> Result<u128, Box<dyn std::error::Error>> {
+) -> Result<u128> {
     let res = session.call_with_address(
         token.clone(),
         "PSP22::allowance",
@@ -62,7 +63,7 @@ pub fn psp22_approve(
     token: &AccountId32,
     to: &AccountId32,
     amount: u128,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     let formatted_amount = format!("{}", amount);
     session.call_with_address(
         token.clone(),

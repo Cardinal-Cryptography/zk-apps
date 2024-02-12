@@ -17,6 +17,8 @@ use crate::{
     test_utils::merkle::MerkleTree,
     types::Scalar,
 };
+use anyhow::Result;
+
 pub struct ShielderUserEnv {
     pub proof: ZkProof,
     pub nullifier: Scalar,
@@ -25,7 +27,7 @@ pub struct ShielderUserEnv {
 
 pub fn deploy_shielder(
     session: &mut Session<MinimalRuntime>,
-) -> Result<AccountId32, Box<dyn std::error::Error>> {
+) -> Result<AccountId32> {
     let res = session.deploy_bundle(
         BundleProvider::local()?,
         "new",
@@ -41,7 +43,7 @@ pub fn create_shielder_account(
     shielder_address: &AccountId32,
     token: &AccountId32,
     merkle_tree: &mut MerkleTree,
-) -> Result<ShielderUserEnv, Box<dyn std::error::Error>> {
+) -> Result<ShielderUserEnv> {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
     tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
 
@@ -80,7 +82,7 @@ pub fn shielder_update(
     upd_op: UpdateOperation,
     user_shielded_data: ShielderUserEnv,
     merkle_tree: &mut MerkleTree,
-) -> Result<ShielderUserEnv, Box<dyn std::error::Error>> {
+) -> Result<ShielderUserEnv> {
     let merkle_root = merkle_tree.root();
     let merkle_proof = merkle_tree
         .gen_proof(user_shielded_data.tree_leaf_id as usize)

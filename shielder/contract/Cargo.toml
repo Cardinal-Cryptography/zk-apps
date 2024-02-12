@@ -7,6 +7,7 @@ repository = "https://github.com/Cardinal-Cryptography/zk-apps"
 edition = "2021"
 
 [dependencies]
+anyhow = { version = "1.0.79", default-features = false }
 ink = { version = "5.0.0-rc", default-features = false }
 
 [dev-dependencies]
