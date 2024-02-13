@@ -123,8 +123,7 @@ fn deploy_single_deposit_multiple_withdraw(mut session: Session) -> Result<()> {
             user_shielded_data,
             &mut merkle_tree,
         )?;
-        let psp22_balance =
-            get_psp22_balance(&mut session, &psp22_address, &withdrawer_addr)?;
+        let psp22_balance = get_psp22_balance(&mut session, &psp22_address, &withdrawer_addr)?;
         assert_eq!(psp22_balance, 1);
     }
     let shielder_psp22_balance =
