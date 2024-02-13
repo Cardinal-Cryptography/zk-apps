@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  rust-checks:
+  legacy-shielder-rust-checks:
     runs-on: [self-hosted, Linux, X64, large]
     steps:
       - name: Checkout source code
@@ -54,7 +54,7 @@ jobs:
       - name: Run tests  for `shielder/public_token`
         run: cd legacy-shielder/public_token/ && cargo test
 
-  build-contracts:
+  legacy-shielder-build-contracts:
     runs-on: [self-hosted, Linux, X64, large]
     env:
       DOCKER_IMAGE: "public.ecr.aws/p6e8q1z1/ink-dev:1.0.0"
@@ -86,3 +86,23 @@ jobs:
             --platform linux/amd64           \
             ${{ env.DOCKER_IMAGE }}         \
             cargo contract build --manifest-path legacy-shielder/contract/Cargo.toml
+
+  shielder-rust-checks:
+    runs-on: [self-hosted, Linux, X64, large]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly-2023-12-21
+
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Run checks for `shielder/contract`
+        run: cd shielder/ && make check-shielder
+
+      - name: Run tests  for `shielder/contract`
+        run: cd shielder/ && make tests

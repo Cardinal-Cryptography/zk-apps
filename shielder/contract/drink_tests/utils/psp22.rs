@@ -1,9 +1,9 @@
+use anyhow::Result;
 use drink::{
     runtime::MinimalRuntime,
     session::{Session, NO_ENDOWMENT, NO_SALT},
     AccountId32, ContractBundle,
 };
-use anyhow::Result;
 
 pub fn deploy_test_token(
     session: &mut Session<MinimalRuntime>,

@@ -1,20 +1,18 @@
 mod utils;
 
+use anyhow::Result;
 use drink::{session::Session, AccountId32};
 
 use crate::{
     drink_tests::utils::{chain::*, ops::*, psp22::*, shielder::*},
     test_utils::merkle::MerkleTree,
 };
-use anyhow::Result;
 
 #[drink::contract_bundle_provider]
 pub enum BundleProvider {}
 
 #[drink::test]
-fn deploy_single_deposit_single_withdraw(
-    mut session: Session,
-) -> Result<()> {
+fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
     let alice: AccountId32 = init_alice(&mut session)?;
     let bob: AccountId32 = init_bob(&mut session)?;
 
@@ -73,9 +71,7 @@ fn deploy_single_deposit_single_withdraw(
 }
 
 #[drink::test]
-fn deploy_single_deposit_multiple_withdraw(
-    mut session: Session,
-) -> Result<()> {
+fn deploy_single_deposit_multiple_withdraw(mut session: Session) -> Result<()> {
     let alice: AccountId32 = init_alice(&mut session)?;
     session = session.with_actor(alice.clone());
 

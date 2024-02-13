@@ -1,3 +1,4 @@
+use anyhow::Result;
 use drink::{
     runtime::MinimalRuntime,
     session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
@@ -17,7 +18,6 @@ use crate::{
     test_utils::merkle::MerkleTree,
     types::Scalar,
 };
-use anyhow::Result;
 
 pub struct ShielderUserEnv {
     pub proof: ZkProof,
@@ -25,9 +25,7 @@ pub struct ShielderUserEnv {
     pub tree_leaf_id: u32,
 }
 
-pub fn deploy_shielder(
-    session: &mut Session<MinimalRuntime>,
-) -> Result<AccountId32> {
+pub fn deploy_shielder(session: &mut Session<MinimalRuntime>) -> Result<AccountId32> {
     let res = session.deploy_bundle(
         BundleProvider::local()?,
         "new",
