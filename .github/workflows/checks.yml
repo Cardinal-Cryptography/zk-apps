@@ -87,7 +87,7 @@ jobs:
             ${{ env.DOCKER_IMAGE }}         \
             cargo contract build --manifest-path legacy-shielder/contract/Cargo.toml
 
-  shielder-rust-checks:
+  shielder-checks:
     runs-on: [self-hosted, Linux, X64, large]
     steps:
       - name: Checkout source code
@@ -106,6 +106,9 @@ jobs:
 
       - name: Run checks for `shielder/contract`
         run: cd shielder/ && make check-shielder
+
+      - name: Build shielder contract
+        run: cd shielder/ && make build-shielder
 
       - name: Run tests  for `shielder/contract`
         run: cd shielder/ && make tests
