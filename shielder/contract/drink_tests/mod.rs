@@ -13,8 +13,8 @@ pub enum BundleProvider {}
 
 #[drink::test]
 fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
-    let alice: AccountId32 = init_alice(&mut session)?;
-    let bob: AccountId32 = init_bob(&mut session)?;
+    let alice = init_alice(&mut session)?;
+    let bob = init_bob(&mut session)?;
 
     session = session.with_actor(alice.clone());
 
@@ -43,9 +43,9 @@ fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
         &mut merkle_tree,
     )?;
 
-    let alice_psp22_balance: u128 = get_psp22_balance(&mut session, &psp22_address, &alice)?;
+    let alice_psp22_balance = get_psp22_balance(&mut session, &psp22_address, &alice)?;
     assert_eq!(alice_psp22_balance, 90);
-    let shielder_psp22_balance: u128 =
+    let shielder_psp22_balance =
         get_psp22_balance(&mut session, &psp22_address, &shielder_address)?;
     assert_eq!(shielder_psp22_balance, 10);
 
@@ -61,9 +61,9 @@ fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
         &mut merkle_tree,
     )?;
 
-    let bob_psp22_balance: u128 = get_psp22_balance(&mut session, &psp22_address, &bob)?;
+    let bob_psp22_balance = get_psp22_balance(&mut session, &psp22_address, &bob)?;
     assert_eq!(bob_psp22_balance, 1);
-    let shielder_psp22_balance: u128 =
+    let shielder_psp22_balance =
         get_psp22_balance(&mut session, &psp22_address, &shielder_address)?;
     assert_eq!(shielder_psp22_balance, 9);
 
@@ -72,10 +72,10 @@ fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
 
 #[drink::test]
 fn deploy_single_deposit_multiple_withdraw(mut session: Session) -> Result<()> {
-    let alice: AccountId32 = init_alice(&mut session)?;
+    let alice = init_alice(&mut session)?;
     session = session.with_actor(alice.clone());
 
-    let mut withdrawers: Vec<AccountId32> = vec![];
+    let mut withdrawers = vec![];
     for i in 3..11 {
         let acc = AccountId32::new([i as u8; 32]);
         init_acc_with_balance(&mut session, &acc)?;
@@ -98,7 +98,7 @@ fn deploy_single_deposit_multiple_withdraw(mut session: Session) -> Result<()> {
     // APPROVE TRANSFER
     psp22_approve(&mut session, &psp22_address, &shielder_address, 50)?;
 
-    let alice_shielder_allowance: u128 =
+    let alice_shielder_allowance =
         get_psp22_allowance(&mut session, &psp22_address, &alice, &shielder_address)?;
     assert_eq!(alice_shielder_allowance, 50);
 
@@ -123,11 +123,11 @@ fn deploy_single_deposit_multiple_withdraw(mut session: Session) -> Result<()> {
             user_shielded_data,
             &mut merkle_tree,
         )?;
-        let psp22_balance: u128 =
+        let psp22_balance =
             get_psp22_balance(&mut session, &psp22_address, &withdrawer_addr)?;
         assert_eq!(psp22_balance, 1);
     }
-    let shielder_psp22_balance: u128 =
+    let shielder_psp22_balance =
         get_psp22_balance(&mut session, &psp22_address, &shielder_address)?;
     assert_eq!(shielder_psp22_balance, 42);
 
