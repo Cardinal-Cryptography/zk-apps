@@ -15,7 +15,7 @@ build-psp22: ## Builds psp22 contracts.
 	@echo "Building psp22 contract" ; \
 	git submodule update --init ; \
 	# TODO: curve25519-dalek-4.1.2 does not compile on x86-64 because of unstable rust https://github.com/jdx/mise/issues/1630
-	cargo update --manifest-path PSP22/Cargo.toml -p curve25519-dalek --precise 4.1.1; \
+	# cargo update --manifest-path PSP22/Cargo.toml -p curve25519-dalek --precise 4.1.1; \
 	cargo contract build --quiet --manifest-path PSP22/Cargo.toml --features "contract" --release ; \
 
 .PHONY: build-shielder
@@ -32,4 +32,4 @@ tests: setup-tests ## Runs tests for contract.
 	cargo test --quiet --manifest-path contract/Cargo.toml --release -- --nocapture ; \
 
 .PHONY:
-all: check-shielder tests ## Runs all tests.
+all: check-shielder tests build-shielder ## Runs all tests.

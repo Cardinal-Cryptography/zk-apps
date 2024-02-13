@@ -96,13 +96,13 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly-2023-12-21
+            toolchain: 1.76.0
 
       - name: Install WASM target
         run: rustup target add wasm32-unknown-unknown
 
       - name: Install cargo-contract
-        run: cargo install cargo-contract --version 4.0.0-rc.1
+        run: cargo install cargo-contract --version 4.0.0-rc.2
 
       - name: Run checks for `shielder/contract`
         run: cd shielder/ && make check-shielder
