@@ -6,7 +6,7 @@ pub mod proof;
 pub mod relations;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 /// Represents the available tokens.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

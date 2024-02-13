@@ -1,14 +1,18 @@
 use halo2_base::{utils::BigPrimeField, AssignedValue, Context};
 
-use crate::operation::{CircuitOperation, Operation};
+use crate::{
+    operation::{CircuitOperation, Operation},
+    Token,
+};
 
 #[derive(Clone, Copy, Debug)]
-pub enum DummyOperation<Amount, TokenId, AccountId>
+pub enum DummyOperation<Amount, AccountId>
 where
     Amount: BigPrimeField,
     AccountId: From<[u8; 32]>,
 {
-    Deposit(Amount, TokenId, AccountId),
+    Deposit(Amount, Token, AccountId),
+    Withdraw(Amount, Token, AccountId),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -17,25 +21,43 @@ where
     F: BigPrimeField,
 {
     Deposit(AssignedValue<F>, AssignedValue<F>, AssignedValue<F>),
+    Withdraw(AssignedValue<F>, AssignedValue<F>, AssignedValue<F>),
 }
 
-impl<Amount, TokenId, AccountId> DummyOperation<Amount, TokenId, AccountId>
+impl<Amount, AccountId> DummyOperation<Amount, AccountId>
 where
     Amount: BigPrimeField,
     AccountId: From<[u8; 32]>,
 {
     pub fn load(&self, ctx: &mut Context<Amount>) -> DummyCircuitOperation<Amount> {
         match self {
-            DummyOperation::Deposit(amount, _token, _account) => DummyCircuitOperation::Deposit(
-                ctx.load_witness(*amount),
-                ctx.load_zero(),
-                ctx.load_zero(),
-            ),
+            DummyOperation::Deposit(amount, token, _account) => {
+                let token = match token {
+                    Token::AZERO => Amount::from_u128(0u128),
+                    Token::USDT => Amount::from_u128(1u128),
+                };
+                DummyCircuitOperation::Deposit(
+                    ctx.load_witness(*amount),
+                    ctx.load_witness(token),
+                    ctx.load_zero(),
+                )
+            }
+            DummyOperation::Withdraw(amount, token, _account) => {
+                let token = match token {
+                    Token::AZERO => Amount::from_u128(0u128),
+                    Token::USDT => Amount::from_u128(1u128),
+                };
+                DummyCircuitOperation::Withdraw(
+                    ctx.load_witness(*amount),
+                    ctx.load_witness(token),
+                    ctx.load_zero(),
+                )
+            }
         }
     }
 }
 
-impl<Amount, TokenId, AccountId> Operation<Amount> for DummyOperation<Amount, TokenId, AccountId>
+impl<Amount, AccountId> Operation<Amount> for DummyOperation<Amount, AccountId>
 where
     Amount: BigPrimeField,
     AccountId: From<[u8; 32]>,
@@ -48,13 +70,14 @@ where
     }
 }
 
-impl<Amount> Into<Vec<AssignedValue<Amount>>> for DummyCircuitOperation<Amount>
+impl<Amount> From<DummyCircuitOperation<Amount>> for Vec<AssignedValue<Amount>>
 where
     Amount: BigPrimeField,
 {
-    fn into(self) -> Vec<AssignedValue<Amount>> {
-        match self {
-            DummyCircuitOperation::Deposit(amount, _token, _account) => vec![amount],
+    fn from(op: DummyCircuitOperation<Amount>) -> Vec<AssignedValue<Amount>> {
+        match op {
+            DummyCircuitOperation::Deposit(amount, token, _account) => vec![amount, token],
+            DummyCircuitOperation::Withdraw(amount, token, _account) => vec![amount, token],
         }
     }
 }

@@ -15,7 +15,7 @@ use crate::{
     proof::CircuitMerkleProof,
 };
 
-pub struct UpdateNoteInput<F, A>
+pub struct UpdateNoteInput<F, A, const MAX_PATH_LEN: usize>
 where
     F: BigPrimeField,
     A: CircuitAccount<F>,
@@ -32,18 +32,20 @@ where
     pub new_trapdoor: AssignedValue<F>,
     pub old_trapdoor: AssignedValue<F>,
     pub new_nullifier: AssignedValue<F>,
-    pub merkle_proof: CircuitMerkleProof<F>,
+    pub merkle_proof: CircuitMerkleProof<F, MAX_PATH_LEN>,
     pub op_priv: <A::Op as CircuitOperation<F>>::OpPriv,
     pub id: AssignedValue<F>,
+
     pub old_account: A,
 }
 
-impl<F, A> UpdateNoteInput<F, A>
+//helper functions
+#[allow(clippy::too_many_arguments)]
+impl<F, A, const MAX_PATH_LEN: usize> UpdateNoteInput<F, A, MAX_PATH_LEN>
 where
     F: BigPrimeField,
     A: CircuitAccount<F>,
 {
-    //helper functions
     pub fn new(
         op_pub: <A::Op as CircuitOperation<F>>::OpPub,
         new_note_hash: AssignedValue<F>,
@@ -54,7 +56,7 @@ where
         new_trapdoor: AssignedValue<F>,
         old_trapdoor: AssignedValue<F>,
         new_nullifier: AssignedValue<F>,
-        merkle_proof: CircuitMerkleProof<F>,
+        merkle_proof: CircuitMerkleProof<F, MAX_PATH_LEN>,
         op_priv: <A::Op as CircuitOperation<F>>::OpPriv,
         id: AssignedValue<F>,
         old_account: A,
@@ -77,28 +79,29 @@ where
     }
 }
 
-//    1. h_note_new = hash(note_new)
-//    2. note_new = Note { id, trapdoor_new, nullifier_new, h_acc_new }
-//    3. h_note_old = hash(note_old)
-//    4. note_old = Note { id, trapdoor_old, nullifier_old, h_acc_old }
-//    5. verify_merkle_proof(merkle_root, h_note_old, proof)
-//    6. op = combine(op_pub, op_priv)
-//    7. R_update_account(op, h_acc_old, h_acc_new)
+fn verify_note_circuit<F>(
+    ctx: &mut Context<F>,
+    gate: &GateChip<F>,
+    poseidon: &mut PoseidonHasher<F, T, RATE>,
+    note: &CircuitNote<F>,
+    note_hash: AssignedValue<F>,
+) where
+    F: BigPrimeField,
+{
+    let inner_note_hash = poseidon.hash_note(ctx, gate, note);
+    let eq = gate.is_equal(ctx, note_hash, inner_note_hash);
+    gate.assert_is_const(ctx, &eq, &F::ONE);
+}
 
 #[allow(dead_code)]
-pub fn update_note_circuit<F, A>(
+pub fn update_note_circuit<F, A, const MAX_PATH_LEN: usize>(
     ctx: &mut Context<F>,
-    input: UpdateNoteInput<F, A>,
+    input: UpdateNoteInput<F, A, MAX_PATH_LEN>,
     make_public: &mut Vec<AssignedValue<F>>,
 ) where
     F: BigPrimeField,
     A: CircuitAccount<F>,
 {
-    //let op_pub = ctx.load_witness(input.op_pub().into());
-    //let outer_new_note_hash = ctx.load_witness(input.new_note_hash());
-    //let merkle_root = ctx.load_witness(input.merkle_root());
-    //let old_nullifier = ctx.load_witness(input.old_nullifier());
-
     let op_pub = input.op_pub;
 
     make_public.extend(op_pub.clone().into());
@@ -109,11 +112,8 @@ pub fn update_note_circuit<F, A>(
 
     make_public.extend([outer_new_note_hash, merkle_root, old_nullifier]);
 
-    //let new_trapdoor = ctx.load_witness(input.new_trapdoor());
-    //let new_nullifier = ctx.load_witness(input.new_nullifier());
-
-    let new_trapdoor = input.new_trapdoor;
-    let new_nullifier = input.new_nullifier;
+    let _new_trapdoor = input.new_trapdoor;
+    let _new_nullifier = input.new_nullifier;
 
     let gate = GateChip::<F>::default();
 
@@ -121,19 +121,28 @@ pub fn update_note_circuit<F, A>(
         PoseidonHasher::<F, T, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
     poseidon.initialize_consts(ctx, &gate);
 
-    let inner_new_note_hash = poseidon.hash_note(ctx, &gate, &input.new_note);
+    verify_note_circuit(
+        ctx,
+        &gate,
+        &mut poseidon,
+        &input.new_note,
+        outer_new_note_hash,
+    );
 
-    let eq = gate.is_equal(ctx, inner_new_note_hash, outer_new_note_hash);
-    gate.assert_is_const(ctx, &eq, &F::ONE);
+    let old_note_hash = poseidon.hash_note(ctx, &gate, &input.old_note);
 
-    let inner_old_note_hash = poseidon.hash_note(ctx, &gate, &input.old_note);
-
-    let eq = gate.is_equal(ctx, outer_new_note_hash, inner_old_note_hash);
-    gate.assert_is_const(ctx, &eq, &F::ONE);
+    let old_account_hash = poseidon.hash_account(ctx, &gate, &input.old_account);
+    let outer_old_note = CircuitNote {
+        id: input.id,
+        trapdoor: input.old_trapdoor,
+        nullifier: input.old_nullifier,
+        account_hash: old_account_hash,
+    };
+    verify_note_circuit(ctx, &gate, &mut poseidon, &outer_old_note, old_note_hash);
 
     let merkle_proof = input.merkle_proof;
 
-    merkle_proof.verify(ctx, &gate, &mut poseidon, merkle_root, inner_old_note_hash);
+    merkle_proof.verify(ctx, &gate, &mut poseidon, merkle_root, old_note_hash);
 
     let op_priv = input.op_priv;
 

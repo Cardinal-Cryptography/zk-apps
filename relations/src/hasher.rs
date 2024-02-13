@@ -1,29 +1,8 @@
 use halo2_base::{
     gates::GateChip, poseidon::hasher::PoseidonHasher, utils::BigPrimeField, AssignedValue, Context,
 };
-use poseidon::Poseidon;
 
-use crate::{
-    account::{Account, CircuitAccount},
-    note::{CircuitNote, Note},
-};
-
-pub trait OuterHasher<F: BigPrimeField> {
-    fn hash_account(&mut self, account: &impl Account<F>) -> F;
-    fn hash_note(&mut self, note: &Note<F>) -> F;
-}
-
-impl<F: BigPrimeField, const T: usize, const RATE: usize> OuterHasher<F> for Poseidon<F, T, RATE> {
-    fn hash_account(&mut self, account: &impl Account<F>) -> F {
-        self.update(&account.to_array());
-        self.squeeze()
-    }
-
-    fn hash_note(&mut self, note: &Note<F>) -> F {
-        self.update(&note.to_array());
-        self.squeeze()
-    }
-}
+use crate::{account::CircuitAccount, note::CircuitNote};
 
 pub trait InnerHasher<F: BigPrimeField> {
     fn hash_account(
@@ -62,5 +41,43 @@ impl<F: BigPrimeField, const T: usize, const RATE: usize> InnerHasher<F>
     ) -> AssignedValue<F> {
         let note_array = note.to_array();
         self.hash_fix_len_array(ctx, gate, &note_array)
+    }
+}
+
+// #[cfg(test)]
+pub mod tests {
+    use poseidon::Poseidon;
+
+    use super::*;
+    use crate::{
+        account::Account,
+        note::Note,
+        poseidon_consts::{R_F, R_P},
+    };
+
+    pub trait OuterHasher<F: BigPrimeField> {
+        fn hash_account(account: &impl Account<F>) -> F;
+        fn hash_note(note: &Note<F>) -> F;
+        fn hash_two_to_one(elements: &[F]) -> F;
+    }
+
+    impl<F: BigPrimeField, const T: usize, const RATE: usize> OuterHasher<F> for Poseidon<F, T, RATE> {
+        fn hash_account(account: &impl Account<F>) -> F {
+            let mut poseidon = Self::new(R_F, R_P);
+            poseidon.update(&account.to_array());
+            poseidon.squeeze()
+        }
+
+        fn hash_note(note: &Note<F>) -> F {
+            let mut poseidon = Self::new(R_F, R_P);
+            poseidon.update(&note.to_array());
+            poseidon.squeeze()
+        }
+
+        fn hash_two_to_one(elements: &[F]) -> F {
+            let mut poseidon = Self::new(R_F, R_P);
+            poseidon.update(elements);
+            poseidon.squeeze()
+        }
     }
 }

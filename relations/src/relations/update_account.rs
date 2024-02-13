@@ -50,6 +50,21 @@ where
     }
 }
 
+pub fn verify_account_circuit<F, A>(
+    ctx: &mut Context<F>,
+    gate: &GateChip<F>,
+    poseidon: &mut PoseidonHasher<F, T, RATE>,
+    account: &A,
+    account_hash: AssignedValue<F>,
+) where
+    F: BigPrimeField,
+    A: CircuitAccount<F>,
+{
+    let inner_account_hash = poseidon.hash_account(ctx, gate, account);
+    let eq = gate.is_equal(ctx, account_hash, inner_account_hash);
+    gate.assert_is_const(ctx, &eq, &F::ONE);
+}
+
 #[allow(dead_code)]
 pub fn update_account_circuit<F, A>(
     ctx: &mut Context<F>,
@@ -65,22 +80,13 @@ pub fn update_account_circuit<F, A>(
     make_public.extend([old_account_hash, new_account_hash]);
 
     let gate = GateChip::<F>::default();
-
     let mut poseidon =
         PoseidonHasher::<F, T, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
     poseidon.initialize_consts(ctx, &gate);
 
     let old_account = input.old_account;
-
-    let inner_old_account_hash = poseidon.hash_account(ctx, &gate, &old_account);
+    verify_account_circuit(ctx, &gate, &mut poseidon, &old_account, old_account_hash);
 
     let new_account = old_account.update(input.operation, ctx, &gate);
-
-    let inner_new_account_hash = poseidon.hash_account(ctx, &gate, &new_account);
-
-    let eq = gate.is_equal(ctx, old_account_hash, inner_old_account_hash);
-    gate.assert_is_const(ctx, &eq, &F::ONE);
-
-    let eq = gate.is_equal(ctx, new_account_hash, inner_new_account_hash);
-    gate.assert_is_const(ctx, &eq, &F::ONE);
+    verify_account_circuit(ctx, &gate, &mut poseidon, &new_account, new_account_hash);
 }
