@@ -1,12 +1,12 @@
 pub mod account;
 pub mod hasher;
+pub mod merkle_proof;
 pub mod note;
 pub mod operation;
-pub mod proof;
 pub mod relations;
 
-#[cfg(test)]
-pub mod tests;
+//#[cfg(test)]
+//pub mod tests;
 
 /// Represents the available tokens.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

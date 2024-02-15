@@ -9,10 +9,10 @@ use super::update_account::{update_account_circuit, UpdateAccountInput};
 use crate::{
     account::CircuitAccount,
     hasher::InnerHasher,
+    merkle_proof::CircuitMerkleProof,
     note::CircuitNote,
     operation::CircuitOperation,
     poseidon_consts::{RATE, R_F, R_P, T},
-    proof::CircuitMerkleProof,
 };
 
 pub struct UpdateNoteInput<F, A, const MAX_PATH_LEN: usize>
