@@ -1,12 +1,11 @@
 pub mod account;
-pub mod hasher;
 pub mod merkle_proof;
 pub mod note;
 pub mod operation;
 pub mod relations;
 
-//#[cfg(test)]
-//pub mod tests;
+#[cfg(test)]
+pub mod tests;
 
 /// Represents the available tokens.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -16,9 +15,9 @@ pub enum Token {
 }
 
 pub mod poseidon_consts {
-    /// The value of T, which represents a parameter used in the implementation of the Poseidon hash function.
+    /// The value of T_WIDTH, which represents a parameter used in the implementation of the Poseidon hash function.
     /// Has to be greater than 1 and equal to RATE + 1, due to the outer Poseidon implementation.
-    pub const T: usize = 5;
+    pub const T_WIDTH: usize = RATE + 1;
 
     /// The value of RATE, which represents the rate of the Poseidon hash function.
     pub const RATE: usize = 4;

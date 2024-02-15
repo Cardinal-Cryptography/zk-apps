@@ -8,11 +8,10 @@ use halo2_base::{
 use super::update_account::{update_account_circuit, UpdateAccountInput};
 use crate::{
     account::CircuitAccount,
-    hasher::InnerHasher,
     merkle_proof::CircuitMerkleProof,
     note::CircuitNote,
     operation::CircuitOperation,
-    poseidon_consts::{RATE, R_F, R_P, T},
+    poseidon_consts::{RATE, R_F, R_P, T_WIDTH},
 };
 
 pub struct UpdateNoteInput<F, A, const MAX_PATH_LEN: usize>
@@ -34,7 +33,7 @@ where
     pub new_nullifier: AssignedValue<F>,
     pub merkle_proof: CircuitMerkleProof<F, MAX_PATH_LEN>,
     pub op_priv: <A::Op as CircuitOperation<F>>::OpPriv,
-    pub id: AssignedValue<F>,
+    pub note_id: AssignedValue<F>,
 
     pub old_account: A,
 }
@@ -58,7 +57,7 @@ where
         new_nullifier: AssignedValue<F>,
         merkle_proof: CircuitMerkleProof<F, MAX_PATH_LEN>,
         op_priv: <A::Op as CircuitOperation<F>>::OpPriv,
-        id: AssignedValue<F>,
+        note_id: AssignedValue<F>,
         old_account: A,
     ) -> Self {
         Self {
@@ -73,7 +72,7 @@ where
             new_nullifier,
             merkle_proof,
             op_priv,
-            id,
+            note_id,
             old_account,
         }
     }
@@ -82,13 +81,13 @@ where
 fn verify_note_circuit<F>(
     ctx: &mut Context<F>,
     gate: &GateChip<F>,
-    poseidon: &mut PoseidonHasher<F, T, RATE>,
+    poseidon: &mut PoseidonHasher<F, T_WIDTH, RATE>,
     note: &CircuitNote<F>,
     note_hash: AssignedValue<F>,
 ) where
     F: BigPrimeField,
 {
-    let inner_note_hash = poseidon.hash_note(ctx, gate, note);
+    let inner_note_hash = poseidon.hash_fix_len_array(ctx, gate, &note.to_array());
     let eq = gate.is_equal(ctx, note_hash, inner_note_hash);
     gate.assert_is_const(ctx, &eq, &F::ONE);
 }
@@ -118,7 +117,7 @@ pub fn update_note_circuit<F, A, const MAX_PATH_LEN: usize>(
     let gate = GateChip::<F>::default();
 
     let mut poseidon =
-        PoseidonHasher::<F, T, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
+        PoseidonHasher::<F, T_WIDTH, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
     poseidon.initialize_consts(ctx, &gate);
 
     verify_note_circuit(
@@ -129,11 +128,10 @@ pub fn update_note_circuit<F, A, const MAX_PATH_LEN: usize>(
         outer_new_note_hash,
     );
 
-    let old_note_hash = poseidon.hash_note(ctx, &gate, &input.old_note);
-
-    let old_account_hash = poseidon.hash_account(ctx, &gate, &input.old_account);
+    let old_note_hash = poseidon.hash_fix_len_array(ctx, &gate, &input.old_note.to_array());
+    let old_account_hash = poseidon.hash_fix_len_array(ctx, &gate, &input.old_account.to_array());
     let outer_old_note = CircuitNote {
-        id: input.id,
+        note_id: input.note_id,
         trapdoor: input.old_trapdoor,
         nullifier: input.old_nullifier,
         account_hash: old_account_hash,

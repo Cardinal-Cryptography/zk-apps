@@ -12,8 +12,7 @@ use halo2_base::{
 
 use crate::{
     account::CircuitAccount,
-    hasher::InnerHasher,
-    poseidon_consts::{RATE, R_F, R_P, T},
+    poseidon_consts::{RATE, R_F, R_P, T_WIDTH},
 };
 
 pub struct UpdateAccountInput<F, A>
@@ -53,14 +52,14 @@ where
 pub fn verify_account_circuit<F, A>(
     ctx: &mut Context<F>,
     gate: &GateChip<F>,
-    poseidon: &mut PoseidonHasher<F, T, RATE>,
+    poseidon: &mut PoseidonHasher<F, T_WIDTH, RATE>,
     account: &A,
     account_hash: AssignedValue<F>,
 ) where
     F: BigPrimeField,
     A: CircuitAccount<F>,
 {
-    let inner_account_hash = poseidon.hash_account(ctx, gate, account);
+    let inner_account_hash = poseidon.hash_fix_len_array(ctx, gate, &account.to_array());
     let eq = gate.is_equal(ctx, account_hash, inner_account_hash);
     gate.assert_is_const(ctx, &eq, &F::ONE);
 }
@@ -81,7 +80,7 @@ pub fn update_account_circuit<F, A>(
 
     let gate = GateChip::<F>::default();
     let mut poseidon =
-        PoseidonHasher::<F, T, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
+        PoseidonHasher::<F, T_WIDTH, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
     poseidon.initialize_consts(ctx, &gate);
 
     let old_account = input.old_account;

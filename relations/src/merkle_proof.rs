@@ -5,38 +5,30 @@ use halo2_base::{
     AssignedValue, Context,
 };
 
-use crate::poseidon_consts::{RATE, T};
+use crate::poseidon_consts::{RATE, T_WIDTH};
 
 #[derive(Clone, Debug)]
 pub struct MerkleProof<F: BigPrimeField, const MAX_PATH_LEN: usize> {
-    pub path_shape: Vec<bool>,
-    pub path: Vec<F>,
+    pub path_shape: [bool; MAX_PATH_LEN],
+    pub path: [F; MAX_PATH_LEN],
 }
 
 #[derive(Clone, Debug)]
 pub struct CircuitMerkleProof<F: BigPrimeField, const MAX_PATH_LEN: usize> {
-    pub path_shape: Vec<AssignedValue<F>>,
-    pub path: Vec<AssignedValue<F>>,
+    pub path_shape: [AssignedValue<F>; MAX_PATH_LEN],
+    pub path: [AssignedValue<F>; MAX_PATH_LEN],
 }
 
 impl<F: BigPrimeField, const MAX_PATH_LEN: usize> MerkleProof<F, MAX_PATH_LEN> {
-    pub fn new(path_shape: Vec<bool>, path: Vec<F>) -> Self {
+    pub fn new(path_shape: [bool; MAX_PATH_LEN], path: [F; MAX_PATH_LEN]) -> Self {
         Self { path_shape, path }
     }
 
     pub fn load(&self, ctx: &mut Context<F>) -> CircuitMerkleProof<F, MAX_PATH_LEN> {
-        let mut path_shape = vec![];
-        let mut path = vec![];
-
-        for i in 0..MAX_PATH_LEN {
-            if i < self.path.len() {
-                path_shape.push(ctx.load_witness(F::from_u128(self.path_shape[i] as u128)));
-                path.push(ctx.load_witness(self.path[i]));
-            } else {
-                path_shape.push(ctx.load_constant(F::ONE));
-                path.push(ctx.load_zero());
-            }
-        }
+        let path_shape = self
+            .path_shape
+            .map(|x| ctx.load_witness(F::from_u128(x as u128)));
+        let path = self.path.map(|x| ctx.load_witness(x));
 
         CircuitMerkleProof { path_shape, path }
     }
@@ -47,15 +39,15 @@ impl<F: BigPrimeField, const MAX_PATH_LEN: usize> CircuitMerkleProof<F, MAX_PATH
         &self,
         ctx: &mut Context<F>,
         gate: &GateChip<F>,
-        poseidon: &mut PoseidonHasher<F, T, RATE>,
+        poseidon: &mut PoseidonHasher<F, T_WIDTH, RATE>,
         root: AssignedValue<F>,
         leaf: AssignedValue<F>,
     ) {
         let mut current_note = leaf;
 
         for i in 0..MAX_PATH_LEN {
-            let sibling = self.path[i as usize];
-            let shape = self.path_shape[i as usize];
+            let sibling = self.path[i];
+            let shape = self.path_shape[i];
 
             let selector = gate.is_zero(ctx, shape);
             let left = gate.select(ctx, sibling, current_note, selector);
@@ -80,15 +72,11 @@ pub mod tests {
             let mut current_note = leaf;
 
             for i in 0..MAX_PATH_LEN {
-                let sibling = if i < self.path.len() {
-                    self.path[i]
-                } else {
-                    F::ZERO
-                };
+                let sibling = self.path[i];
 
-                let mut poseidon: Poseidon<F, T, RATE> = Poseidon::new(R_F, R_P);
+                let mut poseidon: Poseidon<F, T_WIDTH, RATE> = Poseidon::new(R_F, R_P);
 
-                if i < self.path.len() && !self.path_shape[i] {
+                if !self.path_shape[i] {
                     poseidon.update(&[sibling, current_note]);
                 } else {
                     poseidon.update(&[current_note, sibling]);
