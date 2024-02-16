@@ -2,11 +2,14 @@
 //! https://docs.alephzero.org/aleph-zero/shielder/introduction-informal
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-#![deny(missing_docs)]
 
+#[cfg(test)]
+mod drink_tests;
 mod errors;
 mod merkle;
-mod mocked_zk;
+pub mod mocked_zk;
+#[cfg(test)]
+pub mod test_utils;
 mod traits;
 mod types;
 
@@ -24,25 +27,25 @@ pub mod contract {
 
     /// Enum
     #[ink::scale_derive(Encode, Decode, TypeInfo)]
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum OpPub {
         /// Deposit PSP-22 token
         Deposit {
             /// amount of deposit
             amount: u128,
             /// PSP-22 token address
-            token: AccountId,
+            token: Scalar,
             /// User address, from whom tokens are transferred
-            user: AccountId,
+            user: Scalar,
         },
         /// Withdraw PSP-22 token
         Withdraw {
             /// amount of withdrawal
             amount: u128,
             /// PSP-22 token address
-            token: AccountId,
+            token: Scalar,
             /// User address, from whom tokens are transferred
-            user: AccountId,
+            user: Scalar,
         },
     }
 
@@ -100,16 +103,21 @@ pub mod contract {
                     token,
                     user,
                 } => {
-                    let mut psp22: ink::contract_ref!(PSP22) = token.into();
-                    psp22.transfer_from(user, self.env().account_id(), amount, [].to_vec())?;
+                    let mut psp22: ink::contract_ref!(PSP22) = AccountId::from(token.bytes).into();
+                    psp22.transfer_from(
+                        AccountId::from(user.bytes),
+                        self.env().account_id(),
+                        amount,
+                        [].to_vec(),
+                    )?;
                 }
                 OpPub::Withdraw {
                     amount,
                     token,
                     user,
                 } => {
-                    let mut psp22: ink::contract_ref!(PSP22) = token.into();
-                    psp22.transfer(user, amount, [].to_vec())?;
+                    let mut psp22: ink::contract_ref!(PSP22) = AccountId::from(token.bytes).into();
+                    psp22.transfer(AccountId::from(user.bytes), amount, [].to_vec())?;
                 }
             };
             Ok(())
@@ -119,7 +127,7 @@ pub mod contract {
             self.nullifier_set
                 .insert(nullifier, &())
                 .map(|_| {})
-                .ok_or(ShielderError::NullifierIsInSet)
+                .map_or(Ok(()), |_| Err(ShielderError::NullifierIsInSet))
         }
     }
 }

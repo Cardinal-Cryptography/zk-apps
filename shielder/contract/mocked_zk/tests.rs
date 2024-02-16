@@ -1,8 +1,3 @@
-mod merkle;
-
-use ink::primitives::AccountId;
-
-use self::merkle::MerkleTree;
 use super::{
     account::Account,
     note::Note,
@@ -10,17 +5,26 @@ use super::{
     relations::ZkProof,
     traits::Hashable,
 };
-use crate::{contract::OpPub, errors::ShielderError, mocked_zk::USDT_TOKEN, types::Scalar};
+use crate::{
+    contract::OpPub,
+    errors::ShielderError,
+    mocked_zk::{mocked_user, MOCKED_TOKEN, TOKENS_NUMBER},
+    test_utils::merkle::MerkleTree,
+    types::Scalar,
+};
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
-    let acc_new = Account::new();
+    let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
+    tokens[0] = MOCKED_TOKEN;
+
+    let acc_new = Account::new(tokens);
     let note = Note::new(id, trapdoor, nullifier, acc_new.hash());
     let proof = ZkProof::new(
         id,
         trapdoor,
         nullifier,
         OpPriv {
-            user: AccountId::from([0x1; 32]),
+            user: mocked_user(),
         },
         acc_new,
     );
@@ -28,7 +32,6 @@ fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (
 }
 
 fn update_account(
-    id: Scalar,
     nullifier: Scalar,
     trapdoor: Scalar,
     op_pub: OpPub,
@@ -37,20 +40,18 @@ fn update_account(
     merkle_proof_leaf_id: u32,
 ) -> (Scalar, ZkProof) {
     let op_priv = OpPriv {
-        user: AccountId::from([0x1; 32]),
+        user: mocked_user(),
     };
     let operation = Operation::combine(op_pub, op_priv).unwrap();
-    let acc_updated = proof.update_account(operation).unwrap();
-    let note = Note::new(id, trapdoor, nullifier, acc_updated.hash());
-    let new_proof = proof.transition(
-        trapdoor,
-        nullifier,
-        acc_updated,
-        op_priv,
-        merkle_proof,
-        merkle_proof_leaf_id,
-    );
-    (note.hash(), new_proof)
+    proof
+        .update_account(
+            operation,
+            trapdoor,
+            nullifier,
+            merkle_proof,
+            merkle_proof_leaf_id,
+        )
+        .unwrap()
 }
 
 #[test]
@@ -96,19 +97,12 @@ fn test_update_note() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: AccountId::from(USDT_TOKEN),
-        user: AccountId::from([0x1; 32]),
+        token: MOCKED_TOKEN,
+        user: mocked_user(),
     };
 
-    let (h_new_note, proof) = update_account(
-        id,
-        nullifier_new,
-        trapdoor_new,
-        op_pub,
-        proof,
-        merkle_proof,
-        0,
-    );
+    let (h_new_note, proof) =
+        update_account(nullifier_new, trapdoor_new, op_pub, proof, merkle_proof, 0);
     proof.verify_update(op_pub, h_new_note, merkle_root, nullifier)?;
 
     Ok(())
@@ -133,24 +127,17 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
 
     let op_pub = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: AccountId::from(USDT_TOKEN),
-        user: AccountId::from([0x1; 32]),
+        token: MOCKED_TOKEN,
+        user: mocked_user(),
     };
     let op_pub_fake = crate::contract::OpPub::Deposit {
         amount: 10,
-        token: AccountId::from(USDT_TOKEN),
-        user: AccountId::from([0x2; 32]),
+        token: MOCKED_TOKEN,
+        user: 2_u128.into(),
     };
 
-    let (h_new_note, proof) = update_account(
-        id,
-        nullifier_new,
-        trapdoor_new,
-        op_pub,
-        proof,
-        merkle_proof,
-        0,
-    );
+    let (h_new_note, proof) =
+        update_account(nullifier_new, trapdoor_new, op_pub, proof, merkle_proof, 0);
 
     assert_eq!(
         ShielderError::ZkpVerificationFail,

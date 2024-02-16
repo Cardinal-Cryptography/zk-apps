@@ -15,7 +15,7 @@ use crate::{
 /// you can imagine ZkProof object as someone's "knowledge"
 /// functions starting with verify_ are mocks of relation
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct ZkProof {
     id: Scalar,
     trapdoor_new: Scalar,
@@ -50,14 +50,14 @@ impl ZkProof {
             nullifier_new: nullifier,
             acc_new: acc,
             trapdoor_old: 0_u128.into(),
-            acc_old: Account::new(),
+            acc_old: acc,
             op_priv,
             merkle_proof: [0_u128.into(); DEPTH],
             merkle_proof_leaf_id: 0,
         }
     }
 
-    pub fn transition(
+    fn transition(
         &self,
         trapdoor: Scalar,
         nullifier: Scalar,
@@ -79,8 +79,25 @@ impl ZkProof {
         }
     }
 
-    pub fn update_account(&self, operation: Operation) -> Result<Account, ShielderError> {
-        self.acc_new.update(operation)
+    pub fn update_account(
+        &self,
+        operation: Operation,
+        trapdoor: Scalar,
+        nullifier: Scalar,
+        merkle_proof: [Scalar; DEPTH],
+        merkle_proof_leaf_id: u32,
+    ) -> Result<(Scalar, Self), ShielderError> {
+        let acc_updated = self.acc_new.update(operation)?;
+        let note = Note::new(self.id, trapdoor, nullifier, acc_updated.hash());
+        let new_proof = self.transition(
+            trapdoor,
+            nullifier,
+            acc_updated,
+            operation.op_priv,
+            merkle_proof,
+            merkle_proof_leaf_id,
+        );
+        Ok((note.hash(), new_proof))
     }
 
     pub fn verify_acccount_update(
@@ -115,8 +132,7 @@ impl ZkProof {
     }
 
     pub fn verify_creation(&self, h_note_new: Scalar) -> Result<(), ShielderError> {
-        let acc_new = Account::new();
-        let h_acc_new = acc_new.hash();
+        let h_acc_new = self.acc_new.hash();
         let note_new = Note::new(self.id, self.trapdoor_new, self.nullifier_new, h_acc_new);
         verify_hash(note_new, h_note_new)?;
         Ok(())

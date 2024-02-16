@@ -1,9 +1,16 @@
-mod account;
-mod note;
-mod ops;
+pub mod account;
+pub mod note;
+pub mod ops;
 pub mod relations;
 #[cfg(test)]
 mod tests;
-mod traits;
+pub mod traits;
 
-const USDT_TOKEN: [u8; 32] = [0x2_u8; 32];
+use crate::types::Scalar;
+
+pub const TOKENS_NUMBER: usize = 10;
+pub const MOCKED_TOKEN: Scalar = Scalar::from_bytes([228_u8; 32]);
+
+pub fn mocked_user() -> Scalar {
+    1_u128.into()
+}
