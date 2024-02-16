@@ -18,10 +18,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
+        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v6
+        with:
+          targets: wasm32-unknown-unknown
 
       - name: Run format check for `shielder/cli`
         run: cd legacy-shielder/cli/ && cargo fmt --all --check
