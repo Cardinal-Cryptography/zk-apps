@@ -107,8 +107,5 @@ jobs:
       - name: Run checks for `shielder/contract`
         run: cd shielder/ && make check-shielder
 
-      - name: Build shielder contract
-        run: cd shielder/ && make build-shielder
-
       - name: Run tests  for `shielder/contract`
         run: cd shielder/ && make tests
