@@ -1,6 +1,5 @@
 use halo2_base::{utils::ScalarField, AssignedValue, Context};
 
-/// Represents a note in a shielder.
 #[derive(Clone, Copy, Debug)]
 pub struct Note<F: ScalarField> {
     pub note_id: F,
@@ -10,18 +9,6 @@ pub struct Note<F: ScalarField> {
 }
 
 impl<F: ScalarField> Note<F> {
-    /// Creates a new Note instance.
-    ///
-    /// # Arguments
-    ///
-    /// * `note_id` - The ID of the note.
-    /// * `trapdoor` - The trapdoor associated with the note.
-    /// * `nullifier` - The nullifier of the note.
-    /// * `account_hash` - The account hash associated with the note.
-    ///
-    /// # Returns
-    ///
-    /// A new Note instance.
     pub fn new(note_id: F, trapdoor: F, nullifier: F, account_hash: F) -> Self {
         Self {
             note_id,
@@ -31,11 +18,6 @@ impl<F: ScalarField> Note<F> {
         }
     }
 
-    /// Converts the Note instance to an array of elements from the field.
-    ///
-    /// # Returns
-    ///
-    /// An array containing the ID, trapdoor, nullifier, and account hash of the note.
     pub fn to_array(&self) -> [F; 4] {
         [
             self.note_id,
@@ -55,7 +37,6 @@ impl<F: ScalarField> Note<F> {
     }
 }
 
-/// Represents a note in a shielder's circuit.
 #[derive(Clone, Copy, Debug)]
 pub struct CircuitNote<F: ScalarField> {
     pub note_id: AssignedValue<F>,

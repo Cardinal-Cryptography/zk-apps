@@ -8,23 +8,23 @@ use halo2_base::{
 use crate::poseidon_consts::{RATE, T_WIDTH};
 
 #[derive(Clone, Debug)]
-pub struct MerkleProof<F: BigPrimeField, const MAX_PATH_LEN: usize> {
-    pub path_shape: [bool; MAX_PATH_LEN],
-    pub path: [F; MAX_PATH_LEN],
+pub struct MerkleProof<F: BigPrimeField, const TREE_HEIGHT: usize> {
+    pub path_shape: [bool; TREE_HEIGHT],
+    pub path: [F; TREE_HEIGHT],
 }
 
 #[derive(Clone, Debug)]
-pub struct CircuitMerkleProof<F: BigPrimeField, const MAX_PATH_LEN: usize> {
-    pub path_shape: [AssignedValue<F>; MAX_PATH_LEN],
-    pub path: [AssignedValue<F>; MAX_PATH_LEN],
+pub struct CircuitMerkleProof<F: BigPrimeField, const TREE_HEIGHT: usize> {
+    pub path_shape: [AssignedValue<F>; TREE_HEIGHT],
+    pub path: [AssignedValue<F>; TREE_HEIGHT],
 }
 
-impl<F: BigPrimeField, const MAX_PATH_LEN: usize> MerkleProof<F, MAX_PATH_LEN> {
-    pub fn new(path_shape: [bool; MAX_PATH_LEN], path: [F; MAX_PATH_LEN]) -> Self {
+impl<F: BigPrimeField, const TREE_HEIGHT: usize> MerkleProof<F, TREE_HEIGHT> {
+    pub fn new(path_shape: [bool; TREE_HEIGHT], path: [F; TREE_HEIGHT]) -> Self {
         Self { path_shape, path }
     }
 
-    pub fn load(&self, ctx: &mut Context<F>) -> CircuitMerkleProof<F, MAX_PATH_LEN> {
+    pub fn load(&self, ctx: &mut Context<F>) -> CircuitMerkleProof<F, TREE_HEIGHT> {
         let path_shape = self
             .path_shape
             .map(|x| ctx.load_witness(F::from_u128(x as u128)));
@@ -34,7 +34,7 @@ impl<F: BigPrimeField, const MAX_PATH_LEN: usize> MerkleProof<F, MAX_PATH_LEN> {
     }
 }
 
-impl<F: BigPrimeField, const MAX_PATH_LEN: usize> CircuitMerkleProof<F, MAX_PATH_LEN> {
+impl<F: BigPrimeField, const TREE_HEIGHT: usize> CircuitMerkleProof<F, TREE_HEIGHT> {
     pub fn verify(
         &self,
         ctx: &mut Context<F>,
@@ -43,19 +43,19 @@ impl<F: BigPrimeField, const MAX_PATH_LEN: usize> CircuitMerkleProof<F, MAX_PATH
         root: AssignedValue<F>,
         leaf: AssignedValue<F>,
     ) {
-        let mut current_note = leaf;
+        let mut current_node = leaf;
 
-        for i in 0..MAX_PATH_LEN {
+        for i in 0..TREE_HEIGHT {
             let sibling = self.path[i];
             let shape = self.path_shape[i];
 
             let selector = gate.is_zero(ctx, shape);
-            let left = gate.select(ctx, sibling, current_note, selector);
-            let right = gate.select(ctx, current_note, sibling, selector);
-            current_note = poseidon.hash_fix_len_array(ctx, gate, &[left, right]);
+            let left = gate.select(ctx, sibling, current_node, selector);
+            let right = gate.select(ctx, current_node, sibling, selector);
+            current_node = poseidon.hash_fix_len_array(ctx, gate, &[left, right]);
         }
 
-        let eq = gate.is_equal(ctx, current_note, root);
+        let eq = gate.is_equal(ctx, current_node, root);
         gate.assert_is_const(ctx, &eq, &F::ONE);
     }
 }
@@ -67,11 +67,11 @@ pub mod tests {
     use super::*;
     use crate::poseidon_consts::{R_F, R_P};
 
-    impl<F: BigPrimeField, const MAX_PATH_LEN: usize> MerkleProof<F, MAX_PATH_LEN> {
+    impl<F: BigPrimeField, const TREE_HEIGHT: usize> MerkleProof<F, TREE_HEIGHT> {
         pub fn verify(&self, root: F, leaf: F) -> bool {
             let mut current_note = leaf;
 
-            for i in 0..MAX_PATH_LEN {
+            for i in 0..TREE_HEIGHT {
                 let sibling = self.path[i];
 
                 let mut poseidon: Poseidon<F, T_WIDTH, RATE> = Poseidon::new(R_F, R_P);

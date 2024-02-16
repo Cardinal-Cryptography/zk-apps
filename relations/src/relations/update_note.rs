@@ -14,7 +14,7 @@ use crate::{
     poseidon_consts::{RATE, R_F, R_P, T_WIDTH},
 };
 
-pub struct UpdateNoteInput<F, A, const MAX_PATH_LEN: usize>
+pub struct UpdateNoteInput<F, A, const TREE_HEIGHT: usize>
 where
     F: BigPrimeField,
     A: CircuitAccount<F>,
@@ -31,7 +31,7 @@ where
     pub new_trapdoor: AssignedValue<F>,
     pub old_trapdoor: AssignedValue<F>,
     pub new_nullifier: AssignedValue<F>,
-    pub merkle_proof: CircuitMerkleProof<F, MAX_PATH_LEN>,
+    pub merkle_proof: CircuitMerkleProof<F, TREE_HEIGHT>,
     pub op_priv: <A::Op as CircuitOperation<F>>::OpPriv,
     pub note_id: AssignedValue<F>,
 
@@ -40,7 +40,7 @@ where
 
 //helper functions
 #[allow(clippy::too_many_arguments)]
-impl<F, A, const MAX_PATH_LEN: usize> UpdateNoteInput<F, A, MAX_PATH_LEN>
+impl<F, A, const TREE_HEIGHT: usize> UpdateNoteInput<F, A, TREE_HEIGHT>
 where
     F: BigPrimeField,
     A: CircuitAccount<F>,
@@ -55,7 +55,7 @@ where
         new_trapdoor: AssignedValue<F>,
         old_trapdoor: AssignedValue<F>,
         new_nullifier: AssignedValue<F>,
-        merkle_proof: CircuitMerkleProof<F, MAX_PATH_LEN>,
+        merkle_proof: CircuitMerkleProof<F, TREE_HEIGHT>,
         op_priv: <A::Op as CircuitOperation<F>>::OpPriv,
         note_id: AssignedValue<F>,
         old_account: A,
@@ -93,9 +93,9 @@ fn verify_note_circuit<F>(
 }
 
 #[allow(dead_code)]
-pub fn update_note_circuit<F, A, const MAX_PATH_LEN: usize>(
+pub fn update_note_circuit<F, A, const TREE_HEIGHT: usize>(
     ctx: &mut Context<F>,
-    input: UpdateNoteInput<F, A, MAX_PATH_LEN>,
+    input: UpdateNoteInput<F, A, TREE_HEIGHT>,
     make_public: &mut Vec<AssignedValue<F>>,
 ) where
     F: BigPrimeField,
