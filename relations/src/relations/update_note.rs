@@ -111,6 +111,7 @@ pub fn update_note_circuit<F, A, const TREE_HEIGHT: usize>(
 
     make_public.extend([outer_new_note_hash, merkle_root, old_nullifier]);
 
+    //TODO: Check how halo2 works with unused inputs
     let _new_trapdoor = input.new_trapdoor;
     let _new_nullifier = input.new_nullifier;
 
