@@ -9,6 +9,12 @@ pub struct Scalar {
     pub bytes: [u8; 32],
 }
 
+impl Scalar {
+    pub const fn from_bytes(bytes: [u8; 32]) -> Self {
+        Self { bytes }
+    }
+}
+
 impl From<u128> for Scalar {
     fn from(value: u128) -> Self {
         Self {
