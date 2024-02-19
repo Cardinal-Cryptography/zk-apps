@@ -1,5 +1,7 @@
 use halo2_base::{utils::ScalarField, AssignedValue, Context};
 
+use crate::CloneToVec;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Note<F: ScalarField> {
     pub zk_id: F,
@@ -18,10 +20,6 @@ impl<F: ScalarField> Note<F> {
         }
     }
 
-    pub fn to_array(&self) -> [F; 4] {
-        [self.zk_id, self.trapdoor, self.nullifier, self.account_hash]
-    }
-
     pub fn load(&self, ctx: &mut Context<F>) -> CircuitNote<F> {
         CircuitNote {
             zk_id: ctx.load_witness(self.zk_id),
@@ -29,6 +27,12 @@ impl<F: ScalarField> Note<F> {
             nullifier: ctx.load_witness(self.nullifier),
             account_hash: ctx.load_witness(self.account_hash),
         }
+    }
+}
+
+impl<F: ScalarField> CloneToVec<F> for Note<F> {
+    fn clone_to_vec(&self) -> Vec<F> {
+        vec![self.zk_id, self.trapdoor, self.nullifier, self.account_hash]
     }
 }
 
@@ -40,8 +44,8 @@ pub struct CircuitNote<F: ScalarField> {
     pub account_hash: AssignedValue<F>,
 }
 
-impl<F: ScalarField> CircuitNote<F> {
-    pub fn to_array(&self) -> [AssignedValue<F>; 4] {
-        [self.zk_id, self.trapdoor, self.nullifier, self.account_hash]
+impl<F: ScalarField> CloneToVec<AssignedValue<F>> for CircuitNote<F> {
+    fn clone_to_vec(&self) -> Vec<AssignedValue<F>> {
+        vec![self.zk_id, self.trapdoor, self.nullifier, self.account_hash]
     }
 }

@@ -12,6 +12,7 @@ use crate::{
     note::{CircuitNote, Note},
     operation::{CircuitOperation, Operation},
     poseidon_consts::{RATE, R_F, R_P, T_WIDTH},
+    CloneToVec,
 };
 
 type OpFor<A, F> = <<A as Account<F>>::CircuitAccount as CircuitAccount<F>>::Op;
@@ -96,7 +97,7 @@ fn verify_note_circuit<F>(
 ) where
     F: BigPrimeField,
 {
-    let inner_note_hash = poseidon.hash_fix_len_array(ctx, gate, &note.to_array());
+    let inner_note_hash = poseidon.hash_fix_len_array(ctx, gate, &note.clone_to_vec());
     let eq = gate.is_equal(ctx, note_hash, inner_note_hash);
     gate.assert_is_const(ctx, &eq, &F::ONE);
 }
@@ -127,7 +128,7 @@ pub fn update_note_circuit<F, A, const TREE_HEIGHT: usize>(
 
     verify_note_circuit(ctx, &gate, &mut poseidon, &input.new_note, new_note_hash);
 
-    let old_note_hash = poseidon.hash_fix_len_array(ctx, &gate, &input.old_note.to_array());
+    let old_note_hash = poseidon.hash_fix_len_array(ctx, &gate, &input.old_note.clone_to_vec());
 
     let merkle_proof = input.merkle_proof;
 

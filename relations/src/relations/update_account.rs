@@ -59,7 +59,7 @@ pub fn verify_account_circuit<F, A>(
     F: BigPrimeField,
     A: CircuitAccount<F>,
 {
-    let inner_account_hash = poseidon.hash_fix_len_array(ctx, gate, &account.to_array());
+    let inner_account_hash = poseidon.hash_fix_len_array(ctx, gate, &account.clone_to_vec());
     let eq = gate.is_equal(ctx, account_hash, inner_account_hash);
     gate.assert_is_const(ctx, &eq, &F::ONE);
 }

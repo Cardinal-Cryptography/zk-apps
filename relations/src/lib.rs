@@ -10,6 +10,10 @@ pub enum Token {
     USDT,
 }
 
+pub trait CloneToVec<T> {
+    fn clone_to_vec(&self) -> Vec<T>;
+}
+
 pub mod poseidon_consts {
     /// Has to be greater than 1 and equal to RATE + 1, due to the outer Poseidon implementation.
     pub const T_WIDTH: usize = RATE + 1;
