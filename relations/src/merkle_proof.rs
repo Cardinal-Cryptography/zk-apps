@@ -45,6 +45,7 @@ impl<F: BigPrimeField, const TREE_HEIGHT: usize> CircuitMerkleProof<F, TREE_HEIG
     ) {
         let mut current_node = leaf;
 
+        // TREE_HIGHT is definied in a way that path[TREE_HIGHT] would be the root
         for i in 0..TREE_HEIGHT {
             let sibling = self.path[i];
             let shape = self.path_shape[i];

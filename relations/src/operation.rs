@@ -5,7 +5,6 @@ where
     Self: Sized,
     F: BigPrimeField,
 {
-    type CircuitOperation;
     type OpPriv: Into<Vec<F>>;
     type OpPub: Into<Vec<F>>;
 

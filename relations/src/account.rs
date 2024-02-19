@@ -6,7 +6,7 @@ pub trait Account<F: BigPrimeField> {
     type CircuitAccount: CircuitAccount<F>;
     type Op: Operation<F>;
 
-    fn update(&self, op: Self::Op) -> Self;
+    fn update(&self, op: &Self::Op) -> Self;
 
     fn to_array(&self) -> Vec<F>;
 
