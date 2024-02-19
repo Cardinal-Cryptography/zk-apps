@@ -65,27 +65,31 @@ pub fn verify_account_circuit<F, A>(
 }
 
 #[allow(dead_code)]
-pub fn update_account_circuit<F, A>(
-    ctx: &mut Context<F>,
-    input: UpdateAccountInput<F, A>,
-    make_public: &mut Vec<AssignedValue<F>>,
-) where
+pub fn update_account_circuit<F, A>(ctx: &mut Context<F>, input: UpdateAccountInput<F, A>)
+where
     F: BigPrimeField,
     A: CircuitAccount<F>,
 {
-    let old_account_hash = input.old_account_hash;
-    let new_account_hash = input.new_account_hash;
-
-    make_public.extend([old_account_hash, new_account_hash]);
-
     let gate = GateChip::<F>::default();
     let mut poseidon =
         PoseidonHasher::<F, T_WIDTH, RATE>::new(OptimizedPoseidonSpec::new::<R_F, R_P, 0>());
     poseidon.initialize_consts(ctx, &gate);
 
     let old_account = input.old_account;
-    verify_account_circuit(ctx, &gate, &mut poseidon, &old_account, old_account_hash);
+    verify_account_circuit(
+        ctx,
+        &gate,
+        &mut poseidon,
+        &old_account,
+        input.old_account_hash,
+    );
 
     let new_account = old_account.update(input.operation, ctx, &gate);
-    verify_account_circuit(ctx, &gate, &mut poseidon, &new_account, new_account_hash);
+    verify_account_circuit(
+        ctx,
+        &gate,
+        &mut poseidon,
+        &new_account,
+        input.new_account_hash,
+    );
 }

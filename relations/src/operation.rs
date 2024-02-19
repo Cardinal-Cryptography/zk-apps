@@ -1,26 +1,14 @@
-use halo2_base::{utils::BigPrimeField, AssignedValue};
+use halo2_base::{utils::BigPrimeField, AssignedValue, Context};
 
-/// A trait representing an operation.
 pub trait Operation<F>
 where
     Self: Sized,
     F: BigPrimeField,
 {
-    /// The private data associated with the operation.
-    type OpPriv;
-    /// The public data associated with the operation.
-    type OpPub;
+    type CircuitOperation;
+    type OpPriv: Into<Vec<F>>;
+    type OpPub: Into<Vec<F>>;
 
-    /// Combines the private and public data to create an instance of the operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `op_priv` - The private data of the operation.
-    /// * `op_pub` - The public data of the operation.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` containing the combined operation, or `None` if the combination fails.
     fn combine(op_priv: Self::OpPriv, op_pub: Self::OpPub) -> Option<Self>;
 }
 
@@ -29,20 +17,8 @@ where
     Self: Sized,
     F: BigPrimeField,
 {
-    /// The private data associated with the operation.
-    type OpPriv;
-    /// The public data associated with the operation.
-    type OpPub: Into<Vec<AssignedValue<F>>> + Clone;
+    type OpPriv: From<Vec<AssignedValue<F>>>;
+    type OpPub: From<Vec<AssignedValue<F>>> + Into<Vec<AssignedValue<F>>> + Clone;
 
-    /// Combines the private and public data to create an instance of the operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `op_priv` - The private data of the operation.
-    /// * `op_pub` - The public data of the operation.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` containing the combined operation, or `None` if the combination fails.
     fn combine(op_priv: Self::OpPriv, op_pub: Self::OpPub) -> Option<Self>;
 }

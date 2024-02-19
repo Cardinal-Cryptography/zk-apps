@@ -4,9 +4,6 @@ pub mod note;
 pub mod operation;
 pub mod relations;
 
-//#[cfg(test)]
-//pub mod tests;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Token {
     AZERO,

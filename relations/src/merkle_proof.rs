@@ -59,32 +59,3 @@ impl<F: BigPrimeField, const TREE_HEIGHT: usize> CircuitMerkleProof<F, TREE_HEIG
         gate.assert_is_const(ctx, &eq, &F::ONE);
     }
 }
-
-#[cfg(test)]
-pub mod tests {
-    use poseidon::Poseidon;
-
-    use super::*;
-    use crate::poseidon_consts::{R_F, R_P};
-
-    impl<F: BigPrimeField, const TREE_HEIGHT: usize> MerkleProof<F, TREE_HEIGHT> {
-        pub fn verify(&self, root: F, leaf: F) -> bool {
-            let mut current_note = leaf;
-
-            for i in 0..TREE_HEIGHT {
-                let sibling = self.path[i];
-
-                let mut poseidon: Poseidon<F, T_WIDTH, RATE> = Poseidon::new(R_F, R_P);
-
-                if !self.path_shape[i] {
-                    poseidon.update(&[sibling, current_note]);
-                } else {
-                    poseidon.update(&[current_note, sibling]);
-                }
-                current_note = poseidon.squeeze();
-            }
-
-            current_note.eq(&root)
-        }
-    }
-}
