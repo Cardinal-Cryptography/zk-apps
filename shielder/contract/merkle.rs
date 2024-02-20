@@ -111,9 +111,55 @@ mod tests {
     use ink::primitives::AccountId;
 
     #[test]
-    fn merkle_tree_test() {
+    fn add_two_leaves_and_root() {
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
         let mut merkle_tree = MerkleTree::default();
-        merkle_tree.add_leaf(0_u128.into()).unwrap();
+        let leaf0_id = merkle_tree.add_leaf(1_u128.into()).unwrap();
+        assert_eq!(leaf0_id, 0);
+        let leaf1_id = merkle_tree.add_leaf(2_u128.into()).unwrap();
+        assert_eq!(leaf1_id, 1);
+
+        let mut hash_left = compute_hash(1_u128.into(), 2_u128.into());
+        let mut hash_right = compute_hash(0_u128.into(), 0_u128.into());
+        for _i in 1..DEPTH {
+            hash_left = compute_hash(hash_left, 0_u128.into());
+            hash_right = compute_hash(hash_right, hash_right);
+        }
+
+        assert_eq!(hash_left, merkle_tree.root());
+    }
+
+    #[test]
+    fn size_limit() {
+        ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+        let mut merkle_tree = MerkleTree::default();
+        for i in 0..(1 << DEPTH) {
+            merkle_tree.add_leaf((i as u128).into()).unwrap();
+        }
+        assert!(merkle_tree.add_leaf(0_u128.into()).is_err());
+    }
+
+    #[test]
+    fn historical_root() {
+        ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+        let mut merkle_tree = MerkleTree::default();
+        let mut roots = vec![];
+        let leaves_num = 10;
+        for i in 0..leaves_num {
+            merkle_tree.add_leaf((i as u128).into()).unwrap();
+            roots.push(merkle_tree.root());
+        }
+        // redeploy
+        ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
+        let mut merkle_tree = MerkleTree::default();
+        for i in 0..leaves_num {
+            for j in 0..i {
+                assert!(merkle_tree.is_historical_root(roots[j]).is_ok());
+            }
+            for j in i..leaves_num {
+                assert!(merkle_tree.is_historical_root(roots[j]).is_err());
+            }
+            merkle_tree.add_leaf((i as u128).into()).unwrap();
+        }
     }
 }
