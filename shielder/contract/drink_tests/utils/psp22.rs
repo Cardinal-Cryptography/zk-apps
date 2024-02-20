@@ -73,3 +73,20 @@ pub fn psp22_approve(
     )??;
     Ok(())
 }
+
+pub fn psp22_transfer(
+    session: &mut Session<MinimalRuntime>,
+    token: &AccountId32,
+    to: &AccountId32,
+    amount: u128,
+) -> Result<()> {
+    let formatted_amount = format!("{}", amount);
+    let empty_arr: [u8; 0] = [];
+    session.call_with_address(
+        token.clone(),
+        "PSP22::transfer",
+        &[to.to_string(), formatted_amount, format!("{:?}", empty_arr)],
+        NO_ENDOWMENT,
+    )??;
+    Ok(())
+}

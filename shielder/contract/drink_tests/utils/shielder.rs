@@ -15,10 +15,10 @@ use crate::{
         traits::Hashable,
         TOKENS_NUMBER,
     },
-    test_utils::merkle::MerkleTree,
     types::Scalar,
 };
 
+#[derive(Clone, Copy, Debug)]
 pub struct ShielderUserEnv {
     pub proof: ZkProof,
     pub nullifier: Scalar,
@@ -40,7 +40,7 @@ pub fn create_shielder_account(
     session: &mut Session<MinimalRuntime>,
     shielder_address: &AccountId32,
     token: &AccountId32,
-    merkle_tree: &mut MerkleTree,
+    nullifier: Scalar,
 ) -> Result<ShielderUserEnv> {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
     tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
@@ -48,7 +48,6 @@ pub fn create_shielder_account(
     let acc = Account::new(tokens);
 
     let id = 0_128.into();
-    let nullifier = 0_u128.into();
     let trapdoor = 0_u128.into();
     let op_priv = OpPriv {
         user: 0_u128.into(),
@@ -58,19 +57,17 @@ pub fn create_shielder_account(
 
     let h_note_new = Note::new(id, trapdoor, nullifier, acc.hash()).hash();
 
-    session.call_with_address(
+    let leaf_id_res: Result<u32, ()> = session.call_with_address(
         shielder_address.clone(),
         "add_note",
         &[format!("{:?}", h_note_new), format!("{:?}", proof)],
         NO_ENDOWMENT,
     )??;
 
-    merkle_tree.add_leaf(h_note_new).unwrap();
-
     Ok(ShielderUserEnv {
         proof,
         nullifier,
-        tree_leaf_id: 0,
+        tree_leaf_id: leaf_id_res.unwrap(),
     })
 }
 
@@ -79,13 +76,21 @@ pub fn shielder_update(
     shielder_address: &AccountId32,
     upd_op: UpdateOperation,
     user_shielded_data: ShielderUserEnv,
-    merkle_tree: &mut MerkleTree,
+    nullifier: Scalar,
 ) -> Result<ShielderUserEnv> {
-    let merkle_root = merkle_tree.root();
-    let merkle_proof = merkle_tree
-        .gen_proof(user_shielded_data.tree_leaf_id as usize)
-        .unwrap();
-    let nullifier_new = (u128::from(user_shielded_data.nullifier) + 1).into();
+    let merkle_root: Scalar = session.call_with_address(
+        shielder_address.clone(),
+        "notes_merkle_root",
+        NO_ARGS,
+        NO_ENDOWMENT,
+    )??;
+    let merkle_proof_res: Result<[Scalar; 10], ()> = session.call_with_address(
+        shielder_address.clone(),
+        "notes_merkle_path",
+        &[format!("{:?}", user_shielded_data.tree_leaf_id)],
+        NO_ENDOWMENT,
+    )??;
+    let merkle_proof = merkle_proof_res.unwrap();
     let trapdoor_new = 1_u128.into();
 
     let op_pub = upd_op.op_pub;
@@ -96,14 +101,13 @@ pub fn shielder_update(
         .update_account(
             operation,
             trapdoor_new,
-            nullifier_new,
+            nullifier,
             merkle_proof,
             user_shielded_data.tree_leaf_id,
         )
         .unwrap();
-    merkle_tree.add_leaf(note_hash).unwrap();
 
-    session.call_with_address(
+    let new_leaf_id_res: Result<u32, ()> = session.call_with_address(
         shielder_address.clone(),
         "update_note",
         &[
@@ -118,7 +122,7 @@ pub fn shielder_update(
 
     Ok(ShielderUserEnv {
         proof: new_proof,
-        nullifier: nullifier_new,
-        tree_leaf_id: user_shielded_data.tree_leaf_id + 1,
+        nullifier,
+        tree_leaf_id: new_leaf_id_res.unwrap(),
     })
 }

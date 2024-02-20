@@ -42,7 +42,11 @@ impl Default for MerkleTree {
 }
 
 impl MerkleTree {
-    pub fn add_leaf(&mut self, leaf_value: Scalar) -> Result<(), ShielderError> {
+    fn node_value(&self, id: u32) -> Scalar {
+        self.nodes.get(id).unwrap_or_default()
+    }
+
+    pub fn add_leaf(&mut self, leaf_value: Scalar) -> Result<u32, ShielderError> {
         if self.next_leaf_idx == self.size {
             return Err(ShielderError::MerkleTreeLimitExceeded);
         }
@@ -50,6 +54,7 @@ impl MerkleTree {
             .next_leaf_idx
             .checked_add(self.size)
             .ok_or(ShielderError::ArithmeticError)?;
+        let cur_leaf_id = self.next_leaf_idx;
         self.nodes.insert(id, &leaf_value);
 
         id /= 2;
@@ -70,7 +75,7 @@ impl MerkleTree {
             .checked_add(1)
             .ok_or(ShielderError::ArithmeticError)?;
         self.roots_log.insert(self.node_value(1), &());
-        Ok(())
+        Ok(cur_leaf_id)
     }
 
     pub fn is_historical_root(&self, merkle_root_possible: Scalar) -> Result<(), ShielderError> {
@@ -80,7 +85,35 @@ impl MerkleTree {
             .ok_or(ShielderError::MerkleTreeVerificationFail)
     }
 
-    fn node_value(&self, id: u32) -> Scalar {
-        self.nodes.get(id).unwrap_or_default()
+    pub fn gen_proof(&self, leaf_id: u32) -> Result<[Scalar; DEPTH], ShielderError> {
+        let mut res = [Scalar::from_bytes([0x0; 32]); DEPTH];
+        if self.next_leaf_idx == self.size {
+            return Err(ShielderError::MerkleTreeProofGenFail);
+        }
+        let mut id = leaf_id
+            .checked_add(self.size)
+            .ok_or(ShielderError::ArithmeticError)?;
+        for node in res.iter_mut().take(DEPTH) {
+            *node = self.node_value(id ^ 1);
+            id /= 2;
+        }
+        Ok(res)
+    }
+
+    pub fn root(&self) -> Scalar {
+        self.node_value(1)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ink::primitives::AccountId;
+
+    #[test]
+    fn merkle_tree_test() {
+        ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+        let mut merkle_tree = MerkleTree::default();
+        merkle_tree.add_leaf(0_u128.into()).unwrap();
     }
 }
