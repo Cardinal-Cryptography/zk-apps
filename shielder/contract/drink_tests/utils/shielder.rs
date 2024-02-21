@@ -6,6 +6,7 @@ use drink::{
 };
 
 use crate::{
+    contract::DEPTH,
     drink_tests::{BundleProvider, UpdateOperation},
     errors::ShielderError,
     mocked_zk::{
@@ -86,7 +87,7 @@ pub fn shielder_update(
         NO_ENDOWMENT,
     )??;
     let merkle_root = merkle_root_res.unwrap();
-    let merkle_proof_res: Result<[Scalar; 10], ShielderError> = session.call_with_address(
+    let merkle_proof_res: Result<[Scalar; DEPTH], ShielderError> = session.call_with_address(
         shielder_address.clone(),
         "notes_merkle_path",
         &[format!("{:?}", user_shielded_data.tree_leaf_id)],

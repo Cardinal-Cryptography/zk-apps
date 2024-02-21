@@ -9,11 +9,11 @@ use crate::{
 };
 
 /// depth of the tree
-pub const DEPTH: usize = 10;
+// pub const DEPTH: usize = 10;
 
 #[ink::storage_item]
 #[derive(Debug)]
-pub struct MerkleTree {
+pub struct MerkleTree<const DEPTH: usize> {
     /// mapping of tree indexes to values held in nodes
     nodes: Mapping<u32, Scalar>,
     /// set of historical roots (nodes[1]) of tree
@@ -30,7 +30,7 @@ pub fn compute_hash(first: Scalar, second: Scalar) -> Scalar {
     Scalar::from_bytes(res)
 }
 
-impl Default for MerkleTree {
+impl<const DEPTH: usize> Default for MerkleTree<DEPTH> {
     fn default() -> Self {
         Self {
             nodes: Default::default(),
@@ -41,7 +41,7 @@ impl Default for MerkleTree {
     }
 }
 
-impl MerkleTree {
+impl<const DEPTH: usize> MerkleTree<DEPTH> {
     fn node_value(&self, id: u32) -> Result<Scalar, ShielderError> {
         self.nodes
             .get(id)
@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn add_two_leaves_and_root() {
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
-        let mut merkle_tree = MerkleTree::default();
+        let mut merkle_tree = MerkleTree::<10>::default();
         let leaf0_id = merkle_tree.add_leaf(1_u128.into()).unwrap();
         assert_eq!(leaf0_id, 0);
         let leaf1_id = merkle_tree.add_leaf(2_u128.into()).unwrap();
@@ -125,7 +125,7 @@ mod tests {
 
         let mut hash_left = compute_hash(1_u128.into(), 2_u128.into());
         let mut hash_right = compute_hash(0_u128.into(), 0_u128.into());
-        for _i in 1..DEPTH {
+        for _i in 1..10 {
             hash_left = compute_hash(hash_left, 0_u128.into());
             hash_right = compute_hash(hash_right, hash_right);
         }
@@ -136,8 +136,8 @@ mod tests {
     #[test]
     fn size_limit() {
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
-        let mut merkle_tree = MerkleTree::default();
-        for i in 0..(1 << DEPTH) {
+        let mut merkle_tree = MerkleTree::<10>::default();
+        for i in 0..(1 << 10) {
             merkle_tree.add_leaf((i as u128).into()).unwrap();
         }
         assert!(merkle_tree.add_leaf(0_u128.into()).is_err());
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn historical_root() {
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
-        let mut merkle_tree = MerkleTree::default();
+        let mut merkle_tree = MerkleTree::<10>::default();
         let mut roots = vec![];
         let leaves_num = 10;
         for i in 0..leaves_num {
@@ -155,7 +155,7 @@ mod tests {
         }
         // redeploy
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
-        let mut merkle_tree = MerkleTree::default();
+        let mut merkle_tree = MerkleTree::<10>::default();
         for i in 0..leaves_num {
             for j in 0..i {
                 assert!(merkle_tree.is_historical_root(roots[j]).is_ok());

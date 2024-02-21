@@ -17,7 +17,7 @@ pub mod contract {
 
     use crate::{
         errors::ShielderError,
-        merkle::{MerkleTree, DEPTH},
+        merkle::MerkleTree,
         mocked_zk::relations::ZkProof,
         traits::psp22::PSP22,
         types::{Scalar, Set},
@@ -47,12 +47,14 @@ pub mod contract {
         },
     }
 
+    pub const DEPTH: usize = 10;
+
     /// Contract storage
     #[ink(storage)]
     #[derive(Default)]
     pub struct Contract {
         nullifier_set: Set<Scalar>,
-        notes: MerkleTree,
+        notes: MerkleTree<{ DEPTH }>,
     }
 
     impl Contract {
