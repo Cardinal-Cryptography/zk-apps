@@ -129,6 +129,7 @@ pub mod contract {
         }
 
         /// Returns merkle path
+        /// WARNING: that might expose identity of caller!
         #[ink(message)]
         pub fn notes_merkle_path(&self, note_id: u32) -> Result<[Scalar; DEPTH], ShielderError> {
             self.notes.gen_proof(note_id)
