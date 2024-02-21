@@ -9,7 +9,7 @@ pub fn deploy_test_token(
     session: &mut Session<MinimalRuntime>,
     supply: u128,
 ) -> Result<AccountId32> {
-    let formatted_supply = format!("{}", supply);
+    // let formatted_supply = ;
 
     let psp22_bundle =
         ContractBundle::load(std::path::Path::new("../PSP22/target/ink/psp22.contract"))?;
@@ -18,7 +18,7 @@ pub fn deploy_test_token(
         psp22_bundle,
         "new",
         &[
-            formatted_supply.as_str(),
+            format!("{}", supply).as_str(),
             "Some(\"TST\")",
             "Some(\"TST\")",
             "9",
@@ -64,11 +64,10 @@ pub fn psp22_approve(
     to: &AccountId32,
     amount: u128,
 ) -> Result<()> {
-    let formatted_amount = format!("{}", amount);
     session.call_with_address(
         token.clone(),
         "PSP22::approve",
-        &[to.to_string(), formatted_amount],
+        &[to.to_string(), format!("{}", amount)],
         NO_ENDOWMENT,
     )??;
     Ok(())
@@ -80,12 +79,15 @@ pub fn psp22_transfer(
     to: &AccountId32,
     amount: u128,
 ) -> Result<()> {
-    let formatted_amount = format!("{}", amount);
     let empty_arr: [u8; 0] = [];
     session.call_with_address(
         token.clone(),
         "PSP22::transfer",
-        &[to.to_string(), formatted_amount, format!("{:?}", empty_arr)],
+        &[
+            to.to_string(),
+            format!("{}", amount),
+            format!("{:?}", empty_arr),
+        ],
         NO_ENDOWMENT,
     )??;
     Ok(())

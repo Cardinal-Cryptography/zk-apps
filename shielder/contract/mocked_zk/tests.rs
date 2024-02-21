@@ -94,7 +94,7 @@ fn test_update_note() -> Result<(), ShielderError> {
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
     proof.verify_creation(h_new_note)?;
     merkle_tree.add_leaf(h_new_note)?;
-    let merkle_root = merkle_tree.root();
+    let merkle_root = merkle_tree.root()?;
     let merkle_proof = merkle_tree.gen_proof(0)?;
 
     let nullifier_new = 1_u128.into();
@@ -128,7 +128,7 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
     proof.verify_creation(h_new_note)?;
     merkle_tree.add_leaf(h_new_note)?;
-    let merkle_root = merkle_tree.root();
+    let merkle_root = merkle_tree.root()?;
     let merkle_proof = merkle_tree.gen_proof(0)?;
 
     let nullifier_new = 1_u128.into();

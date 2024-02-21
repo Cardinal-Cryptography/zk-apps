@@ -42,8 +42,10 @@ impl Default for MerkleTree {
 }
 
 impl MerkleTree {
-    fn node_value(&self, id: u32) -> Scalar {
-        self.nodes.get(id).unwrap_or_default()
+    fn node_value(&self, id: u32) -> Result<Scalar, ShielderError> {
+        self.nodes
+            .get(id)
+            .ok_or(ShielderError::MerkleTreeNonExistingNode)
     }
 
     pub fn add_leaf(&mut self, leaf_value: Scalar) -> Result<u32, ShielderError> {
@@ -60,12 +62,14 @@ impl MerkleTree {
         id /= 2;
         while id > 0 {
             let id_mul_2 = id.checked_mul(2).ok_or(ShielderError::ArithmeticError)?;
-            let left_n = self.node_value(id_mul_2);
-            let right_n = self.node_value(
-                id_mul_2
-                    .checked_add(1)
-                    .ok_or(ShielderError::ArithmeticError)?,
-            );
+            let left_n = self.node_value(id_mul_2).unwrap_or(0_u128.into());
+            let right_n = self
+                .node_value(
+                    id_mul_2
+                        .checked_add(1)
+                        .ok_or(ShielderError::ArithmeticError)?,
+                )
+                .unwrap_or(0_u128.into());
             let hash = compute_hash(left_n, right_n);
             self.nodes.insert(id, &hash);
             id /= 2;
@@ -74,7 +78,7 @@ impl MerkleTree {
             .next_leaf_idx
             .checked_add(1)
             .ok_or(ShielderError::ArithmeticError)?;
-        self.roots_log.insert(self.node_value(1), &());
+        self.roots_log.insert(self.root()?, &());
         Ok(cur_leaf_id)
     }
 
@@ -94,13 +98,13 @@ impl MerkleTree {
             .checked_add(self.size)
             .ok_or(ShielderError::ArithmeticError)?;
         for node in res.iter_mut().take(DEPTH) {
-            *node = self.node_value(id ^ 1);
+            *node = self.node_value(id ^ 1).unwrap_or(0_u128.into());
             id /= 2;
         }
         Ok(res)
     }
 
-    pub fn root(&self) -> Scalar {
+    pub fn root(&self) -> Result<Scalar, ShielderError> {
         self.node_value(1)
     }
 }
@@ -126,7 +130,7 @@ mod tests {
             hash_right = compute_hash(hash_right, hash_right);
         }
 
-        assert_eq!(hash_left, merkle_tree.root());
+        assert_eq!(hash_left, merkle_tree.root().unwrap());
     }
 
     #[test]
@@ -147,7 +151,7 @@ mod tests {
         let leaves_num = 10;
         for i in 0..leaves_num {
             merkle_tree.add_leaf((i as u128).into()).unwrap();
-            roots.push(merkle_tree.root());
+            roots.push(merkle_tree.root().unwrap());
         }
         // redeploy
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));

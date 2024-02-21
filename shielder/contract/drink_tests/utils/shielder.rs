@@ -7,6 +7,7 @@ use drink::{
 
 use crate::{
     drink_tests::{BundleProvider, UpdateOperation},
+    errors::ShielderError,
     mocked_zk::{
         account::Account,
         note::Note,
@@ -57,7 +58,7 @@ pub fn create_shielder_account(
 
     let h_note_new = Note::new(id, trapdoor, nullifier, acc.hash()).hash();
 
-    let leaf_id_res: Result<u32, ()> = session.call_with_address(
+    let leaf_id_res: Result<u32, ShielderError> = session.call_with_address(
         shielder_address.clone(),
         "add_note",
         &[format!("{:?}", h_note_new), format!("{:?}", proof)],
@@ -78,13 +79,14 @@ pub fn shielder_update(
     user_shielded_data: ShielderUserEnv,
     nullifier: Scalar,
 ) -> Result<ShielderUserEnv> {
-    let merkle_root: Scalar = session.call_with_address(
+    let merkle_root_res: Result<Scalar, ShielderError> = session.call_with_address(
         shielder_address.clone(),
         "notes_merkle_root",
         NO_ARGS,
         NO_ENDOWMENT,
     )??;
-    let merkle_proof_res: Result<[Scalar; 10], ()> = session.call_with_address(
+    let merkle_root = merkle_root_res.unwrap();
+    let merkle_proof_res: Result<[Scalar; 10], ShielderError> = session.call_with_address(
         shielder_address.clone(),
         "notes_merkle_path",
         &[format!("{:?}", user_shielded_data.tree_leaf_id)],
@@ -107,7 +109,7 @@ pub fn shielder_update(
         )
         .unwrap();
 
-    let new_leaf_id_res: Result<u32, ()> = session.call_with_address(
+    let new_leaf_id_res: Result<u32, ShielderError> = session.call_with_address(
         shielder_address.clone(),
         "update_note",
         &[

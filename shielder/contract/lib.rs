@@ -64,6 +64,7 @@ pub mod contract {
 
         /// Adds empty note to shielder storage
         /// Registers new account with empty balance
+        /// Returns id of the note in shielder's storage
         #[ink(message)]
         pub fn add_note(
             &mut self,
@@ -76,6 +77,7 @@ pub mod contract {
 
         /// Updates existing note
         /// Applies operation to private account stored in shielder
+        /// Returns id of the note in shielder's storage
         #[ink(message)]
         pub fn update_note(
             &mut self,
@@ -122,7 +124,7 @@ pub mod contract {
 
         /// Returns merkle root of notes storage
         #[ink(message)]
-        pub fn notes_merkle_root(&self) -> Scalar {
+        pub fn notes_merkle_root(&self) -> Result<Scalar, ShielderError> {
             self.notes.root()
         }
 
