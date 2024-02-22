@@ -9,7 +9,6 @@ use crate::{
 };
 
 /// depth of the tree
-// pub const DEPTH: usize = 10;
 
 #[ink::storage_item]
 #[derive(Debug)]
