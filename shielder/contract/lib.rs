@@ -8,8 +8,6 @@ mod drink_tests;
 mod errors;
 mod merkle;
 pub mod mocked_zk;
-#[cfg(test)]
-pub mod test_utils;
 mod traits;
 mod types;
 
@@ -49,12 +47,14 @@ pub mod contract {
         },
     }
 
+    pub const DEPTH: usize = 10;
+
     /// Contract storage
     #[ink(storage)]
     #[derive(Default)]
     pub struct Contract {
         nullifier_set: Set<Scalar>,
-        notes: MerkleTree,
+        notes: MerkleTree<{ DEPTH }>,
     }
 
     impl Contract {
@@ -66,19 +66,20 @@ pub mod contract {
 
         /// Adds empty note to shielder storage
         /// Registers new account with empty balance
+        /// Returns id of the note in shielder's storage
         #[ink(message)]
         pub fn add_note(
             &mut self,
             h_note_new: Scalar,
             proof: ZkProof,
-        ) -> Result<(), ShielderError> {
+        ) -> Result<u32, ShielderError> {
             proof.verify_creation(h_note_new)?;
-            self.notes.add_leaf(h_note_new)?;
-            Ok(())
+            self.notes.add_leaf(h_note_new)
         }
 
         /// Updates existing note
         /// Applies operation to private account stored in shielder
+        /// Returns id of the note in shielder's storage
         #[ink(message)]
         pub fn update_note(
             &mut self,
@@ -87,13 +88,13 @@ pub mod contract {
             merkle_root: Scalar,
             nullifier_old: Scalar,
             proof: ZkProof,
-        ) -> Result<(), ShielderError> {
+        ) -> Result<u32, ShielderError> {
             self.notes.is_historical_root(merkle_root)?;
             self.nullify(nullifier_old)?;
             proof.verify_update(op_pub, h_note_new, merkle_root, nullifier_old)?;
-            self.notes.add_leaf(h_note_new)?;
+            let leaf_id = self.notes.add_leaf(h_note_new)?;
             self.process_operation(op_pub)?;
-            Ok(())
+            Ok(leaf_id)
         }
 
         fn process_operation(&mut self, op_pub: OpPub) -> Result<(), ShielderError> {
@@ -121,6 +122,19 @@ pub mod contract {
                 }
             };
             Ok(())
+        }
+
+        /// Returns merkle root of notes storage
+        #[ink(message)]
+        pub fn notes_merkle_root(&self) -> Result<Scalar, ShielderError> {
+            self.notes.root()
+        }
+
+        /// Returns merkle path
+        /// WARNING: that might expose identity of caller!
+        #[ink(message)]
+        pub fn notes_merkle_path(&self, note_id: u32) -> Result<[Scalar; DEPTH], ShielderError> {
+            self.notes.gen_proof(note_id)
         }
 
         fn nullify(&mut self, nullifier: Scalar) -> Result<(), ShielderError> {

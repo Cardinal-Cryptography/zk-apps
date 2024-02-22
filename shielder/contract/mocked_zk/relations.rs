@@ -5,9 +5,9 @@ use super::{
     traits::Hashable,
 };
 use crate::{
-    contract::OpPub,
+    contract::{OpPub, DEPTH},
     errors::ShielderError,
-    merkle::{self, DEPTH},
+    merkle::{self},
     types::Scalar,
 };
 
@@ -24,7 +24,7 @@ pub struct ZkProof {
     acc_old: Account,
     acc_new: Account,
     op_priv: OpPriv,
-    merkle_proof: [Scalar; merkle::DEPTH],
+    merkle_proof: [Scalar; DEPTH],
     merkle_proof_leaf_id: u32,
 }
 

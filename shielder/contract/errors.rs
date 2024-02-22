@@ -8,6 +8,7 @@ pub enum ShielderError {
     MerkleTreeVerificationFail,
     MerkleTreeLimitExceeded,
     MerkleTreeProofGenFail,
+    MerkleTreeNonExistingNode,
     ZkpVerificationFail,
     ArithmeticError,
 }

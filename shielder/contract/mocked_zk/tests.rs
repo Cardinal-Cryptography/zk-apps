@@ -8,10 +8,11 @@ use super::{
 use crate::{
     contract::OpPub,
     errors::ShielderError,
+    merkle::MerkleTree,
     mocked_zk::{mocked_user, MOCKED_TOKEN, TOKENS_NUMBER},
-    test_utils::merkle::MerkleTree,
     types::Scalar,
 };
+use ink::primitives::AccountId;
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
@@ -80,16 +81,20 @@ fn test_create_note_fails() -> Result<(), ShielderError> {
 
 #[test]
 fn test_update_note() -> Result<(), ShielderError> {
+    // need this because MerkleTree is called
+    ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+
     let id = 0_u128.into();
 
-    let mut merkle_tree = MerkleTree::new();
+    let mut merkle_tree = MerkleTree::default();
 
     let nullifier = 0_u128.into();
     let trapdoor = 0_u128.into();
 
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
     proof.verify_creation(h_new_note)?;
-    let merkle_root = merkle_tree.add_leaf(h_new_note)?;
+    merkle_tree.add_leaf(h_new_note)?;
+    let merkle_root = merkle_tree.root()?;
     let merkle_proof = merkle_tree.gen_proof(0)?;
 
     let nullifier_new = 1_u128.into();
@@ -110,16 +115,20 @@ fn test_update_note() -> Result<(), ShielderError> {
 
 #[test]
 fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
+    // need this because merkle tree is called
+    ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+
     let id = 0_u128.into();
 
-    let mut merkle_tree = MerkleTree::new();
+    let mut merkle_tree = MerkleTree::default();
 
     let nullifier = 0_u128.into();
     let trapdoor = 0_u128.into();
 
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
     proof.verify_creation(h_new_note)?;
-    let merkle_root = merkle_tree.add_leaf(h_new_note)?;
+    merkle_tree.add_leaf(h_new_note)?;
+    let merkle_root = merkle_tree.root()?;
     let merkle_proof = merkle_tree.gen_proof(0)?;
 
     let nullifier_new = 1_u128.into();
