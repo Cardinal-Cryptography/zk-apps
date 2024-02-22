@@ -9,11 +9,8 @@ pub fn deploy_test_token(
     session: &mut Session<MinimalRuntime>,
     supply: u128,
 ) -> Result<AccountId32> {
-    // let formatted_supply = ;
-
     let psp22_bundle =
         ContractBundle::load(std::path::Path::new("../PSP22/target/ink/psp22.contract"))?;
-
     let res = session.deploy_bundle(
         psp22_bundle,
         "new",
