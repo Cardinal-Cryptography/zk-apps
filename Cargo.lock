@@ -3616,6 +3616,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "psp22"
+version = "0.3.0"
+dependencies = [
+ "ink",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
