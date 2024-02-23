@@ -110,8 +110,9 @@ impl<const DEPTH: usize> MerkleTree<DEPTH> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ink::primitives::AccountId;
+
+    use super::*;
 
     #[test]
     fn add_two_leaves_and_root() {

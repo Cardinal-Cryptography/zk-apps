@@ -1,4 +1,4 @@
-use halo2_base::{utils::BigPrimeField, AssignedValue, Context};
+use halo2_base::{utils::BigPrimeField, AssignedValue};
 
 pub trait Operation<F>
 where

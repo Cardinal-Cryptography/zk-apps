@@ -8,7 +8,7 @@ help: # Show help for each of the Makefile recipes.
 check-shielder: ## Run cargo checks on shielder contract.
 	@echo "Checking shielder contract" ; \
 	cargo clippy --manifest-path contract/Cargo.toml -- -D warnings ; \
-	cargo fmt --quiet --all --check --manifest-path contract/Cargo.toml ; \
+	cargo fmt --quiet --check -p shielder-contract ; \
 
 
 .PHONY: build-psp22
@@ -28,7 +28,7 @@ setup-tests: build-psp22 build-shielder ## Builds contracts and generates wrappe
 .PHONY: tests
 tests: setup-tests ## Runs tests for contract.
 	@echo "Running drink tests" ; \
-	cargo test --quiet --manifest-path contract/Cargo.toml --release -- --nocapture ; \
+	cargo test --quiet -p shielder-contract --release -- --nocapture ; \
 
 .PHONY:
 all: check-shielder tests
