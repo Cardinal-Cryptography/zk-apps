@@ -175,10 +175,7 @@ fn generate_snark<CG: CircuitGenerator<Fr>>(
         ..
     } = kg;
     let circuit = create_circuit_prover(cg, c_params, break_points, input);
-    //let proving_time = start_timer!(|| "Generating proof");
-    let snark = gen_snark_shplonk(&params, &pk, circuit, None::<String>);
-    //end_timer!(proving_time);
-    snark
+    gen_snark_shplonk(&params, &pk, circuit, None::<String>)
 }
 
 fn verify_snark(
@@ -226,7 +223,6 @@ pub fn mock_run<F: BigPrimeField, CG: CircuitGenerator<F>>(
         .assert_satisfied();
     println!("Mock run successful");
 }
-
 
 /// k_srs -- 2^{k_srs} is the size of the srs
 /// k_circuit -- 2^{k_circuit} is the max number of rows the halo2-lib circuit generator will use in a single column

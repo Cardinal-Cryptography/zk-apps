@@ -1,9 +1,7 @@
 use circuit_runner::{mock_run, run, CircuitGenerator};
 use halo2_base::{
     gates::{circuit::builder::BaseCircuitBuilder, GateChip, GateInstructions},
-    halo2_proofs::{
-        halo2curves::{bn256::Fr, ff::PrimeField},
-    },
+    halo2_proofs::halo2curves::{bn256::Fr, ff::PrimeField},
     utils::BigPrimeField,
     AssignedValue,
 };
