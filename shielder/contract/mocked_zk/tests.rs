@@ -1,3 +1,5 @@
+use ink::primitives::AccountId;
+
 use super::{
     account::Account,
     note::Note,
@@ -12,7 +14,6 @@ use crate::{
     mocked_zk::{mocked_user, MOCKED_TOKEN, TOKENS_NUMBER},
     types::Scalar,
 };
-use ink::primitives::AccountId;
 
 fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];

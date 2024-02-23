@@ -1,13 +1,12 @@
 [package]
 name = "shielder-contract"
-authors.workspace = true
-documentation = "https://docs.rs/?"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
-readme.workspace = true
-repository.workspace = true
-version.workspace = true
+authors = ["Cardinal"]
+edition = "2021"
+homepage = "https://github.com/Cardinal-Cryptography/zk-apps"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/Cardinal-Cryptography/zk-apps"
+version = "0.1.0"
 
 [dependencies]
 anyhow = { workspace = true }

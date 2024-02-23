@@ -1361,9 +1361,9 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe98a00ca230717410a3e5f7a286bc031191198f7ffd782950563825b7b9a771"
+checksum = "6fe74f1b23038c882501682b6ea1ba97be124960adb68a0aea5aa2128a5df2e0"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
@@ -1388,9 +1388,9 @@ dependencies = [
 
 [[package]]
 name = "drink-test-macro"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f939561232d64a9c0cd24bea918825713e1441fcfb01b7089844fdb0aaf39bf"
+checksum = "ea166fddef10682aa3ebd1ce9da0fd84e8ca9d5397b70e93fcebac877d53139c"
 dependencies = [
  "cargo_metadata",
  "contract-build",
@@ -4375,12 +4375,12 @@ checksum = "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
 
 [[package]]
 name = "socket2"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b5fac59a5cb5dd637972e5fca70daf0523c9067fcdc4842f053dae04a18f8e9"
+checksum = "05ffd9c0a93b7543e062e759284fcf5f5e3b098501104bfbdde4d404db792871"
 dependencies = [
  "libc",
- "windows-sys 0.48.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4922,9 +4922,9 @@ dependencies = [
 
 [[package]]
 name = "staging-xcm-builder"
-version = "7.0.3"
+version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ba4f214fe99d79ffcc266f431abbb32d3596788327b925d469c7bb6a3c84d3c"
+checksum = "2f7a45adc5b85ac35d2245833967772cc74af10899143ebfa4df3c7eb494edb0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4945,9 +4945,9 @@ dependencies = [
 
 [[package]]
 name = "staging-xcm-executor"
-version = "7.0.3"
+version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f1dea1e33eefee513c197c24255670951a2c515a6ce2c7049fe86385400074f"
+checksum = "2493cf438497734b64cdeb55dbee9872bd598f7b08649e9a3bd56d7939360a80"
 dependencies = [
  "environmental",
  "frame-benchmarking",

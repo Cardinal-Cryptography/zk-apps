@@ -2,10 +2,9 @@ mod utils;
 
 use anyhow::Result;
 use drink::{session::Session, AccountId32};
+use rand::prelude::*;
 
 use crate::drink_tests::utils::{chain::*, ops::*, psp22::*, shielder::*};
-
-use rand::prelude::*;
 
 #[drink::contract_bundle_provider]
 pub enum BundleProvider {}
