@@ -5,11 +5,11 @@
 
 #[cfg(test)]
 mod drink_tests;
-mod errors;
+pub mod errors;
 mod merkle;
 pub mod mocked_zk;
 mod traits;
-mod types;
+pub mod types;
 
 /// Contract module
 #[ink::contract]
