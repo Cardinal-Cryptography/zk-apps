@@ -2,8 +2,9 @@
 resolver = "2"
 
 members = [
-    "relations",
     "shielder/contract",
+    "shielder/relations",
+    "shielder/PSP22",
 ]
 
 [workspace.package]
