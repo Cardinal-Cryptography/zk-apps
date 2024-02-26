@@ -9,7 +9,7 @@ pub mod errors;
 mod merkle;
 pub mod mocked_zk;
 mod traits;
-pub mod types;
+mod types;
 
 /// Contract module
 #[ink::contract]
