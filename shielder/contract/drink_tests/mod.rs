@@ -19,8 +19,8 @@ fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
 
     session = session.with_actor(alice.clone());
 
-    let shielder_address = deploy_shielder(&mut session)?;
     let psp22_address = deploy_test_token(&mut session, 100)?;
+    let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
 
     // CREATE ACCOUNT
     let user_shielded_data = create_shielder_account(
@@ -83,8 +83,8 @@ fn deploy_single_deposit_multiple_withdraw(mut session: Session) -> Result<()> {
         withdrawers.push(acc.clone());
     }
 
-    let shielder_address = deploy_shielder(&mut session)?;
     let psp22_address = deploy_test_token(&mut session, 100)?;
+    let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
 
     // CREATE ACCOUNT
     let mut user_shielded_data = create_shielder_account(
@@ -153,8 +153,9 @@ fn deploy_multiple_deposit_multiple_withdraw(mut session: Session) -> Result<()>
         withdrawers.push(acc.clone());
     }
 
-    let shielder_address = deploy_shielder(&mut session)?;
     let psp22_address = deploy_test_token(&mut session, 800)?;
+    let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
+
     for depositor_addr in &depositors {
         psp22_transfer(&mut session, &psp22_address, &depositor_addr, 100)?;
     }

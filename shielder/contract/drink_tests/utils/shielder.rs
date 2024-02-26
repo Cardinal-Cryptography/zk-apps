@@ -27,11 +27,16 @@ pub struct ShielderUserEnv {
     pub tree_leaf_id: u32,
 }
 
-pub fn deploy_shielder(session: &mut Session<MinimalRuntime>) -> Result<AccountId32> {
+pub fn deploy_shielder(
+    session: &mut Session<MinimalRuntime>,
+    token: &AccountId32,
+) -> Result<AccountId32> {
+    let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
+    tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
     let res = session.deploy_bundle(
         BundleProvider::local()?,
         "new",
-        NO_ARGS,
+        &[format!("{:?}", tokens)],
         NO_SALT,
         NO_ENDOWMENT,
     )?;

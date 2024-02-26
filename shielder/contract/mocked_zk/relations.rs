@@ -6,7 +6,7 @@ use super::{
     Scalar,
 };
 use crate::{
-    contract::MERKLE_TREE_DEPTH,
+    contract::{MERKLE_TREE_DEPTH, TOKENS_NUMBER},
     errors::ShielderError,
     merkle::{self},
 };
@@ -131,8 +131,12 @@ impl ZkProof {
         Ok(())
     }
 
-    pub fn verify_creation(&self, h_note_new: Scalar) -> Result<(), ShielderError> {
-        let h_acc_new = self.acc_new.hash();
+    pub fn verify_creation(
+        &self,
+        h_note_new: Scalar,
+        tokens_list: [Scalar; TOKENS_NUMBER],
+    ) -> Result<(), ShielderError> {
+        let h_acc_new = Account::new(tokens_list).hash();
         let note_new = Note::new(self.id, self.trapdoor_new, self.nullifier_new, h_acc_new);
         verify_hash(note_new, h_note_new)?;
         Ok(())

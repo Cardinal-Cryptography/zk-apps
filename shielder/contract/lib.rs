@@ -24,6 +24,7 @@ pub mod contract {
     };
 
     pub const MERKLE_TREE_DEPTH: usize = 10;
+    pub const TOKENS_NUMBER: usize = 2;
 
     /// Contract storage
     #[ink(storage)]
@@ -31,13 +32,17 @@ pub mod contract {
     pub struct Contract {
         nullifier_set: Set<Scalar>,
         notes: MerkleTree<{ MERKLE_TREE_DEPTH }>,
+        supported_tokens: [Scalar; TOKENS_NUMBER],
     }
 
     impl Contract {
         /// Constructor
         #[ink(constructor)]
-        pub fn new() -> Self {
-            Self::default()
+        pub fn new(supported_tokens: [Scalar; TOKENS_NUMBER]) -> Self {
+            Self {
+                supported_tokens,
+                ..Default::default()
+            }
         }
 
         /// Adds empty note to shielder storage
@@ -49,7 +54,7 @@ pub mod contract {
             h_note_new: Scalar,
             proof: ZkProof,
         ) -> Result<u32, ShielderError> {
-            proof.verify_creation(h_note_new)?;
+            proof.verify_creation(h_note_new, self.supported_tokens)?;
             self.notes.add_leaf(h_note_new)
         }
 
@@ -114,6 +119,11 @@ pub mod contract {
             note_id: u32,
         ) -> Result<[Scalar; MERKLE_TREE_DEPTH], ShielderError> {
             self.notes.gen_proof(note_id)
+        }
+
+        #[ink(message)]
+        pub fn supported_tokens(&self) -> [Scalar; TOKENS_NUMBER] {
+            self.supported_tokens
         }
 
         fn nullify(&mut self, nullifier: Scalar) -> Result<(), ShielderError> {

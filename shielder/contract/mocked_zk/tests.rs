@@ -13,11 +13,14 @@ use crate::{
 };
 use ink::primitives::AccountId;
 
-fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
+fn supported_tokens() -> [Scalar; TOKENS_NUMBER] {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
     tokens[0] = MOCKED_TOKEN;
+    tokens
+}
 
-    let acc_new = Account::new(tokens);
+fn create_empty_note_proof(id: Scalar, nullifier: Scalar, trapdoor: Scalar) -> (Scalar, ZkProof) {
+    let acc_new = Account::new(supported_tokens());
     let note = Note::new(id, trapdoor, nullifier, acc_new.hash());
     let proof = ZkProof::new(
         id,
@@ -60,7 +63,7 @@ fn test_create_note() -> Result<(), ShielderError> {
     let nullifier = 0_u128.into();
     let trapdoor = 0_u128.into();
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
-    proof.verify_creation(h_new_note)?;
+    proof.verify_creation(h_new_note, supported_tokens())?;
     Ok(())
 }
 
@@ -73,7 +76,9 @@ fn test_create_note_fails() -> Result<(), ShielderError> {
     let (h_new_note, _) = create_empty_note_proof(1_u128.into(), nullifier, trapdoor);
     assert_eq!(
         ShielderError::ZkpVerificationFail,
-        proof.verify_creation(h_new_note).unwrap_err()
+        proof
+            .verify_creation(h_new_note, supported_tokens())
+            .unwrap_err()
     );
     Ok(())
 }
@@ -91,7 +96,7 @@ fn test_update_note() -> Result<(), ShielderError> {
     let trapdoor = 0_u128.into();
 
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
-    proof.verify_creation(h_new_note)?;
+    proof.verify_creation(h_new_note, supported_tokens())?;
     merkle_tree.add_leaf(h_new_note)?;
     let merkle_root = merkle_tree.root()?;
     let merkle_proof = merkle_tree.gen_proof(0)?;
@@ -125,7 +130,7 @@ fn test_update_note_fail_op_priv() -> Result<(), ShielderError> {
     let trapdoor = 0_u128.into();
 
     let (h_new_note, proof) = create_empty_note_proof(id, nullifier, trapdoor);
-    proof.verify_creation(h_new_note)?;
+    proof.verify_creation(h_new_note, supported_tokens())?;
     merkle_tree.add_leaf(h_new_note)?;
     let merkle_root = merkle_tree.root()?;
     let merkle_proof = merkle_tree.gen_proof(0)?;

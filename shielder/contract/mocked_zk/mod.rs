@@ -7,8 +7,8 @@ mod tests;
 pub mod traits;
 
 pub type Scalar = crate::types::Scalar;
+pub const TOKENS_NUMBER: usize = crate::contract::TOKENS_NUMBER;
 
-pub const TOKENS_NUMBER: usize = 10;
 pub const MOCKED_TOKEN: Scalar = Scalar::from_bytes([228_u8; 32]);
 
 pub fn mocked_user() -> Scalar {
