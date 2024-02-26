@@ -6,7 +6,7 @@ pub mod relations;
 mod tests;
 pub mod traits;
 
-use crate::types::Scalar;
+pub type Scalar = crate::types::Scalar;
 
 pub const TOKENS_NUMBER: usize = 10;
 pub const MOCKED_TOKEN: Scalar = Scalar::from_bytes([228_u8; 32]);

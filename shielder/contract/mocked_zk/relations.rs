@@ -1,21 +1,21 @@
 use super::{
     account::Account,
     note::Note,
-    ops::{OpPriv, Operation},
+    ops::{OpPriv, OpPub, Operation},
     traits::Hashable,
+    Scalar,
 };
 use crate::{
-    contract::{OpPub, DEPTH},
+    contract::MERKLE_TREE_DEPTH,
     errors::ShielderError,
     merkle::{self},
-    types::Scalar,
 };
 
 /// mocked proof of knowledge, not ZK
 /// you can imagine ZkProof object as someone's "knowledge"
 /// functions starting with verify_ are mocks of relation
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct ZkProof {
     id: Scalar,
     trapdoor_new: Scalar,
@@ -24,7 +24,7 @@ pub struct ZkProof {
     acc_old: Account,
     acc_new: Account,
     op_priv: OpPriv,
-    merkle_proof: [Scalar; DEPTH],
+    merkle_proof: [Scalar; MERKLE_TREE_DEPTH],
     merkle_proof_leaf_id: u32,
 }
 
@@ -52,7 +52,7 @@ impl ZkProof {
             trapdoor_old: 0_u128.into(),
             acc_old: acc,
             op_priv,
-            merkle_proof: [0_u128.into(); DEPTH],
+            merkle_proof: [0_u128.into(); MERKLE_TREE_DEPTH],
             merkle_proof_leaf_id: 0,
         }
     }
@@ -63,7 +63,7 @@ impl ZkProof {
         nullifier: Scalar,
         acc: Account,
         op_priv: OpPriv,
-        merkle_proof: [Scalar; DEPTH],
+        merkle_proof: [Scalar; MERKLE_TREE_DEPTH],
         merkle_proof_leaf_id: u32,
     ) -> Self {
         Self {
@@ -84,7 +84,7 @@ impl ZkProof {
         operation: Operation,
         trapdoor: Scalar,
         nullifier: Scalar,
-        merkle_proof: [Scalar; DEPTH],
+        merkle_proof: [Scalar; MERKLE_TREE_DEPTH],
         merkle_proof_leaf_id: u32,
     ) -> Result<(Scalar, Self), ShielderError> {
         let acc_updated = self.acc_new.update(operation)?;

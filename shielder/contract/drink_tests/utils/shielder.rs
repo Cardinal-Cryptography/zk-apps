@@ -6,7 +6,7 @@ use drink::{
 };
 
 use crate::{
-    contract::DEPTH,
+    contract::MERKLE_TREE_DEPTH,
     drink_tests::{BundleProvider, UpdateOperation},
     errors::ShielderError,
     mocked_zk::{
@@ -87,12 +87,13 @@ pub fn shielder_update(
         NO_ENDOWMENT,
     )??;
     let merkle_root = merkle_root_res.unwrap();
-    let merkle_proof_res: Result<[Scalar; DEPTH], ShielderError> = session.call_with_address(
-        shielder_address.clone(),
-        "notes_merkle_path",
-        &[format!("{:?}", user_shielded_data.tree_leaf_id)],
-        NO_ENDOWMENT,
-    )??;
+    let merkle_proof_res: Result<[Scalar; MERKLE_TREE_DEPTH], ShielderError> = session
+        .call_with_address(
+            shielder_address.clone(),
+            "notes_merkle_path",
+            &[format!("{:?}", user_shielded_data.tree_leaf_id)],
+            NO_ENDOWMENT,
+        )??;
     let merkle_proof = merkle_proof_res.unwrap();
     let trapdoor_new = 1_u128.into();
 

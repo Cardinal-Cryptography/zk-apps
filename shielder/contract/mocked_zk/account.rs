@@ -1,10 +1,14 @@
 use ink::env::hash::{CryptoHash, Sha2x256};
 
-use super::{ops::Operation, traits::Hashable, TOKENS_NUMBER};
-use crate::{contract::OpPub, errors::ShielderError, types::Scalar};
+use super::{
+    ops::{OpPub, Operation},
+    traits::Hashable,
+    TOKENS_NUMBER,
+};
+use crate::{errors::ShielderError, types::Scalar};
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Account {
     balances: [(Scalar, Scalar); TOKENS_NUMBER],
 }

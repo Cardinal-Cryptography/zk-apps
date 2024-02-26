@@ -4,7 +4,7 @@ use super::traits::Hashable;
 use crate::types::Scalar;
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Note {
     id: Scalar,
     trapdoor: Scalar,

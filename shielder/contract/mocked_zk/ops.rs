@@ -1,14 +1,16 @@
-use crate::{contract::OpPub, errors::ShielderError, types::Scalar};
+use crate::{errors::ShielderError, types::Scalar};
+
+pub type OpPub = crate::types::OpPub;
 
 /// empty private operation
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct OpPriv {
     pub user: Scalar,
 }
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Operation {
     pub op_pub: OpPub,
     pub op_priv: OpPriv,

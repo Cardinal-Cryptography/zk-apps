@@ -20,41 +20,17 @@ pub mod contract {
         merkle::MerkleTree,
         mocked_zk::relations::ZkProof,
         traits::psp22::PSP22,
-        types::{Scalar, Set},
+        types::{OpPub, Scalar, Set},
     };
 
-    /// Enum
-    #[ink::scale_derive(Encode, Decode, TypeInfo)]
-    #[derive(Debug, Clone, Copy)]
-    pub enum OpPub {
-        /// Deposit PSP-22 token
-        Deposit {
-            /// amount of deposit
-            amount: u128,
-            /// PSP-22 token address
-            token: Scalar,
-            /// User address, from whom tokens are transferred
-            user: Scalar,
-        },
-        /// Withdraw PSP-22 token
-        Withdraw {
-            /// amount of withdrawal
-            amount: u128,
-            /// PSP-22 token address
-            token: Scalar,
-            /// User address, from whom tokens are transferred
-            user: Scalar,
-        },
-    }
-
-    pub const DEPTH: usize = 10;
+    pub const MERKLE_TREE_DEPTH: usize = 10;
 
     /// Contract storage
     #[ink(storage)]
     #[derive(Default)]
     pub struct Contract {
         nullifier_set: Set<Scalar>,
-        notes: MerkleTree<{ DEPTH }>,
+        notes: MerkleTree<{ MERKLE_TREE_DEPTH }>,
     }
 
     impl Contract {
@@ -133,7 +109,10 @@ pub mod contract {
         /// Returns merkle path
         /// WARNING: that might expose identity of caller!
         #[ink(message)]
-        pub fn notes_merkle_path(&self, note_id: u32) -> Result<[Scalar; DEPTH], ShielderError> {
+        pub fn notes_merkle_path(
+            &self,
+            note_id: u32,
+        ) -> Result<[Scalar; MERKLE_TREE_DEPTH], ShielderError> {
             self.notes.gen_proof(note_id)
         }
 

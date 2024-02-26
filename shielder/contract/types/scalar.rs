@@ -1,9 +1,5 @@
-use ink::storage::Mapping;
-
-pub type Set<T> = Mapping<T, ()>;
-
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "std", derive(ink::storage::traits::StorageLayout))]
 pub struct Scalar {
     pub bytes: [u8; 32],
