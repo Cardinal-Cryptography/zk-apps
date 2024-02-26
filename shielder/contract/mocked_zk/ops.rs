@@ -9,6 +9,12 @@ pub struct OpPriv {
     pub user: Scalar,
 }
 
+impl OpPriv {
+    pub fn new(user: Scalar) -> Self {
+        Self { user }
+    }
+}
+
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
 #[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Operation {
