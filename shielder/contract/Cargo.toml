@@ -7,7 +7,6 @@ repository = "https://github.com/Cardinal-Cryptography/zk-apps"
 edition = "2021"
 
 [dependencies]
-# ink = { workspace = true }
 ink = { version = "5.0.0-rc", default-features = false }
 mocked_zk = { path = "../mocked_zk", default-features = false }
 
