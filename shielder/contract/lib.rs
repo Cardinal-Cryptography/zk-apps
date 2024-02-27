@@ -30,10 +30,9 @@ pub mod contract {
     impl Contract {
         /// Constructor
         #[ink(constructor)]
-        // pub fn new(supported_tokens: [Scalar; TOKENS_NUMBER]) -> Self {
-        pub fn new() -> Self {
+        pub fn new(supported_tokens: [Scalar; TOKENS_NUMBER]) -> Self {
             Self {
-                supported_tokens: [0_u128.into(); TOKENS_NUMBER],
+                supported_tokens,
                 ..Default::default()
             }
         }

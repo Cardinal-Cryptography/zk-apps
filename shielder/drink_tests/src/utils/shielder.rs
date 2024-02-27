@@ -30,7 +30,13 @@ pub fn deploy_shielder(
     let shielder_bundle = BundleProvider::ShielderContract.bundle()?;
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
     tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
-    let res = session.deploy_bundle(shielder_bundle, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?;
+    let res = session.deploy_bundle(
+        shielder_bundle,
+        "new",
+        &[format!("{:?}", tokens)],
+        NO_SALT,
+        NO_ENDOWMENT,
+    )?;
     Ok(res)
 }
 
