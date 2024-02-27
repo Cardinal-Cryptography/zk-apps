@@ -52,7 +52,7 @@ mocked-zk-unit-tests: ## Runs unit tests for contract.
 
 .PHONY: shielder-drink-tests
 shielder-drink-tests: setup-tests ## Runs drink tests for contract.
-	@echo "Running shielder unit tests" ; \
+	@echo "Running shielder drink tests" ; \
 	cargo test --quiet --manifest-path drink_tests/Cargo.toml --release -- --nocapture ; \
 
 .PHONY: tests
