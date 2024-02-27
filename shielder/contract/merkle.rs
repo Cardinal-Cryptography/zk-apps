@@ -3,10 +3,8 @@ use ink::{
     storage::Mapping,
 };
 
-use crate::{
-    errors::ShielderError,
-    types::{Scalar, Set},
-};
+use crate::{errors::ShielderError, types::Set};
+use mocked_zk::Scalar;
 
 /// depth of the tree
 

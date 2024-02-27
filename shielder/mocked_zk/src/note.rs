@@ -1,7 +1,6 @@
 use ink::env::hash::{CryptoHash, Sha2x256};
 
-use super::traits::Hashable;
-use crate::types::Scalar;
+use crate::{traits::Hashable, Scalar};
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
 #[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]

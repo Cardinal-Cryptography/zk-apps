@@ -2,23 +2,19 @@ use anyhow::Result;
 use drink::{
     runtime::MinimalRuntime,
     session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
-    AccountId32,
+    AccountId32, ContractBundle,
 };
 
-use crate::{
-    contract::MERKLE_TREE_DEPTH,
-    drink_tests::{BundleProvider, UpdateOperation},
-    errors::ShielderError,
-    mocked_zk::{
-        account::Account,
-        note::Note,
-        ops::{OpPriv, Operation},
-        relations::ZkProof,
-        traits::Hashable,
-        TOKENS_NUMBER,
-    },
-    types::Scalar,
+use crate::utils::ops::UpdateOperation;
+use mocked_zk::{
+    account::Account,
+    note::Note,
+    ops::{OpPriv, Operation},
+    relations::ZkProof,
+    traits::Hashable,
+    Scalar, MERKLE_TREE_DEPTH, TOKENS_NUMBER,
 };
+use shielder_contract::errors::ShielderError;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ShielderUserEnv {
@@ -31,12 +27,15 @@ pub fn deploy_shielder(
     session: &mut Session<MinimalRuntime>,
     token: &AccountId32,
 ) -> Result<AccountId32> {
+    let shielder_bundle = ContractBundle::load(std::path::Path::new(
+        "../contract/target/ink/shielder_contract.contract",
+    ))?;
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
     tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
     let res = session.deploy_bundle(
-        BundleProvider::local()?,
+        shielder_bundle,
         "new",
-        &[format!("{:?}", tokens)],
+        NO_ARGS,
         NO_SALT,
         NO_ENDOWMENT,
     )?;

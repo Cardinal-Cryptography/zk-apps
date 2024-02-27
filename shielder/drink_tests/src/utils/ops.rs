@@ -1,8 +1,8 @@
 use drink::AccountId32;
 
-use crate::{
-    mocked_zk::ops::{OpPriv, OpPub},
-    types::Scalar,
+use mocked_zk::{
+    ops::{OpPriv, OpPub},
+    Scalar,
 };
 
 pub struct UpdateOperation {

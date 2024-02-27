@@ -3,11 +3,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-#[cfg(test)]
-mod drink_tests;
 pub mod errors;
 mod merkle;
-pub mod mocked_zk;
 mod traits;
 mod types;
 
@@ -15,13 +12,8 @@ mod types;
 #[ink::contract]
 pub mod contract {
 
-    use crate::{
-        errors::ShielderError,
-        merkle::MerkleTree,
-        mocked_zk::relations::ZkProof,
-        traits::psp22::PSP22,
-        types::{OpPub, Scalar, Set},
-    };
+    use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22, types::Set};
+    use mocked_zk::{ops::OpPub, relations::ZkProof, Scalar};
 
     pub const MERKLE_TREE_DEPTH: usize = 10;
     pub const TOKENS_NUMBER: usize = 2;
@@ -38,9 +30,10 @@ pub mod contract {
     impl Contract {
         /// Constructor
         #[ink(constructor)]
-        pub fn new(supported_tokens: [Scalar; TOKENS_NUMBER]) -> Self {
+        // pub fn new(supported_tokens: [Scalar; TOKENS_NUMBER]) -> Self {
+        pub fn new() -> Self {
             Self {
-                supported_tokens,
+                supported_tokens: [0_u128.into(); TOKENS_NUMBER],
                 ..Default::default()
             }
         }
@@ -121,10 +114,10 @@ pub mod contract {
             self.notes.gen_proof(note_id)
         }
 
-        #[ink(message)]
-        pub fn supported_tokens(&self) -> [Scalar; TOKENS_NUMBER] {
-            self.supported_tokens
-        }
+        // #[ink(message)]
+        // pub fn supported_tokens(&self) -> [Scalar; TOKENS_NUMBER] {
+        //     self.supported_tokens
+        // }
 
         fn nullify(&mut self, nullifier: Scalar) -> Result<(), ShielderError> {
             self.nullifier_set

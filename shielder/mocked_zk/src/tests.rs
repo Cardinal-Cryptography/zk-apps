@@ -1,14 +1,12 @@
-use super::{
+use crate::{
     account::Account,
+    errors::ShielderError,
+    merkle::MerkleTree,
+    mocked_zk::{mocked_user, MOCKED_TOKEN, TOKENS_NUMBER},
     note::Note,
     ops::{OpPriv, OpPub, Operation},
     relations::ZkProof,
     traits::Hashable,
-};
-use crate::{
-    errors::ShielderError,
-    merkle::MerkleTree,
-    mocked_zk::{mocked_user, MOCKED_TOKEN, TOKENS_NUMBER},
     types::Scalar,
 };
 use ink::primitives::AccountId;
