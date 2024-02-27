@@ -31,7 +31,7 @@ impl From<Scalar> for u128 {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::Scalar;
+    use crate::Scalar;
 
     #[test]
     fn test_scalar_from_u128() {

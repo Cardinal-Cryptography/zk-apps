@@ -11,6 +11,9 @@ mod tests {
 
     use rand::prelude::*;
 
+    #[drink::contract_bundle_provider]
+    pub enum BundleProvider {}
+
     #[drink::test]
     fn deploy_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
         let mut rng = StdRng::seed_from_u64(1);
@@ -158,7 +161,7 @@ mod tests {
         let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
 
         for depositor_addr in &depositors {
-            psp22_transfer(&mut session, &psp22_address, &depositor_addr, 100)?;
+            psp22_transfer(&mut session, &psp22_address, depositor_addr, 100)?;
         }
 
         let mut user_shielded_data = vec![];
@@ -181,7 +184,7 @@ mod tests {
             user_shielded_data[i] = shielder_update(
                 &mut session,
                 &shielder_address,
-                deposit_op(&psp22_address, &depositor_addr, 50),
+                deposit_op(&psp22_address, depositor_addr, 50),
                 user_shielded_data[i],
                 rng.gen::<u128>().into(),
             )?;
@@ -195,11 +198,11 @@ mod tests {
             user_shielded_data[i] = shielder_update(
                 &mut session,
                 &shielder_address,
-                withdraw_op(&psp22_address, &withdrawer_addr, 1),
+                withdraw_op(&psp22_address, withdrawer_addr, 1),
                 user_shielded_data[i],
                 rng.gen::<u128>().into(),
             )?;
-            let psp22_balance = get_psp22_balance(&mut session, &psp22_address, &withdrawer_addr)?;
+            let psp22_balance = get_psp22_balance(&mut session, &psp22_address, withdrawer_addr)?;
             assert_eq!(psp22_balance, 1);
         }
         let shielder_psp22_balance =

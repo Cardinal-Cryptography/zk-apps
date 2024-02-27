@@ -154,11 +154,11 @@ mod tests {
         ink::env::test::set_callee::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
         let mut merkle_tree = MerkleTree::<10>::default();
         for i in 0..leaves_num {
-            for j in 0..i {
-                assert!(merkle_tree.is_historical_root(roots[j]).is_ok());
+            for item in roots.iter().take(i) {
+                assert!(merkle_tree.is_historical_root(*item).is_ok());
             }
-            for j in i..leaves_num {
-                assert!(merkle_tree.is_historical_root(roots[j]).is_err());
+            for item in roots.iter().take(leaves_num).skip(i) {
+                assert!(merkle_tree.is_historical_root(*item).is_err());
             }
             merkle_tree.add_leaf((i as u128).into()).unwrap();
         }

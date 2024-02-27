@@ -2,10 +2,10 @@ use anyhow::Result;
 use drink::{
     runtime::MinimalRuntime,
     session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
-    AccountId32, ContractBundle,
+    AccountId32,
 };
 
-use crate::utils::ops::UpdateOperation;
+use crate::{tests::BundleProvider, utils::ops::UpdateOperation};
 use mocked_zk::{
     account::Account,
     note::Note,
@@ -27,18 +27,10 @@ pub fn deploy_shielder(
     session: &mut Session<MinimalRuntime>,
     token: &AccountId32,
 ) -> Result<AccountId32> {
-    let shielder_bundle = ContractBundle::load(std::path::Path::new(
-        "../contract/target/ink/shielder_contract.contract",
-    ))?;
+    let shielder_bundle = BundleProvider::ShielderContract.bundle()?;
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
     tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
-    let res = session.deploy_bundle(
-        shielder_bundle,
-        "new",
-        NO_ARGS,
-        NO_SALT,
-        NO_ENDOWMENT,
-    )?;
+    let res = session.deploy_bundle(shielder_bundle, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?;
     Ok(res)
 }
 
@@ -53,7 +45,7 @@ pub fn create_shielder_account(
 
     let acc = Account::new(tokens);
 
-    let id = 0_128.into();
+    let id = 0_u128.into();
     let trapdoor = 0_u128.into();
     let op_priv = OpPriv {
         user: 0_u128.into(),

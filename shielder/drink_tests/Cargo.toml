@@ -13,4 +13,4 @@ drink = { version = "0.10.0" }
 rand = { version = "0.8.5", default-features = false }
 anyhow = { version = "1.0.79", default-features = false }
 mocked_zk = { path = "../mocked_zk", default-features = false }
-shielder-contract = { path = "../contract", default-features = false }
+shielder-contract = { path = "../contract", default-features = false, features = ["ink-as-dependency"] }

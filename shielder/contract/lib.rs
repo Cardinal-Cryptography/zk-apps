@@ -15,8 +15,8 @@ pub mod contract {
     use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22, types::Set};
     use mocked_zk::{ops::OpPub, relations::ZkProof, Scalar};
 
-    pub const MERKLE_TREE_DEPTH: usize = 10;
-    pub const TOKENS_NUMBER: usize = 2;
+    pub const MERKLE_TREE_DEPTH: usize = mocked_zk::MERKLE_TREE_DEPTH;
+    pub const TOKENS_NUMBER: usize = mocked_zk::TOKENS_NUMBER;
 
     /// Contract storage
     #[ink(storage)]
