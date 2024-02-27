@@ -113,10 +113,10 @@ pub mod contract {
             self.notes.gen_proof(note_id)
         }
 
-        // #[ink(message)]
-        // pub fn supported_tokens(&self) -> [Scalar; TOKENS_NUMBER] {
-        //     self.supported_tokens
-        // }
+        #[ink(message)]
+        pub fn supported_tokens(&self) -> [Scalar; TOKENS_NUMBER] {
+            self.supported_tokens
+        }
 
         fn nullify(&mut self, nullifier: Scalar) -> Result<(), ShielderError> {
             self.nullifier_set
