@@ -1,23 +1,20 @@
 [package]
-name = "shielder-contract"
+name = "mocked_zk"
 version = "0.1.0"
 authors = ["Cardinal"]
 homepage = "https://alephzero.org"
 repository = "https://github.com/Cardinal-Cryptography/zk-apps"
 edition = "2021"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [dependencies]
 ink = { version = "5.0.0-rc", default-features = false }
-mocked_zk = { path = "../mocked_zk", default-features = false }
-
-[lib]
-path = "lib.rs"
+serde = { version = "1.0.197", default-features = false, features = ["derive"] }
 
 [features]
 default = ["std"]
 std = [
     "ink/std",
-    "mocked_zk/std",
 ]
 ink-as-dependency = []
-e2e-tests = []

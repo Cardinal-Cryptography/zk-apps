@@ -3,11 +3,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-#[cfg(test)]
-mod drink_tests;
-mod errors;
+pub mod errors;
 mod merkle;
-pub mod mocked_zk;
 mod traits;
 mod types;
 
@@ -15,53 +12,29 @@ mod types;
 #[ink::contract]
 pub mod contract {
 
-    use crate::{
-        errors::ShielderError,
-        merkle::MerkleTree,
-        mocked_zk::relations::ZkProof,
-        traits::psp22::PSP22,
-        types::{Scalar, Set},
-    };
+    use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22, types::Set};
+    use mocked_zk::{ops::OpPub, relations::ZkProof, Scalar};
 
-    /// Enum
-    #[ink::scale_derive(Encode, Decode, TypeInfo)]
-    #[derive(Debug, Clone, Copy)]
-    pub enum OpPub {
-        /// Deposit PSP-22 token
-        Deposit {
-            /// amount of deposit
-            amount: u128,
-            /// PSP-22 token address
-            token: Scalar,
-            /// User address, from whom tokens are transferred
-            user: Scalar,
-        },
-        /// Withdraw PSP-22 token
-        Withdraw {
-            /// amount of withdrawal
-            amount: u128,
-            /// PSP-22 token address
-            token: Scalar,
-            /// User address, from whom tokens are transferred
-            user: Scalar,
-        },
-    }
-
-    pub const DEPTH: usize = 10;
+    pub const MERKLE_TREE_DEPTH: usize = mocked_zk::MERKLE_TREE_DEPTH;
+    pub const TOKENS_NUMBER: usize = mocked_zk::TOKENS_NUMBER;
 
     /// Contract storage
     #[ink(storage)]
     #[derive(Default)]
     pub struct Contract {
         nullifier_set: Set<Scalar>,
-        notes: MerkleTree<{ DEPTH }>,
+        notes: MerkleTree<{ MERKLE_TREE_DEPTH }>,
+        supported_tokens: [Scalar; TOKENS_NUMBER],
     }
 
     impl Contract {
         /// Constructor
         #[ink(constructor)]
-        pub fn new() -> Self {
-            Self::default()
+        pub fn new(supported_tokens: [Scalar; TOKENS_NUMBER]) -> Self {
+            Self {
+                supported_tokens,
+                ..Default::default()
+            }
         }
 
         /// Adds empty note to shielder storage
@@ -73,7 +46,7 @@ pub mod contract {
             h_note_new: Scalar,
             proof: ZkProof,
         ) -> Result<u32, ShielderError> {
-            proof.verify_creation(h_note_new)?;
+            proof.verify_creation(h_note_new, self.supported_tokens)?;
             self.notes.add_leaf(h_note_new)
         }
 
@@ -133,8 +106,16 @@ pub mod contract {
         /// Returns merkle path
         /// WARNING: that might expose identity of caller!
         #[ink(message)]
-        pub fn notes_merkle_path(&self, note_id: u32) -> Result<[Scalar; DEPTH], ShielderError> {
+        pub fn notes_merkle_path(
+            &self,
+            note_id: u32,
+        ) -> Result<[Scalar; MERKLE_TREE_DEPTH], ShielderError> {
             self.notes.gen_proof(note_id)
+        }
+
+        #[ink(message)]
+        pub fn supported_tokens(&self) -> [Scalar; TOKENS_NUMBER] {
+            self.supported_tokens
         }
 
         fn nullify(&mut self, nullifier: Scalar) -> Result<(), ShielderError> {

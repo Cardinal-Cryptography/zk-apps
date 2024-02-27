@@ -29,7 +29,7 @@ jobs:
         run: cargo install cargo-contract --version 4.0.0-rc.2
 
       - name: Run checks for `shielder/contract`
-        run: cd shielder/ && make check-shielder
+        run: cd shielder/ && make check
 
       - name: Run tests  for `shielder/contract`
         run: cd shielder/ && make tests

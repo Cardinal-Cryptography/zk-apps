@@ -1,7 +1,7 @@
 use anyhow::Result;
 use drink::{runtime::MinimalRuntime, session::Session, AccountId32};
 
-use crate::drink_tests::utils::ACCOUNT_INITIAL_AMOUNT;
+use crate::utils::ACCOUNT_INITIAL_AMOUNT;
 
 pub fn init_acc_with_balance(
     session: &mut Session<MinimalRuntime>,

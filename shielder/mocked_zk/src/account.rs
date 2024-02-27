@@ -1,10 +1,14 @@
 use ink::env::hash::{CryptoHash, Sha2x256};
 
-use super::{ops::Operation, traits::Hashable, TOKENS_NUMBER};
-use crate::{contract::OpPub, errors::ShielderError, types::Scalar};
+use crate::{
+    errors::ZkpError,
+    ops::{OpPub, Operation},
+    traits::Hashable,
+    Scalar, TOKENS_NUMBER,
+};
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Account {
     balances: [(Scalar, Scalar); TOKENS_NUMBER],
 }
@@ -29,7 +33,7 @@ impl Account {
         Self { balances }
     }
 
-    pub fn update(&self, operation: Operation) -> Result<Self, ShielderError> {
+    pub fn update(&self, operation: Operation) -> Result<Self, ZkpError> {
         match operation.op_pub {
             OpPub::Deposit {
                 amount: op_amount,
@@ -40,7 +44,7 @@ impl Account {
                     if token == op_token {
                         let balance_upd: Scalar = ((u128::from(balance))
                             .checked_add(op_amount)
-                            .ok_or(ShielderError::ArithmeticError)?)
+                            .ok_or(ZkpError::AccountUpdateError)?)
                         .into();
                         let mut balances_upd = self.balances;
                         balances_upd[i] = (token, balance_upd);
@@ -49,7 +53,7 @@ impl Account {
                         });
                     }
                 }
-                Err(ShielderError::ZkpVerificationFail)
+                Err(ZkpError::AccountUpdateError)
             }
             OpPub::Withdraw {
                 amount: op_amount,
@@ -60,7 +64,7 @@ impl Account {
                     if token == op_token {
                         let balance_upd: Scalar = ((u128::from(balance))
                             .checked_sub(op_amount)
-                            .ok_or(ShielderError::ArithmeticError)?)
+                            .ok_or(ZkpError::AccountUpdateError)?)
                         .into();
                         let mut balances_upd = self.balances;
                         balances_upd[i] = (token, balance_upd);
@@ -69,7 +73,7 @@ impl Account {
                         });
                     }
                 }
-                Err(ShielderError::ZkpVerificationFail)
+                Err(ZkpError::AccountUpdateError)
             }
         }
     }

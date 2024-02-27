@@ -5,20 +5,16 @@ use drink::{
     AccountId32,
 };
 
-use crate::{
-    contract::DEPTH,
-    drink_tests::{BundleProvider, UpdateOperation},
-    errors::ShielderError,
-    mocked_zk::{
-        account::Account,
-        note::Note,
-        ops::{OpPriv, Operation},
-        relations::ZkProof,
-        traits::Hashable,
-        TOKENS_NUMBER,
-    },
-    types::Scalar,
+use crate::{tests::BundleProvider, utils::ops::UpdateOperation};
+use mocked_zk::{
+    account::Account,
+    note::Note,
+    ops::{OpPriv, Operation},
+    relations::ZkProof,
+    traits::Hashable,
+    Scalar, MERKLE_TREE_DEPTH, TOKENS_NUMBER,
 };
+use shielder_contract::errors::ShielderError;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ShielderUserEnv {
@@ -27,11 +23,17 @@ pub struct ShielderUserEnv {
     pub tree_leaf_id: u32,
 }
 
-pub fn deploy_shielder(session: &mut Session<MinimalRuntime>) -> Result<AccountId32> {
+pub fn deploy_shielder(
+    session: &mut Session<MinimalRuntime>,
+    token: &AccountId32,
+) -> Result<AccountId32> {
+    let shielder_bundle = BundleProvider::ShielderContract.bundle()?;
+    let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
+    tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
     let res = session.deploy_bundle(
-        BundleProvider::local()?,
+        shielder_bundle,
         "new",
-        NO_ARGS,
+        &[format!("{:?}", tokens)],
         NO_SALT,
         NO_ENDOWMENT,
     )?;
@@ -49,7 +51,7 @@ pub fn create_shielder_account(
 
     let acc = Account::new(tokens);
 
-    let id = 0_128.into();
+    let id = 0_u128.into();
     let trapdoor = 0_u128.into();
     let op_priv = OpPriv {
         user: 0_u128.into(),
@@ -87,12 +89,13 @@ pub fn shielder_update(
         NO_ENDOWMENT,
     )??;
     let merkle_root = merkle_root_res.unwrap();
-    let merkle_proof_res: Result<[Scalar; DEPTH], ShielderError> = session.call_with_address(
-        shielder_address.clone(),
-        "notes_merkle_path",
-        &[format!("{:?}", user_shielded_data.tree_leaf_id)],
-        NO_ENDOWMENT,
-    )??;
+    let merkle_proof_res: Result<[Scalar; MERKLE_TREE_DEPTH], ShielderError> = session
+        .call_with_address(
+            shielder_address.clone(),
+            "notes_merkle_path",
+            &[format!("{:?}", user_shielded_data.tree_leaf_id)],
+            NO_ENDOWMENT,
+        )??;
     let merkle_proof = merkle_proof_res.unwrap();
     let trapdoor_new = 1_u128.into();
 
