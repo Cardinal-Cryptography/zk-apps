@@ -37,6 +37,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "bitflags"
+version = "1.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
 name = "bitvec"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -335,9 +341,9 @@ dependencies = [
 
 [[package]]
 name = "ink"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64f0047f1e70ddeae00d45c55bb069d94836ac74d895d2f24c3d6a65ba13b628"
+checksum = "3d4a862aedbfda93175ddf75c9aaa2ae4c4b39ee5cee06c16d50bccce05bf5c7"
 dependencies = [
  "derive_more",
  "ink_env",
@@ -346,24 +352,25 @@ dependencies = [
  "ink_prelude",
  "ink_primitives",
  "ink_storage",
+ "pallet-contracts-uapi-next",
  "parity-scale-codec",
  "scale-info",
 ]
 
 [[package]]
 name = "ink_allocator"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c1d2eddb445b3ef076dacaa9968a7ff5b80ad5b9b724966fab66a8f4e48bde4"
+checksum = "5cee56055bac6d928d425e944c5f3b69baa33c9635822fd1c00cd4afc70fde3e"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "ink_codegen"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31d7479eab1bb62f52a13fca02414a65cd4d9d116bbcae97eafd0808ee5f7ba4"
+checksum = "70a1f8473fa09e0f9b6f3cb3f8d18c07c14ebf9ea1f7cdfee270f009d45ee8e9"
 dependencies = [
  "blake2",
  "derive_more",
@@ -383,13 +390,14 @@ dependencies = [
 
 [[package]]
 name = "ink_engine"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b99aae25c6820d9e9dae12f79df79a10cba3c961fe1204a68fefaf72f9ae7b14"
+checksum = "4f357e2e867f4e222ffc4015a6e61d1073548de89f70a4e36a8b0385562777fa"
 dependencies = [
  "blake2",
  "derive_more",
  "ink_primitives",
+ "pallet-contracts-uapi-next",
  "parity-scale-codec",
  "secp256k1",
  "sha2",
@@ -398,9 +406,9 @@ dependencies = [
 
 [[package]]
 name = "ink_env"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c8f814ac18100f5ba3d265fbc29e1639325660571883184bedf31dcfecd2428"
+checksum = "42cec50b7e4f8406aab25801b015d3802a52d76cfbe48ce11cfb4200fa88e296"
 dependencies = [
  "blake2",
  "cfg-if",
@@ -412,6 +420,7 @@ dependencies = [
  "ink_primitives",
  "ink_storage_traits",
  "num-traits",
+ "pallet-contracts-uapi-next",
  "parity-scale-codec",
  "paste",
  "rlibc",
@@ -427,12 +436,13 @@ dependencies = [
 
 [[package]]
 name = "ink_ir"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06ff5a0f5d1a7cbced5e4f0e828cfebae7c94948b27de7b6075937f85f58f8a9"
+checksum = "3b1ad2975551c4ed800af971289ed6d2c68ac41ffc03a42010b3e01d7360dfb2"
 dependencies = [
  "blake2",
  "either",
+ "impl-serde",
  "ink_prelude",
  "itertools",
  "proc-macro2",
@@ -442,9 +452,9 @@ dependencies = [
 
 [[package]]
 name = "ink_macro"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4347620c4ab436e3aa8b0b1ea7da4ea1d09a7281c8d917e01ba2649cabad541"
+checksum = "aee1a546f37eae3b3cd223832d31702033c5369dcfa3405899587c110a7908d3"
 dependencies = [
  "ink_codegen",
  "ink_ir",
@@ -458,15 +468,16 @@ dependencies = [
 
 [[package]]
 name = "ink_metadata"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75859c7142101f3ad30a763fd0e5468df164e3d424086df8de40531fb54940f3"
+checksum = "a98fcc0ff9292ff68c7ee7b84c93533c9ff13859ec3b148faa822e2da9954fe6"
 dependencies = [
  "derive_more",
  "impl-serde",
  "ink_prelude",
  "ink_primitives",
  "linkme",
+ "parity-scale-codec",
  "scale-info",
  "schemars",
  "serde",
@@ -474,18 +485,18 @@ dependencies = [
 
 [[package]]
 name = "ink_prelude"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc3fbd55e0cf78e456ad4a92558d55b577bf65944bb37bf7debb8f03ed66a47b"
+checksum = "ea1734d058c80aa72e59c8ae75624fd8a51791efba21469f273156c0f4cad5c9"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "ink_primitives"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c976554c1bd075c6722d0f30cc3a8337b7ebaf487b95a40c9e81097d995f921"
+checksum = "11ec35ef7f45e67a53b6142d7e7f18e6d9292d76c3a2a1da14cf8423e481813d"
 dependencies = [
  "derive_more",
  "ink_prelude",
@@ -498,9 +509,9 @@ dependencies = [
 
 [[package]]
 name = "ink_storage"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4e3cf99814c37c9cf789a94479cc39fe86e8af0be43e5962080e01fa53ca0e5"
+checksum = "bbdb04cad74df858c05bc9cb6f30bbf12da33c3e2cb7ca211749c001fa761aa9"
 dependencies = [
  "array-init",
  "cfg-if",
@@ -510,15 +521,16 @@ dependencies = [
  "ink_prelude",
  "ink_primitives",
  "ink_storage_traits",
+ "pallet-contracts-uapi-next",
  "parity-scale-codec",
  "scale-info",
 ]
 
 [[package]]
 name = "ink_storage_traits"
-version = "5.0.0-rc"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a469c01b48282a459130ca72a75e57feedbb69ab151639f532156d10d574353"
+checksum = "83ce49e3d2935fc1ec3e73117119712b187d3123339f6a31624e92f75fa2293d"
 dependencies = [
  "ink_metadata",
  "ink_prelude",
@@ -559,18 +571,18 @@ checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
 
 [[package]]
 name = "linkme"
-version = "0.3.22"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b53ad6a33de58864705954edb5ad5d571a010f9e296865ed43dc72a5621b430"
+checksum = "bb2cfee0de9bd869589fb9a015e155946d1be5ff415cb844c2caccc6cc4b5db9"
 dependencies = [
  "linkme-impl",
 ]
 
 [[package]]
 name = "linkme-impl"
-version = "0.3.22"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04e542a18c94a9b6fcc7adb090fa3ba6b79ee220a16404f325672729f32a66ff"
+checksum = "adf157a4dc5a29b7b464aa8fe7edeff30076e07e13646a1c3874f58477dc99f8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -619,6 +631,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
+name = "pallet-contracts-uapi-next"
+version = "6.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd549c16296ea5b2eb7c65c56aba548b286c1be4d7675b424ff6ccb8319c97a9"
+dependencies = [
+ "bitflags",
+ "paste",
+ "polkavm-derive",
+]
+
+[[package]]
 name = "parity-scale-codec"
 version = "3.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -655,6 +678,34 @@ name = "platforms"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "626dec3cac7cc0e1577a2ec3fc496277ec2baa084bebad95bb6fdbfae235f84c"
+
+[[package]]
+name = "polkavm-common"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88b4e215c80fe876147f3d58158d5dfeae7dabdd6047e175af77095b78d0035c"
+
+[[package]]
+name = "polkavm-derive"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6380dbe1fb03ecc74ad55d841cfc75480222d153ba69ddcb00977866cbdabdb8"
+dependencies = [
+ "polkavm-derive-impl",
+ "syn 2.0.48",
+]
+
+[[package]]
+name = "polkavm-derive-impl"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc8211b3365bbafb2fb32057d68b0e1ca55d079f5cf6f9da9b98079b94b3987d"
+dependencies = [
+ "polkavm-common",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -768,9 +819,9 @@ dependencies = [
 
 [[package]]
 name = "scale-decode"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7789f5728e4e954aaa20cadcc370b99096fb8645fca3c9333ace44bb18f30095"
+checksum = "7caaf753f8ed1ab4752c6afb20174f03598c664724e0e32628e161c21000ff76"
 dependencies = [
  "derive_more",
  "parity-scale-codec",
@@ -782,9 +833,9 @@ dependencies = [
 
 [[package]]
 name = "scale-decode-derive"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27873eb6005868f8cc72dcfe109fae664cf51223d35387bc2f28be4c28d94c47"
+checksum = "d3475108a1b62c7efd1b5c65974f30109a598b2f45f23c9ae030acb9686966db"
 dependencies = [
  "darling",
  "proc-macro-crate 1.3.1",
@@ -891,9 +942,9 @@ dependencies = [
 
 [[package]]
 name = "secp256k1"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f622567e3b4b38154fb8190bcf6b160d7a4301d70595a49195b48c116007a27"
+checksum = "d24b59d129cdadea20aea4fb2352fa053712e5d713eee47d700cd4b2bc002f10"
 dependencies = [
  "secp256k1-sys",
 ]
@@ -955,9 +1006,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.111"
+version = "1.0.114"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "176e46fa42316f18edd598015a5166857fc835ec732f5215eac6b7bdbf0a84f4"
+checksum = "c5f09b1bd632ef549eaa9f60a1f8de742bdbc698e6cee2095fc84dde5f549ae0"
 dependencies = [
  "itoa",
  "ryu",
@@ -1041,14 +1092,13 @@ dependencies = [
 
 [[package]]
 name = "synstructure"
-version = "0.13.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "285ba80e733fac80aa4270fbcdf83772a79b80aa35c97075320abfee4a915b06"
+checksum = "c8af7666ab7b6390ab78131fb5b0fce11d6b7a6951602017c35fa82800708971"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.48",
- "unicode-xid",
 ]
 
 [[package]]
@@ -1096,12 +1146,6 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
-
-[[package]]
-name = "unicode-xid"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 
 [[package]]
 name = "version_check"
