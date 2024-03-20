@@ -1,5 +1,5 @@
 [package]
-name = "liminal-halo2-relations"
+name = "circuit_runner"
 version = "0.0.0"
 edition = "2021"
 authors = ["Cardinal"]
@@ -17,3 +17,7 @@ serde = { version = "=1.0", default-features = false, features = ["derive"] }
 serde_json = "=1.0"
 
 halo2-base =  { git = "https://github.com/axiom-crypto/halo2-lib", branch = "community-edition" }
+snark-verifier-sdk = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "community-edition" }
+
+# For measuring performance
+ark-std = { version = "=0.4.0", features = ["print-trace"] }
