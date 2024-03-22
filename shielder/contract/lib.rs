@@ -12,7 +12,9 @@ mod types;
 #[ink::contract]
 pub mod contract {
 
-    use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22, types::Set};
+    use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22Error, types::Set};
+    use ink::env::call::{build_call, ExecutionInput, Selector};
+    use ink::env::DefaultEnvironment;
     use mocked_zk::{ops::OpPub, relations::ZkProof, Scalar};
 
     pub const MERKLE_TREE_DEPTH: usize = mocked_zk::MERKLE_TREE_DEPTH;
@@ -76,23 +78,39 @@ pub mod contract {
                     amount,
                     token,
                     user,
-                } => {
-                    let mut psp22: ink::contract_ref!(PSP22) = AccountId::from(token.bytes).into();
-                    psp22.transfer_from(
-                        AccountId::from(user.bytes),
-                        self.env().account_id(),
-                        amount,
-                        [].to_vec(),
-                    )?;
-                }
+                } => build_call::<DefaultEnvironment>()
+                    .call(AccountId::from(token.bytes))
+                    .call_v1()
+                    .gas_limit(0)
+                    .transferred_value(0)
+                    .exec_input(
+                        ExecutionInput::new(Selector::new(ink::selector_bytes!(
+                            "PSP22::transfer_from"
+                        )))
+                        .push_arg(AccountId::from(user.bytes))
+                        .push_arg(self.env().account_id())
+                        .push_arg(amount)
+                        .push_arg([].to_vec() as ink::prelude::vec::Vec<u8>),
+                    )
+                    .returns::<Result<(), PSP22Error>>()
+                    .invoke()?,
                 OpPub::Withdraw {
                     amount,
                     token,
                     user,
-                } => {
-                    let mut psp22: ink::contract_ref!(PSP22) = AccountId::from(token.bytes).into();
-                    psp22.transfer(AccountId::from(user.bytes), amount, [].to_vec())?;
-                }
+                } => build_call::<DefaultEnvironment>()
+                    .call(AccountId::from(token.bytes))
+                    .call_v1()
+                    .gas_limit(0)
+                    .transferred_value(0)
+                    .exec_input(
+                        ExecutionInput::new(Selector::new(ink::selector_bytes!("PSP22::transfer")))
+                            .push_arg(AccountId::from(user.bytes))
+                            .push_arg(amount)
+                            .push_arg([].to_vec() as ink::prelude::vec::Vec<u8>),
+                    )
+                    .returns::<Result<(), PSP22Error>>()
+                    .invoke()?,
             };
             Ok(())
         }

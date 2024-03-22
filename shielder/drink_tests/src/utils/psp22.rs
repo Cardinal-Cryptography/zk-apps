@@ -1,12 +1,12 @@
 use anyhow::Result;
 use drink::{
-    runtime::MinimalRuntime,
-    session::{Session, NO_ENDOWMENT, NO_SALT},
-    AccountId32, ContractBundle,
+    minimal::MinimalSandbox,
+    session::{bundle::ContractBundle, Session, NO_ENDOWMENT, NO_SALT},
+    AccountId32,
 };
 
 pub fn deploy_test_token(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     supply: u128,
 ) -> Result<AccountId32> {
     let psp22_bundle =
@@ -27,7 +27,7 @@ pub fn deploy_test_token(
 }
 
 pub fn get_psp22_balance(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     token: &AccountId32,
     address: &AccountId32,
 ) -> Result<u128> {
@@ -41,7 +41,7 @@ pub fn get_psp22_balance(
 }
 
 pub fn get_psp22_allowance(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     token: &AccountId32,
     from: &AccountId32,
     to: &AccountId32,
@@ -56,7 +56,7 @@ pub fn get_psp22_allowance(
 }
 
 pub fn psp22_approve(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     token: &AccountId32,
     to: &AccountId32,
     amount: u128,
@@ -71,7 +71,7 @@ pub fn psp22_approve(
 }
 
 pub fn psp22_transfer(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     token: &AccountId32,
     to: &AccountId32,
     amount: u128,

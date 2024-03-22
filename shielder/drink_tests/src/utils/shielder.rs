@@ -1,6 +1,6 @@
 use anyhow::Result;
 use drink::{
-    runtime::MinimalRuntime,
+    minimal::MinimalSandbox,
     session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     AccountId32,
 };
@@ -24,7 +24,7 @@ pub struct ShielderUserEnv {
 }
 
 pub fn deploy_shielder(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     token: &AccountId32,
 ) -> Result<AccountId32> {
     let shielder_bundle = BundleProvider::ShielderContract.bundle()?;
@@ -41,7 +41,7 @@ pub fn deploy_shielder(
 }
 
 pub fn create_shielder_account(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     shielder_address: &AccountId32,
     token: &AccountId32,
     nullifier: Scalar,
@@ -76,7 +76,7 @@ pub fn create_shielder_account(
 }
 
 pub fn shielder_update(
-    session: &mut Session<MinimalRuntime>,
+    session: &mut Session<MinimalSandbox>,
     shielder_address: &AccountId32,
     upd_op: UpdateOperation,
     user_shielded_data: ShielderUserEnv,
