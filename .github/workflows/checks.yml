@@ -26,7 +26,7 @@ jobs:
         run: rustup target add wasm32-unknown-unknown
 
       - name: Install cargo-contract
-        run: cargo install cargo-contract --version 4.0.0-rc.2
+        run: cargo install cargo-contract
 
       - name: Run checks for `shielder/contract`
         run: cd shielder/ && make check
