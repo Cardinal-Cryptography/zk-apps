@@ -43,3 +43,49 @@ pub fn withdraw_op(
         },
     }
 }
+
+pub fn deposit_op_relayer(
+    psp22_address: &AccountId32,
+    user: &AccountId32,
+    amount: u128,
+    azero_address: &AccountId32,
+    relayer: &AccountId32,
+    fee: u128,
+) -> UpdateOperation {
+    UpdateOperation {
+        op_pub: OpPub::DepositRelayer {
+            amount,
+            token: Scalar::from_bytes(*((*psp22_address).as_ref())),
+            user: Scalar::from_bytes(*((*user).as_ref())),
+            fee,
+            fee_token: Scalar::from_bytes(*((*azero_address).as_ref())),
+            relayer: Scalar::from_bytes(*((*relayer).as_ref())),
+        },
+        op_priv: OpPriv {
+            user: Scalar::from_bytes(*((*user).as_ref())),
+        },
+    }
+}
+
+pub fn withdraw_op_relayer(
+    psp22_address: &AccountId32,
+    user: &AccountId32,
+    amount: u128,
+    azero_address: &AccountId32,
+    relayer: &AccountId32,
+    fee: u128,
+) -> UpdateOperation {
+    UpdateOperation {
+        op_pub: OpPub::WithdrawRelayer {
+            amount,
+            token: Scalar::from_bytes(*((*psp22_address).as_ref())),
+            user: Scalar::from_bytes(*((*user).as_ref())),
+            fee,
+            fee_token: Scalar::from_bytes(*((*azero_address).as_ref())),
+            relayer: Scalar::from_bytes(*((*relayer).as_ref())),
+        },
+        op_priv: OpPriv {
+            user: Scalar::from_bytes(*((*user).as_ref())),
+        },
+    }
+}

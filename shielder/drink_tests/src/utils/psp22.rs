@@ -26,6 +26,26 @@ pub fn deploy_test_token(
     Ok(res)
 }
 
+pub fn deploy_azero_test_token(
+    session: &mut Session<MinimalSandbox>,
+    supply: u128,
+) -> Result<AccountId32> {
+    let psp22_bundle = BundleProvider::Psp22.bundle()?;
+    let res = session.deploy_bundle(
+        psp22_bundle,
+        "new",
+        &[
+            format!("{}", supply).as_str(),
+            "Some(\"AZERO\")",
+            "Some(\"AZERO\")",
+            "9",
+        ],
+        NO_SALT,
+        NO_ENDOWMENT,
+    )?;
+    Ok(res)
+}
+
 pub fn get_psp22_balance(
     session: &mut Session<MinimalSandbox>,
     token: &AccountId32,
