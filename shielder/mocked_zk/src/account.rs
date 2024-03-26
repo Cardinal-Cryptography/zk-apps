@@ -75,6 +75,86 @@ impl Account {
                 }
                 Err(ZkpError::AccountUpdateError)
             }
+            OpPub::DepositRelayer {
+                amount: op_amount,
+                token: op_token,
+                fee,
+                fee_token,
+                ..
+            } => {
+                let mut dep_token_idx = None;
+                let mut fee_token_idx = None;
+                for (i, (token, _balance)) in self.balances.into_iter().enumerate() {
+                    if token == op_token {
+                        dep_token_idx = Some(i);
+                    }
+                    if token == fee_token {
+                        fee_token_idx = Some(i);
+                    }
+                }
+                if dep_token_idx.is_none() || fee_token_idx.is_none() {
+                    return Err(ZkpError::AccountUpdateError);
+                }
+                let dep_token_idx = dep_token_idx.unwrap();
+                let fee_token_idx = fee_token_idx.unwrap();
+
+                let balance_upd: Scalar = ((u128::from(self.balances[dep_token_idx].1))
+                    .checked_add(op_amount)
+                    .ok_or(ZkpError::AccountUpdateError)?)
+                .into();
+                let fee_balance_upd: Scalar = ((u128::from(self.balances[fee_token_idx].1))
+                    .checked_sub(fee)
+                    .ok_or(ZkpError::AccountUpdateError)?)
+                .into();
+
+                let mut balances_upd = self.balances;
+                balances_upd[dep_token_idx] = (op_token, balance_upd);
+                balances_upd[fee_token_idx] = (fee_token, fee_balance_upd);
+
+                Ok(Self {
+                    balances: balances_upd,
+                })
+            }
+            OpPub::WithdrawRelayer {
+                amount: op_amount,
+                token: op_token,
+                fee,
+                fee_token,
+                ..
+            } => {
+                let mut dep_token_idx = None;
+                let mut fee_token_idx = None;
+                for (i, (token, _balance)) in self.balances.into_iter().enumerate() {
+                    if token == op_token {
+                        dep_token_idx = Some(i);
+                    }
+                    if token == fee_token {
+                        fee_token_idx = Some(i);
+                    }
+                }
+                if dep_token_idx.is_none() || fee_token_idx.is_none() {
+                    return Err(ZkpError::AccountUpdateError);
+                }
+                let dep_token_idx = dep_token_idx.unwrap();
+                let fee_token_idx = fee_token_idx.unwrap();
+
+                let balance_upd: Scalar = ((u128::from(self.balances[dep_token_idx].1))
+                    .checked_sub(op_amount)
+                    .ok_or(ZkpError::AccountUpdateError)?)
+                .into();
+                let fee_balance_upd: Scalar = ((u128::from(self.balances[fee_token_idx].1))
+                    .checked_sub(fee)
+                    .ok_or(ZkpError::AccountUpdateError)?)
+                .into();
+
+                let mut balances_upd = self.balances;
+                balances_upd[dep_token_idx] = (op_token, balance_upd);
+                balances_upd[fee_token_idx] = (fee_token, fee_balance_upd);
+
+                Ok(Self {
+                    balances: balances_upd,
+                })
+            }
         }
     }
 }

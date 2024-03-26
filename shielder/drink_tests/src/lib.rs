@@ -24,13 +24,13 @@ mod tests {
         session = session.with_actor(alice.clone());
 
         let psp22_address = deploy_test_token(&mut session, 100)?;
-        let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
+        let shielder_address = deploy_shielder(&mut session, vec![psp22_address.clone()])?;
 
         // CREATE ACCOUNT
         let user_shielded_data = create_shielder_account(
             &mut session,
             &shielder_address,
-            &psp22_address,
+            vec![psp22_address.clone()],
             rng.gen::<u128>().into(),
         )?;
 
@@ -88,13 +88,13 @@ mod tests {
         }
 
         let psp22_address = deploy_test_token(&mut session, 100)?;
-        let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
+        let shielder_address = deploy_shielder(&mut session, vec![psp22_address.clone()])?;
 
         // CREATE ACCOUNT
         let mut user_shielded_data = create_shielder_account(
             &mut session,
             &shielder_address,
-            &psp22_address,
+            vec![psp22_address.clone()],
             rng.gen::<u128>().into(),
         )?;
 
@@ -158,7 +158,7 @@ mod tests {
         }
 
         let psp22_address = deploy_test_token(&mut session, 800)?;
-        let shielder_address = deploy_shielder(&mut session, &psp22_address)?;
+        let shielder_address = deploy_shielder(&mut session, vec![psp22_address.clone()])?;
 
         for depositor_addr in &depositors {
             psp22_transfer(&mut session, &psp22_address, depositor_addr, 100)?;
@@ -173,7 +173,7 @@ mod tests {
             user_shielded_data.push(create_shielder_account(
                 &mut session,
                 &shielder_address,
-                &psp22_address,
+                vec![psp22_address.clone()],
                 rng.gen::<u128>().into(),
             )?);
 
@@ -208,6 +208,87 @@ mod tests {
         let shielder_psp22_balance =
             get_psp22_balance(&mut session, &psp22_address, &shielder_address)?;
         assert_eq!(shielder_psp22_balance, 400 - 8);
+
+        Ok(())
+    }
+
+    #[drink::test]
+    fn relayer_single_deposit_single_withdraw(mut session: Session) -> Result<()> {
+        let mut rng = StdRng::seed_from_u64(1);
+
+        let alice = init_alice(&mut session)?;
+        let bob = init_bob(&mut session)?;
+        let relayer = init_relayer(&mut session)?;
+
+        session = session.with_actor(alice.clone());
+
+        let psp22_address = deploy_test_token(&mut session, 100)?;
+        let azero_address = deploy_azero_test_token(&mut session, 100)?;
+        let shielder_address = deploy_shielder(
+            &mut session,
+            vec![psp22_address.clone(), azero_address.clone()],
+        )?;
+
+        // CREATE ACCOUNT
+        let user_shielded_data = create_shielder_account(
+            &mut session,
+            &shielder_address,
+            vec![psp22_address.clone(), azero_address.clone()],
+            rng.gen::<u128>().into(),
+        )?;
+
+        // APPROVE TRANSFER
+        psp22_approve(&mut session, &azero_address, &shielder_address, 10)?;
+
+        // DEPOSIT
+        let user_shielded_data = shielder_update(
+            &mut session,
+            &shielder_address,
+            deposit_op(&azero_address, &alice, 10),
+            user_shielded_data,
+            rng.gen::<u128>().into(),
+        )?;
+
+        // APPROVE TRANSFER
+        psp22_approve(&mut session, &psp22_address, &shielder_address, 10)?;
+
+        session = session.with_actor(relayer.clone());
+        // DEPOSIT THROUGH RELAYER
+        let user_shielded_data = shielder_update(
+            &mut session,
+            &shielder_address,
+            deposit_op_relayer(&psp22_address, &alice, 10, &azero_address, &relayer, 1),
+            user_shielded_data,
+            rng.gen::<u128>().into(),
+        )?;
+
+        let alice_psp22_balance = get_psp22_balance(&mut session, &psp22_address, &alice)?;
+        assert_eq!(alice_psp22_balance, 90);
+        let shielder_psp22_balance =
+            get_psp22_balance(&mut session, &psp22_address, &shielder_address)?;
+        assert_eq!(shielder_psp22_balance, 10);
+        let relayer_psp22_balance = get_psp22_balance(&mut session, &azero_address, &relayer)?;
+        assert_eq!(relayer_psp22_balance, 1);
+
+        // SWITCH TO bob
+        session = session.with_actor(bob.clone());
+
+        // WITHDRAW THROUGH RELAYER
+        let _ = shielder_update(
+            &mut session,
+            &shielder_address,
+            withdraw_op_relayer(&psp22_address, &bob, 1, &azero_address, &relayer, 1),
+            user_shielded_data,
+            rng.gen::<u128>().into(),
+        )?;
+
+        let bob_psp22_balance = get_psp22_balance(&mut session, &psp22_address, &bob)?;
+        assert_eq!(bob_psp22_balance, 1);
+        let shielder_psp22_balance =
+            get_psp22_balance(&mut session, &psp22_address, &shielder_address)?;
+        assert_eq!(shielder_psp22_balance, 9);
+        let relayer_psp22_balance = get_psp22_balance(&mut session, &azero_address, &relayer)?;
+        assert_eq!(relayer_psp22_balance, 2);
 
         Ok(())
     }

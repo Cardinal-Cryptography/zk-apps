@@ -1370,6 +1370,7 @@ dependencies = [
  "anyhow",
  "drink",
  "mocked_zk",
+ "psp22",
  "rand",
  "shielder-contract",
 ]
@@ -3487,6 +3488,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "psp22"
+version = "0.3.0"
+source = "git+https://github.com/Cardinal-Cryptography/PSP22.git?rev=676768b#676768b226d1460be95aff12cf35b3dcc84c7952"
+dependencies = [
+ "ink",
 ]
 
 [[package]]

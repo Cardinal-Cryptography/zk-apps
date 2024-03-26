@@ -25,11 +25,13 @@ pub struct ShielderUserEnv {
 
 pub fn deploy_shielder(
     session: &mut Session<MinimalSandbox>,
-    token: &AccountId32,
+    allowed_tokens: Vec<AccountId32>,
 ) -> Result<AccountId32> {
     let shielder_bundle = BundleProvider::ShielderContract.bundle()?;
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
-    tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
+    for (i, token) in allowed_tokens.iter().enumerate() {
+        tokens[i] = Scalar::from_bytes(*((*token).as_ref()));
+    }
     let res = session.deploy_bundle(
         shielder_bundle,
         "new",
@@ -43,11 +45,13 @@ pub fn deploy_shielder(
 pub fn create_shielder_account(
     session: &mut Session<MinimalSandbox>,
     shielder_address: &AccountId32,
-    token: &AccountId32,
+    allowed_tokens: Vec<AccountId32>,
     nullifier: Scalar,
 ) -> Result<ShielderUserEnv> {
     let mut tokens: [Scalar; TOKENS_NUMBER] = [0_u128.into(); TOKENS_NUMBER];
-    tokens[0] = Scalar::from_bytes(*((*token).as_ref()));
+    for (i, token) in allowed_tokens.iter().enumerate() {
+        tokens[i] = Scalar::from_bytes(*((*token).as_ref()));
+    }
 
     let acc = Account::new(tokens);
 

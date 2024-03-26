@@ -26,3 +26,9 @@ pub fn init_bob(session: &mut Session<MinimalSandbox>) -> Result<AccountId32> {
     init_acc_with_balance(session, &res)?;
     Ok(res)
 }
+
+pub fn init_relayer(session: &mut Session<MinimalSandbox>) -> Result<AccountId32> {
+    let res = AccountId32::new([4u8; 32]);
+    init_acc_with_balance(session, &res)?;
+    Ok(res)
+}

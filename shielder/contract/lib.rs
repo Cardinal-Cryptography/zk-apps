@@ -10,6 +10,7 @@ mod types;
 
 /// Contract module
 #[ink::contract]
+#[allow(clippy::large_enum_variant)]
 pub mod contract {
 
     use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22Error, types::Set};
@@ -111,6 +112,85 @@ pub mod contract {
                     )
                     .returns::<Result<(), PSP22Error>>()
                     .invoke()?,
+                OpPub::DepositRelayer {
+                    amount,
+                    token,
+                    user,
+                    fee,
+                    fee_token,
+                    relayer,
+                } => {
+                    build_call::<DefaultEnvironment>()
+                        .call(AccountId::from(token.bytes))
+                        .call_v1()
+                        .gas_limit(0)
+                        .transferred_value(0)
+                        .exec_input(
+                            ExecutionInput::new(Selector::new(ink::selector_bytes!(
+                                "PSP22::transfer_from"
+                            )))
+                            .push_arg(AccountId::from(user.bytes))
+                            .push_arg(self.env().account_id())
+                            .push_arg(amount)
+                            .push_arg([].to_vec() as ink::prelude::vec::Vec<u8>),
+                        )
+                        .returns::<Result<(), PSP22Error>>()
+                        .invoke()?;
+                    build_call::<DefaultEnvironment>()
+                        .call(AccountId::from(fee_token.bytes))
+                        .call_v1()
+                        .gas_limit(0)
+                        .transferred_value(0)
+                        .exec_input(
+                            ExecutionInput::new(Selector::new(ink::selector_bytes!(
+                                "PSP22::transfer"
+                            )))
+                            .push_arg(AccountId::from(relayer.bytes))
+                            .push_arg(fee)
+                            .push_arg([].to_vec() as ink::prelude::vec::Vec<u8>),
+                        )
+                        .returns::<Result<(), PSP22Error>>()
+                        .invoke()?;
+                }
+                OpPub::WithdrawRelayer {
+                    amount,
+                    token,
+                    user,
+                    fee,
+                    fee_token,
+                    relayer,
+                } => {
+                    build_call::<DefaultEnvironment>()
+                        .call(AccountId::from(token.bytes))
+                        .call_v1()
+                        .gas_limit(0)
+                        .transferred_value(0)
+                        .exec_input(
+                            ExecutionInput::new(Selector::new(ink::selector_bytes!(
+                                "PSP22::transfer"
+                            )))
+                            .push_arg(AccountId::from(user.bytes))
+                            .push_arg(amount)
+                            .push_arg([].to_vec() as ink::prelude::vec::Vec<u8>),
+                        )
+                        .returns::<Result<(), PSP22Error>>()
+                        .invoke()?;
+                    build_call::<DefaultEnvironment>()
+                        .call(AccountId::from(fee_token.bytes))
+                        .call_v1()
+                        .gas_limit(0)
+                        .transferred_value(0)
+                        .exec_input(
+                            ExecutionInput::new(Selector::new(ink::selector_bytes!(
+                                "PSP22::transfer"
+                            )))
+                            .push_arg(AccountId::from(relayer.bytes))
+                            .push_arg(fee)
+                            .push_arg([].to_vec() as ink::prelude::vec::Vec<u8>),
+                        )
+                        .returns::<Result<(), PSP22Error>>()
+                        .invoke()?;
+                }
             };
             Ok(())
         }
