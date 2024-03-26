@@ -26,19 +26,13 @@ check-drink-tests: ## Run cargo checks on drink tests.
 .PHONY: check
 check: check-contract check-mocked-zk check-drink-tests ## Run cargo checks
 
-.PHONY: build-psp22
-build-psp22: ## Builds psp22 contracts.
-	@echo "Building psp22 contract" ; \
-	git submodule update --init ; \
-	cargo contract build --quiet --manifest-path PSP22/Cargo.toml --features "contract" --release ; \
-
 .PHONY: build-shielder
 build-shielder: ## Builds shielder contracts.
 	@echo "Building shielder contract" ; \
 	cargo contract build --quiet --manifest-path contract/Cargo.toml --release ; \
 
 .PHONY: setup-tests
-setup-tests: build-psp22 build-shielder ## Builds contracts and generates wrappers.
+setup-tests: build-shielder ## Builds contracts and generates wrappers.
 
 .PHONY: shielder-unit-tests
 shielder-unit-tests: ## Runs unit tests for contract.

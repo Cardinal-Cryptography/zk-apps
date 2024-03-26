@@ -1,7 +1,8 @@
+use crate::tests::BundleProvider;
 use anyhow::Result;
 use drink::{
     minimal::MinimalSandbox,
-    session::{bundle::ContractBundle, Session, NO_ENDOWMENT, NO_SALT},
+    session::{Session, NO_ENDOWMENT, NO_SALT},
     AccountId32,
 };
 
@@ -9,8 +10,7 @@ pub fn deploy_test_token(
     session: &mut Session<MinimalSandbox>,
     supply: u128,
 ) -> Result<AccountId32> {
-    let psp22_bundle =
-        ContractBundle::load(std::path::Path::new("../PSP22/target/ink/psp22.contract"))?;
+    let psp22_bundle = BundleProvider::Psp22.bundle()?;
     let res = session.deploy_bundle(
         psp22_bundle,
         "new",
