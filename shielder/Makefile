@@ -23,23 +23,18 @@ build-shielder: ## Builds shielder contracts.
 .PHONY: setup-tests
 setup-tests: build-psp22 build-shielder ## Builds contracts and generates wrappers.
 
-.PHONY: shielder-unit-tests
-shielder-unit-tests: ## Runs unit tests for contract.
-	@echo "Running shielder unit tests" ; \
-	cargo test --quiet --manifest-path contract/Cargo.toml --release -- --nocapture ; \
+.PHONY: shielder-tests
+shielder-tests: ## Runs tests for contract.
+	@echo "Running shielder tests" ; \
+	cargo test --manifest-path contract/Cargo.toml --release -- --nocapture ; \
 
 .PHONY: mocked-zk-unit-tests
 mocked-zk-unit-tests: ## Runs unit tests for contract.
 	@echo "Running mocked_zk unit tests" ; \
 	cargo test --quiet --manifest-path mocked_zk/Cargo.toml --release -- --nocapture ; \
 
-.PHONY: shielder-drink-tests
-shielder-drink-tests: setup-tests ## Runs drink tests for contract.
-	@echo "Running shielder drink tests" ; \
-	cargo test --quiet --manifest-path drink_tests/Cargo.toml --release -- --nocapture ; \
-
 .PHONY: tests
-tests: shielder-unit-tests mocked-zk-unit-tests shielder-drink-tests ## Runs tests for contract.
+tests: shielder-tests mocked-zk-unit-tests ## Runs tests for contract.
 
 .PHONY:
 all: check tests
