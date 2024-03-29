@@ -26,7 +26,7 @@ build-shielder: ## Builds shielder contracts.
 setup-tests: build-psp22 build-shielder ## Builds contracts and generates wrappers.
 
 .PHONY: shielder-tests
-shielder-tests: ## Runs tests for contract.
+shielder-tests: setup-tests ## Runs tests for contract.
 	@echo "Running shielder tests" ; \
 	cargo test --manifest-path contract/Cargo.toml --release -- --nocapture ; \
 
