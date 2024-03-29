@@ -26,8 +26,5 @@ jobs:
       - name: Install cargo-contract
         run: cargo install cargo-contract
 
-      - name: Run checks for `shielder/contract`
-        run: cd shielder/ && make check
-
-      - name: Run tests  for `shielder/contract`
-        run: cd shielder/ && make tests
+      - name: Run checks and tests
+        run: cd shielder/ && make all

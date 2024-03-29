@@ -1,5 +1,4 @@
 use drink::AccountId32;
-
 use mocked_zk::{
     ops::{OpPriv, OpPub},
     Scalar,

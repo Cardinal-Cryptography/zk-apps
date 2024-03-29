@@ -3,6 +3,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
+#[cfg(test)]
+mod drink_tests;
 pub mod errors;
 mod merkle;
 mod traits;

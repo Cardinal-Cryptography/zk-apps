@@ -2,12 +2,12 @@
 resolver = "2"
 
 members = [
-    "contract",
     "mocked_zk",
     "relations",
 ]
 
 exclude = [
+    "contract", # neither `cargo-contract` nor `drink` works well with workspaces
     "PSP22",
 ]
 
@@ -33,4 +33,4 @@ serde_json = { version = "=1.0" }
 
 liminal-halo2-relations = { path = "relations", version = "=0.1.0" }
 mocked_zk = { path = "mocked_zk", version = "=0.1.0", default-features = false }
-shielder-contract = { path = "contract", version = "=0.1.0" }
+shielder-contract = { path = "contract", version = "=0.1.0", features = ["ink-as-dependency"] }

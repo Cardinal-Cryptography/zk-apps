@@ -1,12 +1,9 @@
-mod utils;
-
-
 use anyhow::Result;
 use drink::{session::Session, AccountId32};
-
-use crate::utils::{chain::*, ops::*, psp22::*, shielder::*};
-
 use rand::prelude::*;
+use utils::{chain::*, ops::*, psp22::*, shielder::*};
+
+mod utils;
 
 #[drink::contract_bundle_provider]
 pub enum BundleProvider {}

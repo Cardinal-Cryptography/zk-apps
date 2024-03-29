@@ -6,14 +6,16 @@ help: # Show help for each of the Makefile recipes.
 
 .PHONY: check
 check: ## Run cargo checks
-	cargo clippy --all-targets -- -D warnings
-	cargo fmt --all --check
+	@cargo clippy --all-targets -- -D warnings
+	@cargo clippy --manifest-path contract/Cargo.toml -- -D warnings
+	@cargo fmt --all --check
+	@cargo fmt --all --check --manifest-path contract/Cargo.toml
 
 .PHONY: build-psp22
 build-psp22: ## Builds psp22 contracts.
 	@echo "Building psp22 contract" ; \
 	git submodule update --init ; \
-	cargo contract build --quiet --manifest-path PSP22/Cargo.toml --features "contract" --release ; \
+	cargo contract build --manifest-path PSP22/Cargo.toml --features "contract" --release ; \
 
 .PHONY: build-shielder
 build-shielder: ## Builds shielder contracts.
@@ -31,7 +33,7 @@ shielder-tests: ## Runs tests for contract.
 .PHONY: mocked-zk-unit-tests
 mocked-zk-unit-tests: ## Runs unit tests for contract.
 	@echo "Running mocked_zk unit tests" ; \
-	cargo test --quiet --manifest-path mocked_zk/Cargo.toml --release -- --nocapture ; \
+	cargo test --manifest-path mocked_zk/Cargo.toml --release -- --nocapture ; \
 
 .PHONY: tests
 tests: shielder-tests mocked-zk-unit-tests ## Runs tests for contract.
