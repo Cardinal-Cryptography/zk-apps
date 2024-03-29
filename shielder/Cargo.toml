@@ -7,6 +7,10 @@ members = [
     "relations",
 ]
 
+exclude = [
+    "PSP22",
+]
+
 [workspace.package]
 authors = ["Cardinal"]
 edition = "2021"

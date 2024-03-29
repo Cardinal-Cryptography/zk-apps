@@ -10,13 +10,13 @@ edition = "2021"
 path = "lib.rs"
 
 [dependencies]
-ink = { workspace = true }
-mocked_zk = { workspace = true }
+ink = { version = "5.0.0", default-features = false }
+mocked_zk = { path = "../mocked_zk", default-features = false }
 
 [dev-dependencies]
-anyhow = { workspace = true }
-drink = { workspace = true }
-rand = { workspace = true }
+anyhow = { version = "1.0.79", default-features = false }
+drink = { version = "0.16.0" }
+rand = { version = "=0.8" }
 
 [features]
 default = ["std"]

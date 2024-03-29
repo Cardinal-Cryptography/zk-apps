@@ -18,7 +18,7 @@ build-psp22: ## Builds psp22 contracts.
 .PHONY: build-shielder
 build-shielder: ## Builds shielder contracts.
 	@echo "Building shielder contract" ; \
-	cargo contract build --quiet --manifest-path contract/Cargo.toml --release ; \
+	cargo contract build --manifest-path contract/Cargo.toml --release ; \
 
 .PHONY: setup-tests
 setup-tests: build-psp22 build-shielder ## Builds contracts and generates wrappers.
