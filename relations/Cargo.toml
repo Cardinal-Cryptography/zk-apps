@@ -1,24 +1,22 @@
 [package]
 name = "liminal-halo2-relations"
-version = "0.0.0"
-edition = "2021"
-authors = ["Cardinal"]
-documentation = "https://docs.rs/?"
-homepage = "https://alephzero.org"
-license = "Apache-2.0"
+authors.workspace = true
 categories = ["cryptography"]
-keywords = ["cryptography", "snark", "zero-knowledge", "liminal", "shielder"]
-repository = "https://github.com/Cardinal-Cryptography/zk-apps"
 description = "A collection of halo2-based relations for use in liminal."
+documentation = "https://docs.rs/?"
+edition.workspace = true
+homepage.workspace = true
+keywords = ["cryptography", "snark", "zero-knowledge", "liminal", "shielder"]
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
-rand = "=0.8"
-serde = { version = "=1.0", default-features = false, features = ["derive"] }
-serde_json = "=1.0"
-
-halo2-base = { package = "halo2-base", git = "https://github.com/Cardinal-Cryptography/halo2-lib", branch = "aleph" }
-
+halo2-base = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 
 #[dev-dependencies]
-# Fork with halo2curves = 0.6 to match the version of halo2-base
-poseidon = { git = "https://github.com/zemse/pse-poseidon" }
+poseidon = { workspace = true }
