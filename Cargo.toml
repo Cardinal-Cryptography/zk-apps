@@ -2,7 +2,7 @@
 resolver = "2"
 
 members = [
-    "relations",
+    "shielder/relations",
     "shielder/contract",
 ]
 
