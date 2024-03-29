@@ -20,10 +20,8 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: 1.76.0
-
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
+          toolchain: nightly-2024-02-14
+          targets: wasm32-unknown-unknown
 
       - name: Install cargo-contract
         run: cargo install cargo-contract

@@ -6,12 +6,17 @@ homepage = "https://alephzero.org"
 repository = "https://github.com/Cardinal-Cryptography/zk-apps"
 edition = "2021"
 
-[dependencies]
-ink = { workspace = true }
-mocked_zk = { path = "../mocked_zk", default-features = false }
-
 [lib]
 path = "lib.rs"
+
+[dependencies]
+ink = { workspace = true }
+mocked_zk = { workspace = true }
+
+[dev-dependencies]
+anyhow = { workspace = true }
+drink = { workspace = true }
+rand = { workspace = true }
 
 [features]
 default = ["std"]
@@ -20,4 +25,3 @@ std = [
     "mocked_zk/std",
 ]
 ink-as-dependency = []
-e2e-tests = []

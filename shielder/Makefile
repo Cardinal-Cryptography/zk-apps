@@ -4,27 +4,10 @@
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
-.PHONY: check-contract
-check-contract: ## Run cargo checks on shielder contract.
-	@echo "Checking shielder contract" ; \
-	cargo clippy --all-targets --manifest-path contract/Cargo.toml -- -D warnings ; \
-	cargo fmt --quiet --all --check --manifest-path contract/Cargo.toml ; \
-
-.PHONY: check-mocked-zk
-check-mocked-zk: ## Run cargo checks on mocked relations.
-	@echo "Checking shielder mocked relations" ; \
-	cargo clippy --all-targets --manifest-path mocked_zk/Cargo.toml -- -D warnings ; \
-	cargo fmt --quiet --all --check --manifest-path mocked_zk/Cargo.toml ; \
-
-.PHONY: check-drink-tests
-check-drink-tests: ## Run cargo checks on drink tests.
-	@echo "Checking shielder drink tests" ; \
-	cargo clippy --all-targets --manifest-path drink_tests/Cargo.toml -- -D warnings ; \
-	cargo fmt --quiet --all --check --manifest-path drink_tests/Cargo.toml ; \
-
-
 .PHONY: check
-check: check-contract check-mocked-zk check-drink-tests ## Run cargo checks
+check: ## Run cargo checks
+	cargo clippy --all-targets -- -D warnings
+	cargo fmt --all --check
 
 .PHONY: build-psp22
 build-psp22: ## Builds psp22 contracts.

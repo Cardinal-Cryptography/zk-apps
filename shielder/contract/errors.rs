@@ -1,5 +1,6 @@
-use crate::traits::psp22::PSP22Error;
 use mocked_zk::errors::ZkpError;
+
+use crate::traits::psp22::PSP22Error;
 
 #[ink::scale_derive(Encode, Decode, TypeInfo)]
 #[derive(PartialEq, Debug)]

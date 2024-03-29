@@ -5,7 +5,7 @@ use drink::{
     AccountId32,
 };
 
-use crate::{tests::BundleProvider, utils::ops::UpdateOperation};
+use crate::{utils::ops::UpdateOperation};
 use mocked_zk::{
     account::Account,
     note::Note,
