@@ -1,8 +1,9 @@
 use anyhow::Result;
-use drink::sandbox_api::balance_api::BalanceAPI;
-use drink::{minimal::MinimalSandbox, session::Session, AccountId32};
+use drink::{
+    minimal::MinimalSandbox, sandbox_api::balance_api::BalanceAPI, session::Session, AccountId32,
+};
 
-use crate::utils::ACCOUNT_INITIAL_AMOUNT;
+use super::ACCOUNT_INITIAL_AMOUNT;
 
 pub fn init_acc_with_balance(
     session: &mut Session<MinimalSandbox>,

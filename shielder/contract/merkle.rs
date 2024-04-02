@@ -2,9 +2,9 @@ use ink::{
     env::hash::{CryptoHash, Sha2x256},
     storage::Mapping,
 };
+use mocked_zk::Scalar;
 
 use crate::{errors::ShielderError, types::Set};
-use mocked_zk::Scalar;
 
 /// depth of the tree
 
@@ -108,8 +108,9 @@ impl<const DEPTH: usize> MerkleTree<DEPTH> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ink::primitives::AccountId;
+
+    use super::*;
 
     #[test]
     fn add_two_leaves_and_root() {

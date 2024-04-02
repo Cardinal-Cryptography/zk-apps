@@ -4,8 +4,6 @@ use drink::{
     session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     AccountId32,
 };
-
-use crate::{tests::BundleProvider, utils::ops::UpdateOperation};
 use mocked_zk::{
     account::Account,
     note::Note,
@@ -14,7 +12,9 @@ use mocked_zk::{
     traits::Hashable,
     Scalar, MERKLE_TREE_DEPTH, TOKENS_NUMBER,
 };
-use shielder_contract::errors::ShielderError;
+
+use super::ops::UpdateOperation;
+use crate::{drink_tests::BundleProvider, errors::ShielderError};
 
 #[derive(Clone, Copy, Debug)]
 pub struct ShielderUserEnv {

@@ -3,6 +3,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
+#[cfg(test)]
+mod drink_tests;
 pub mod errors;
 mod merkle;
 mod traits;
@@ -12,10 +14,13 @@ mod types;
 #[ink::contract]
 pub mod contract {
 
-    use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22Error, types::Set};
-    use ink::env::call::{build_call, ExecutionInput, Selector};
-    use ink::env::DefaultEnvironment;
+    use ink::env::{
+        call::{build_call, ExecutionInput, Selector},
+        DefaultEnvironment,
+    };
     use mocked_zk::{ops::OpPub, relations::ZkProof, Scalar};
+
+    use crate::{errors::ShielderError, merkle::MerkleTree, traits::psp22::PSP22Error, types::Set};
 
     pub const MERKLE_TREE_DEPTH: usize = mocked_zk::MERKLE_TREE_DEPTH;
     pub const TOKENS_NUMBER: usize = mocked_zk::TOKENS_NUMBER;

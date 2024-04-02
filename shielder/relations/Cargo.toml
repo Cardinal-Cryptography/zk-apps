@@ -1,0 +1,22 @@
+[package]
+name = "liminal-halo2-relations"
+authors.workspace = true
+categories = ["cryptography"]
+description = "A collection of halo2-based relations for use in liminal."
+documentation = "https://docs.rs/?"
+edition.workspace = true
+homepage.workspace = true
+keywords = ["cryptography", "snark", "zero-knowledge", "liminal", "shielder"]
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+halo2-base = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+#[dev-dependencies]
+poseidon = { workspace = true }
